@@ -1,0 +1,159 @@
+<div class="modal fade" id="authModal" tabindex="-1" aria-label="Login or register" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered auth-dialog modal-fullscreen-sm-down">
+    <div class="modal-content auth-content">
+      <button type="button" class="btn-close auth-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+      <div class="row g-0">
+
+        <!-- KALIWANG PANEL (nakatago sa mobile) -->
+        <div class="col-lg-5 auth-brand d-none d-lg-flex">
+          <div class="auth-logo">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Simons Institute of Theology" height="56">
+          </div>
+          <div>
+            <div data-brand="login">
+              <h3>Good to see you again.</h3>
+              <p>Log in to continue your enrollment and track your application.</p>
+            </div>
+            <div data-brand="register" class="d-none">
+              <h3>Start your journey.</h3>
+              <p>Create an account to apply and join the SIT community.</p>
+            </div>
+            <p class="auth-motto">&ldquo;Faithful in living, faithful in teaching&rdquo;</p>
+          </div>
+        </div>
+
+        <!-- KANANG PANEL -->
+        <div class="col-lg-7 auth-form-panel">
+          <div class="d-lg-none text-center mb-3">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Simons Institute of Theology" height="48">
+          </div>
+
+          <ul class="nav nav-pills auth-tabs mb-4" role="tablist">
+            <li class="nav-item flex-fill" role="presentation">
+              <button class="nav-link active w-100" id="tab-login" data-bs-toggle="pill" data-bs-target="#pane-login"
+                      data-auth-name="login" type="button" role="tab">Log In</button>
+            </li>
+            <li class="nav-item flex-fill" role="presentation">
+              <button class="nav-link w-100" id="tab-register" data-bs-toggle="pill" data-bs-target="#pane-register"
+                      data-auth-name="register" type="button" role="tab">Register</button>
+            </li>
+          </ul>
+
+          <div class="tab-content">
+
+            <!-- LOGIN -->
+            <div class="tab-pane fade show active" id="pane-login" role="tabpanel" aria-labelledby="tab-login">
+              <h2>Welcome back</h2>
+              <p class="text-muted">Sign in to your account to continue.</p>
+
+              <form method="post" action="/auth/login" class="needs-validation" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="mb-3">
+                  <label for="login-email" class="visually-hidden">Email address</label>
+                  <input type="email" class="form-control auth-input" id="login-email" name="email"
+                         placeholder="Email address" required maxlength="120" autocomplete="username">
+                  <div class="invalid-feedback">Enter a valid email address.</div>
+                </div>
+
+                <div class="mb-4">
+                  <label for="login-password" class="visually-hidden">Password</label>
+                  <div class="password-field">
+                    <input type="password" class="form-control auth-input" id="login-password" name="password"
+                           placeholder="Password" required autocomplete="current-password">
+                    <button type="button" class="toggle-password" data-toggle-password="login-password" aria-label="Show or hide password">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                  </div>
+                  <div class="invalid-feedback d-block-if-invalid">Enter your password.</div>
+                </div>
+
+                <button type="submit" class="btn btn-sit auth-submit w-100">Log In</button>
+              </form>
+            </div>
+
+            <!-- REGISTER -->
+            <div class="tab-pane fade" id="pane-register" role="tabpanel" aria-labelledby="tab-register">
+              <h2>Create your account</h2>
+              <p class="text-muted">Join SIT-EnrollEase and start your application.</p>
+
+              <form method="post" action="/auth/register" class="needs-validation" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="row g-3 mb-3">
+                  <div class="col-sm-6">
+                    <label for="reg-first" class="visually-hidden">First name</label>
+                    <input type="text" class="form-control auth-input" id="reg-first" name="first_name"
+                           placeholder="First name" required minlength="2" maxlength="50"
+                           pattern="[A-Za-zÀ-ÿ .'\-]{2,50}" autocomplete="given-name">
+                    <div class="invalid-feedback">Letters only, 2 to 50 characters.</div>
+                  </div>
+                  <div class="col-sm-6">
+                    <label for="reg-last" class="visually-hidden">Last name</label>
+                    <input type="text" class="form-control auth-input" id="reg-last" name="last_name"
+                           placeholder="Last name" required minlength="2" maxlength="50"
+                           pattern="[A-Za-zÀ-ÿ .'\-]{2,50}" autocomplete="family-name">
+                    <div class="invalid-feedback">Letters only, 2 to 50 characters.</div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="reg-middle" class="visually-hidden">Middle name (optional)</label>
+                  <input type="text" class="form-control auth-input" id="reg-middle" name="middle_name"
+                         placeholder="Middle name (optional)" maxlength="50"
+                         pattern="[A-Za-zÀ-ÿ .'\-]{1,50}" autocomplete="additional-name">
+                  <div class="invalid-feedback">Letters only, up to 50 characters.</div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="reg-email" class="visually-hidden">Email address</label>
+                  <input type="email" class="form-control auth-input" id="reg-email" name="email"
+                         placeholder="Email address" required maxlength="120" autocomplete="email">
+                  <div class="invalid-feedback">Enter a valid email address.</div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="reg-password" class="visually-hidden">Password</label>
+                  <div class="password-field">
+                    <input type="password" class="form-control auth-input" id="reg-password" name="password"
+                           placeholder="Password" required minlength="8"
+                           pattern="(?=.*[A-Za-z])(?=.*\d).{8,}" autocomplete="new-password">
+                    <button type="button" class="toggle-password" data-toggle-password="reg-password" aria-label="Show or hide password">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                  </div>
+                  <div class="form-text">At least 8 characters, with a letter and a number.</div>
+                  <div class="invalid-feedback">Use at least 8 characters with a letter and a number.</div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="reg-confirm" class="visually-hidden">Confirm password</label>
+                  <div class="password-field">
+                    <input type="password" class="form-control auth-input" id="reg-confirm" name="confirm"
+                           placeholder="Confirm password" required autocomplete="new-password">
+                    <button type="button" class="toggle-password" data-toggle-password="reg-confirm" aria-label="Show or hide password">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                  </div>
+                  <div class="invalid-feedback">Passwords do not match.</div>
+                </div>
+
+                <div class="form-check mb-4">
+                  <input class="form-check-input" type="checkbox" id="reg-agree" name="agree" required>
+                  <label class="form-check-label small" for="reg-agree">
+                    I agree to the Terms and the Data Privacy Notice.
+                  </label>
+                  <div class="invalid-feedback">You must agree to continue.</div>
+                </div>
+
+                <button type="submit" class="btn btn-sit auth-submit w-100">Create Account</button>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -68,3 +68,56 @@ h1, h2, h3, .brand-serif { font-family: 'Cormorant Garamond', Georgia, serif; fo
 .quote { text-align: center; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.6rem; font-style: italic; color: var(--sit-primary); }
 .contact-section { background: var(--sit-dark); color: #fff; }
 .contact-section .section-title { color: #fff; }
+
+/* ===== Login / Register modal ===== */
+.auth-dialog { --bs-modal-width: 940px; }
+.auth-content { border: 0; border-radius: 28px; overflow: hidden; position: relative; }
+.auth-close {
+  position: absolute; top: 1rem; right: 1rem; z-index: 5;
+  background-color: var(--sit-soft); border-radius: 50%; padding: .8rem; opacity: 1;
+}
+
+.auth-brand {
+  position: relative; overflow: hidden; min-height: 620px;
+  background: linear-gradient(160deg, var(--sit-primary) 0%, var(--sit-dark) 100%);
+  color: #fff; flex-direction: column; justify-content: space-between; padding: 2.5rem;
+}
+.auth-brand::before, .auth-brand::after {
+  content: ''; position: absolute; border: 1px solid rgba(255, 255, 255, .18); border-radius: 50%;
+}
+.auth-brand::before { width: 260px; height: 260px; top: 18%; right: -60px; }
+.auth-brand::after { width: 320px; height: 320px; bottom: -120px; left: -80px; }
+.auth-brand > * { position: relative; z-index: 1; }
+.auth-logo { background: #fff; border-radius: 14px; padding: .6rem .9rem; align-self: flex-start; }
+.auth-brand h3 { font-size: 2.6rem; line-height: 1.1; }
+.auth-brand p { opacity: .85; }
+.auth-motto { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 1.1rem; margin: 1.5rem 0 0; }
+
+.auth-form-panel { background: #fff; padding: 2.5rem; }
+.auth-form-panel h2 { font-size: 2.2rem; color: var(--sit-dark); }
+
+.auth-tabs { background: var(--sit-soft); border-radius: 16px; padding: .35rem; gap: .25rem; }
+.auth-tabs .nav-link { border-radius: 12px; color: var(--sit-dark); font-weight: 600; }
+.auth-tabs .nav-link.active { background: #fff; color: var(--sit-dark); box-shadow: 0 2px 8px rgba(12, 74, 69, .12); }
+
+.auth-input {
+  background: var(--sit-mist); border: 1.5px solid var(--sit-soft);
+  border-radius: 14px; padding: .8rem 1rem;
+}
+.auth-input:focus { border-color: var(--sit-primary); box-shadow: 0 0 0 .2rem rgba(27, 107, 99, .15); background: #fff; }
+.was-validated .auth-input:valid, .was-validated .auth-input:invalid { background-image: none; }
+.auth-submit { border-radius: 14px; padding: .85rem; font-weight: 700; box-shadow: 0 8px 20px rgba(27, 107, 99, .25); }
+
+.password-field { position: relative; }
+.password-field .auth-input { padding-right: 3rem; }
+.toggle-password {
+  position: absolute; right: .9rem; top: 50%; transform: translateY(-50%);
+  border: 0; background: none; color: #5b6b68; padding: .25rem;
+}
+.password-field + .invalid-feedback { display: none; }
+.was-validated .password-field:has(:invalid) + .invalid-feedback { display: block; }
+
+@media (max-width: 575.98px) {
+  .auth-content { border-radius: 0; }
+  .auth-form-panel { padding: 1.5rem; }
+}
