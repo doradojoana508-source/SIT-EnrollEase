@@ -1,0 +1,32 @@
+:root {
+  --sit-primary: #1b6b63;
+  --sit-dark: #0c4a45;
+  --sit-soft: #d9e7e4;
+  --sit-mist: #f4f8f7;
+  --sit-ink: #1c2b29;
+  --bs-body-font-family: 'DM Sans', system-ui, sans-serif;
+  --bs-body-color: var(--sit-ink);
+}
+
+body { background: var(--sit-mist); }
+h1, h2, h3, .brand-serif { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 700; }
+
+/* Navbar */
+.navbar-sit { background: #fff; box-shadow: 0 2px 12px rgba(12, 74, 69, .08); }
+.navbar-sit .nav-link { color: var(--sit-ink); font-weight: 500; }
+.navbar-sit .nav-link:hover { color: var(--sit-primary); }
+
+/* Buttons */
+.btn-sit { background: var(--sit-primary); color: #fff; border: 1px solid var(--sit-primary); }
+.btn-sit:hover, .btn-sit:focus { background: var(--sit-dark); border-color: var(--sit-dark); color: #fff; }
+.btn-outline-sit { color: var(--sit-primary); border: 1px solid var(--sit-primary); background: transparent; }
+.btn-outline-sit:hover { background: var(--sit-primary); color: #fff; }
+
+/* Hero */
+.hero {
+  background: linear-gradient(135deg, var(--sit-dark) 0%, var(--sit-primary) 100%);
+  color: #fff;
+  padding: 6rem 0;
+}
+.hero .eyebrow { letter-spacing: .15em; font-size: .8rem; opacity: .85; }
+.hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); }

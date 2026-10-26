@@ -1,0 +1,21 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Home | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="container">
+    <p class="eyebrow">WELCOME TO</p>
+    <h1>SIT-EnrollEase</h1>
+    <p class="lead">Your journey in theological education starts here.</p>
+  </div>
+</section>
+
+<section class="container py-5" id="programs">
+  <h2>Our Programs</h2>
+  <ul>
+    {% for p in programs %}
+    <li>{{ p.code }}: {{ p.name }} ({{ p.total_units }} units)</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

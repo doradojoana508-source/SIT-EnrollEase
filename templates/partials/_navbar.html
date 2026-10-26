@@ -1,0 +1,23 @@
+<nav class="navbar navbar-expand-lg navbar-sit sticky-top">
+  <div class="container-fluid px-3 px-lg-4">
+    <a class="navbar-brand d-flex align-items-center" href="{{ url_for('public.index') }}">
+      <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Simons Institute of Theology" height="48">
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+            aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('public.index') }}#programs">Programs</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('public.index') }}#process">Enrollment Process</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('public.index') }}#about">About</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('public.index') }}#contact">Contact</a></li>
+      </ul>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-sit" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login">Login</button>
+        <button class="btn btn-sit" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="register">Register</button>
+      </div>
+    </div>
+  </div>
+</nav>
