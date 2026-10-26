@@ -30,3 +30,41 @@ h1, h2, h3, .brand-serif { font-family: 'Cormorant Garamond', Georgia, serif; fo
 }
 .hero .eyebrow { letter-spacing: .15em; font-size: .8rem; opacity: .85; }
 .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); }
+
+.hero {
+  background:
+    linear-gradient(135deg, rgba(12, 74, 69, .92), rgba(27, 107, 99, .82)),
+    url('../img/hero.jpg') center / cover no-repeat;
+  color: #fff;
+  padding: 6rem 0;
+}
+
+.highlights { margin-top: -2.5rem; position: relative; z-index: 2; }
+.info-card {
+  display: flex; gap: 1rem; align-items: center;
+  background: #fff; border-radius: 14px; padding: 1.25rem;
+  box-shadow: 0 8px 24px rgba(12, 74, 69, .1);
+}
+.info-card i { font-size: 1.8rem; color: var(--sit-primary); }
+.info-card h3 { font-size: 1.15rem; margin: 0; }
+.info-card p { margin: 0; font-size: .9rem; color: #5b6b68; }
+
+.section-title { text-align: center; margin-bottom: 2rem; color: var(--sit-dark); }
+.card { border: 0; border-radius: 14px; box-shadow: 0 4px 16px rgba(12, 74, 69, .07); }
+.program-card:hover { transform: translateY(-3px); transition: transform .2s; }
+.badge-level { background: var(--sit-soft); color: var(--sit-dark); font-weight: 600; }
+
+.process-section { background: #fff; }
+.steps { list-style: none; counter-reset: step; padding: 0; margin: 0; }
+.steps li { counter-increment: step; position: relative; padding: .5rem 0 .9rem 3.2rem; }
+.steps li::before {
+  content: counter(step);
+  position: absolute; left: 0; top: 0;
+  width: 2.3rem; height: 2.3rem; border-radius: 50%;
+  background: var(--sit-primary); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-weight: 700;
+}
+
+.quote { text-align: center; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.6rem; font-style: italic; color: var(--sit-primary); }
+.contact-section { background: var(--sit-dark); color: #fff; }
+.contact-section .section-title { color: #fff; }

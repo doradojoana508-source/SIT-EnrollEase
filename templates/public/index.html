@@ -2,20 +2,134 @@
 {% block title %}Home | SIT-EnrollEase{% endblock %}
 
 {% block content %}
+
+<!-- HERO -->
 <section class="hero">
   <div class="container">
     <p class="eyebrow">WELCOME TO</p>
     <h1>SIT-EnrollEase</h1>
-    <p class="lead">Your journey in theological education starts here.</p>
+    <p class="lead col-lg-6 px-0">
+      Your journey in theological education starts here. Enroll online, track your
+      application and stay connected with the school.
+    </p>
+    <div class="d-flex flex-wrap gap-2 mt-4">
+      <button class="btn btn-light px-4" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="register">Get Started</button>
+      <a href="#process" class="btn btn-outline-light px-4">Learn More</a>
+    </div>
   </div>
 </section>
 
-<section class="container py-5" id="programs">
-  <h2>Our Programs</h2>
-  <ul>
-    {% for p in programs %}
-    <li>{{ p.code }}: {{ p.name }} ({{ p.total_units }} units)</li>
-    {% endfor %}
-  </ul>
+<!-- HIGHLIGHTS -->
+<section class="container highlights">
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="info-card"><i class="bi bi-book"></i>
+        <div><h3>Our Programs</h3><p>Certificate, Diploma, Bachelor, Master and M.Div.</p></div></div>
+    </div>
+    <div class="col-md-4">
+      <div class="info-card"><i class="bi bi-clipboard-check"></i>
+        <div><h3>Enrollment Process</h3><p>Simple, guided and transparent.</p></div></div>
+    </div>
+    <div class="col-md-4">
+      <div class="info-card"><i class="bi bi-compass"></i>
+        <div><h3>Our Mission</h3><p>Equipping servant leaders for God's kingdom.</p></div></div>
+    </div>
+  </div>
 </section>
+
+<!-- PROGRAMS -->
+<section class="container py-5" id="programs">
+  <h2 class="section-title">Programs Offered</h2>
+  <div class="row g-4">
+    {% for p in programs %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card program-card h-100">
+        <div class="card-body">
+          <span class="badge badge-level">{{ p.level }}</span>
+          <h3 class="h5 mt-2">{{ p.name }}</h3>
+          <p class="text-muted small mb-2">{{ p.code }} &middot; {{ p.total_units }} units</p>
+          {% if p.prerequisites %}
+          <p class="small mb-0"><strong>Prerequisite:</strong> {{ p.prerequisites }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ENROLLMENT PROCESS -->
+<section class="process-section py-5" id="process">
+  <div class="container">
+    <h2 class="section-title">Enrollment Process</h2>
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <ol class="steps">
+          <li><strong>Create an account</strong> and verify your email address.</li>
+          <li><strong>Fill out the application form</strong> and choose your program.</li>
+          <li><strong>Upload your requirements</strong> for review by the registrar.</li>
+          <li><strong>Follow your schedule</strong> for the exam, interview and medical.</li>
+          <li><strong>Submit your original documents</strong> to the school for evaluation and payment of fees.</li>
+          <li><strong>Receive your student number</strong> and your institutional email account.</li>
+        </ol>
+      </div>
+      <div class="col-lg-5">
+        <div class="card h-100">
+          <div class="card-body">
+            <h3 class="h5">Requirements for New Students</h3>
+            <ul class="mb-0">
+              {% for d in documents %}<li>{{ d.name }}</li>{% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="container py-5" id="about">
+  <h2 class="section-title">About SIT</h2>
+  <p class="quote">&ldquo;Faithful in living, faithful in teaching&rdquo;</p>
+  <p class="text-center mx-auto col-lg-8">
+    SIMONS Institute of Theology is the theological training arm of New Testament Baptist Church.
+    It is tasked to train church leaders and workers for the work of ministry, and seeks to produce
+    pastors and missionaries for local and international ministries.
+  </p>
+  <div class="row g-4 mt-2">
+    <div class="col-md-6">
+      <div class="card h-100"><div class="card-body">
+        <h3 class="h5">Vision</h3>
+        <p class="mb-0">SIMONS Institute of Theology shall be a leading theological institute in modeling Christ's life and teaching.</p>
+      </div></div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100"><div class="card-body">
+        <h3 class="h5">Mission</h3>
+        <p class="mb-0">SIMONS Institute of Theology shall achieve its vision through Christian life practical training, in-depth study of Christian doctrines, and constant Christian discipline.</p>
+      </div></div>
+    </div>
+    <div class="col-12">
+      <div class="card"><div class="card-body">
+        <h3 class="h5">Core Values</h3>
+        <ul class="mb-0">
+          <li><strong>Deeds</strong>: Life that is steered by the Spirit of Christ (Gal. 5:22-26).</li>
+          <li><strong>Doctrine</strong>: Life that is sanctified by the truth of Christ (Jn. 17:17).</li>
+          <li><strong>Discipline</strong>: Life that is surrendered in obedience to Christ (Lk. 9:23).</li>
+        </ul>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact-section py-5" id="contact">
+  <div class="container text-center">
+    <h2 class="section-title">Contact Us</h2>
+    <p class="mb-1"><i class="bi bi-geo-alt"></i> {{ school.school_address }}</p>
+    <p class="mb-1"><i class="bi bi-envelope"></i> {{ school.school_email }}</p>
+    <p class="mb-0"><i class="bi bi-telephone"></i> {{ school.school_phone }}</p>
+  </div>
+</section>
+
 {% endblock %}
