@@ -60,11 +60,11 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <div class="mb-3">
-                  <label for="login-email" class="visually-hidden">Email address</label>
-                  <input type="email" class="form-control auth-input" id="login-email" name="email"
-                        value="{{ form.get('email', '') }}"
-                         placeholder="Email address" required maxlength="120" autocomplete="username">
-                  <div class="invalid-feedback">Enter a valid email address.</div>
+                  <label for="login-id" class="visually-hidden">Email or Student ID</label>
+                  <input type="text" class="form-control auth-input" id="login-id" name="identifier"
+                         value="{{ form.get('identifier', '') }}"
+                         placeholder="Email or Student ID" required maxlength="120" autocomplete="username">
+                  <div class="invalid-feedback">Enter your email or Student ID.</div>
                 </div>
 
                 <div class="mb-4">

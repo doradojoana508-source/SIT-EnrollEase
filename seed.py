@@ -1,5 +1,6 @@
 from models.base import BaseModel
 from models.user import User
+from config import ADMIN_EMAIL, ADMIN_PASSWORD
 
 run = BaseModel.run
 
@@ -41,22 +42,11 @@ DOCUMENT_TYPES = [
 SETTINGS = {
     'application_open': '2026-10-01',
     'application_close': '2026-12-15',
-    'institutional_domain': 'sit.edu.ph',
     'school_name': 'Simons Institute of Theology',
     'school_address': '7-108 T. Valdellon St., Paete, Laguna 4016',
     'school_email': 'ntbcpaetefounded1957@yahoo.com',
     'school_phone': '049-557-2464',
 }
-
-# (first_name, last_name, email, role)  -- dummy lang; HUWAG gumamit ng totoong pangalan
-STAFF = [
-    ('System', 'Admin', 'admin@sit.edu.ph', 'admin'),
-    ('Test', 'Registrar', 'registrar@sit.edu.ph', 'registrar'),
-    ('Test', 'Finance', 'finance@sit.edu.ph', 'finance'),
-    ('Test', 'Faculty', 'faculty@sit.edu.ph', 'faculty'),
-]
-DEV_PASSWORD = 'Password123'          # pang-development lang; papalitan bago i-deploy
-
 
 def seed_programs():
     for p in PROGRAMS:
@@ -78,23 +68,23 @@ def seed_term_and_settings():
         run("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES (%s, %s)", (key, value))
 
 
-def seed_staff():
-    for first, last, email, role in STAFF:
-        if User.find_by_email(email) is None:
-            user = User(first, last, email, role)
-            user.set_password(DEV_PASSWORD)
-            user.save()
-            user.is_verified = 1
-            user.save()
+def seed_admin():
+    """Admin lang ang nasa backend. Ang registrar, finance at faculty ay gagawin ng Admin sa system."""
+    if User.find_by_email(ADMIN_EMAIL) is None:
+        user = User('System', 'Administrator', ADMIN_EMAIL, 'admin')
+        user.set_password(ADMIN_PASSWORD)
+        user.save()
+        user.is_verified = 1
+        user.save()
 
 
 if __name__ == '__main__':
     seed_programs()
     seed_documents()
     seed_term_and_settings()
-    seed_staff()
+    seed_admin()
     print('Seed complete.')
     print('Programs:', run('SELECT COUNT(*) AS n FROM programs', fetch='one')['n'])
     print('Document types:', run('SELECT COUNT(*) AS n FROM document_types', fetch='one')['n'])
     print('Program-document links:', run('SELECT COUNT(*) AS n FROM program_documents', fetch='one')['n'])
-    print('Staff users:', run('SELECT COUNT(*) AS n FROM users', fetch='one')['n'])
+    print('Users:', run('SELECT COUNT(*) AS n FROM users', fetch='one')['n'])

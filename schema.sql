@@ -4,6 +4,7 @@
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   email VARCHAR(120) NOT NULL UNIQUE,
+  username VARCHAR(30) NULL UNIQUE
   password_hash VARCHAR(255) NOT NULL,
   role ENUM('admin','registrar','finance','faculty','student','applicant') NOT NULL DEFAULT 'applicant',
   first_name VARCHAR(50) NOT NULL,
@@ -12,8 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   photo VARCHAR(255) NULL,
   is_verified TINYINT(1) NOT NULL DEFAULT 0,
   is_active TINYINT(1) NOT NULL DEFAULT 1,
-  institutional_email VARCHAR(120) NULL UNIQUE,
-  institutional_active TINYINT(1) NOT NULL DEFAULT 0,
+  is_activated TINYINT(1) NOT NULL DEFAULT 1,
   failed_attempts INT NOT NULL DEFAULT 0,
   locked_until DATETIME NULL,
   session_version INT NOT NULL DEFAULT 0,

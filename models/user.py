@@ -1,6 +1,8 @@
+from datetime import datetime, timedelta
+from flask import current_app
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from werkzeug.security import generate_password_hash, check_password_hash
 from models.base import BaseModel
-from datetime import datetime, timedelta
 
 
 class User(BaseModel):
@@ -14,12 +16,12 @@ class User(BaseModel):
         self.middle_name = middle_name or None
         self.last_name = last_name
         self.email = email.strip().lower()
+        self.username = None                 # Student ID para sa mga student
         self.role = role
         self.photo = None
-        self.is_verified = 0
-        self.is_active = 1
-        self.institutional_email = None
-        self.institutional_active = 0
+        self.is_verified = 0                 # na-verify na ba ang email
+        self.is_active = 1                   # 0 = na-deactivate ng Admin
+        self.is_activated = 1                # 0 = hindi pa gumagamit ng activation link
         self.failed_attempts = 0
         self.locked_until = None
         self.session_version = 0
@@ -44,42 +46,7 @@ class User(BaseModel):
     def check_password(self, raw_password):
         return check_password_hash(self.__password_hash, raw_password)
 
-    # ---- database ----
-    def save(self):
-        """INSERT kung bago, UPDATE kung mayroon nang id."""
-        if self.id is None:
-            self.id = self.run(
-                "INSERT INTO users (email, password_hash, role, first_name, middle_name, last_name) "
-                "VALUES (%s, %s, %s, %s, %s, %s)",
-                (self.email, self.__password_hash, self.role,
-                 self.first_name, self.middle_name, self.last_name))
-        else:
-            self.run(
-                "UPDATE users SET email=%s, password_hash=%s, role=%s, first_name=%s, middle_name=%s, "
-                "last_name=%s, photo=%s, is_verified=%s, is_active=%s, institutional_email=%s, "
-                "institutional_active=%s, failed_attempts=%s, locked_until=%s, session_version=%s "
-                "WHERE id=%s",
-                (self.email, self.__password_hash, self.role, self.first_name, self.middle_name,
-                 self.last_name, self.photo, self.is_verified, self.is_active,
-                 self.institutional_email, self.institutional_active, self.failed_attempts,
-                 self.locked_until, self.session_version, self.id))
-        return self
-
-    @classmethod
-    def from_row(cls, row):
-        user = cls(row['first_name'], row['last_name'], row['email'], row['role'],
-                   row['middle_name'], row['id'], row['password_hash'])
-        user.photo = row['photo']
-        user.is_verified = row['is_verified']
-        user.is_active = row['is_active']
-        user.institutional_email = row['institutional_email']
-        user.institutional_active = row['institutional_active']
-        user.failed_attempts = row['failed_attempts']
-        user.locked_until = row['locked_until']
-        user.session_version = row['session_version']
-        return user
-    
-        # ---- lockout at login record ----
+    # ---- lockout at login record ----
     def is_locked(self):
         return self.locked_until is not None and self.locked_until > datetime.now()
 
@@ -98,6 +65,59 @@ class User(BaseModel):
         self.run("UPDATE users SET failed_attempts=0, locked_until=NULL, last_login=NOW() WHERE id=%s",
                  (self.id,))
 
+    def activate(self):
+        self.is_activated = 1
+        self.run("UPDATE users SET is_activated=1 WHERE id=%s", (self.id,))
+
+    # ---- token para sa activation at verification link ----
+    def get_token(self, purpose):
+        """Pirmadong token (gamit ang SECRET_KEY). Hindi puwedeng hulaan o gawin ng iba."""
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        return serializer.dumps({'id': self.id}, salt=purpose)
+
+    @classmethod
+    def from_token(cls, token, purpose, max_age=86400):
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        try:
+            data = serializer.loads(token, salt=purpose, max_age=max_age)
+        except (BadSignature, SignatureExpired):
+            return None
+        return cls.find(data['id'])
+
+    # ---- database ----
+    def save(self):
+        """INSERT kung bago, UPDATE kung mayroon nang id."""
+        if self.id is None:
+            self.id = self.run(
+                "INSERT INTO users (email, username, password_hash, role, first_name, middle_name, "
+                "last_name, is_activated) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                (self.email, self.username, self.__password_hash, self.role, self.first_name,
+                 self.middle_name, self.last_name, self.is_activated))
+        else:
+            self.run(
+                "UPDATE users SET email=%s, username=%s, password_hash=%s, role=%s, first_name=%s, "
+                "middle_name=%s, last_name=%s, photo=%s, is_verified=%s, is_active=%s, is_activated=%s, "
+                "failed_attempts=%s, locked_until=%s, session_version=%s WHERE id=%s",
+                (self.email, self.username, self.__password_hash, self.role, self.first_name,
+                 self.middle_name, self.last_name, self.photo, self.is_verified, self.is_active,
+                 self.is_activated, self.failed_attempts, self.locked_until, self.session_version,
+                 self.id))
+        return self
+
+    @classmethod
+    def from_row(cls, row):
+        user = cls(row['first_name'], row['last_name'], row['email'], row['role'],
+                   row['middle_name'], row['id'], row['password_hash'])
+        user.username = row['username']
+        user.photo = row['photo']
+        user.is_verified = row['is_verified']
+        user.is_active = row['is_active']
+        user.is_activated = row['is_activated']
+        user.failed_attempts = row['failed_attempts']
+        user.locked_until = row['locked_until']
+        user.session_version = row['session_version']
+        return user
+
     @classmethod
     def find(cls, user_id):
         row = cls.find_by_id(user_id)
@@ -106,4 +126,12 @@ class User(BaseModel):
     @classmethod
     def find_by_email(cls, email):
         row = cls.run("SELECT * FROM users WHERE email = %s", (email.strip().lower(),), fetch='one')
+        return cls.from_row(row) if row else None
+
+    @classmethod
+    def find_by_login(cls, identifier):
+        """Hinahanap gamit ang email (applicant at staff) O ang Student ID (student)."""
+        identifier = identifier.strip().lower()
+        row = cls.run("SELECT * FROM users WHERE email = %s OR username = %s",
+                      (identifier, identifier), fetch='one')
         return cls.from_row(row) if row else None

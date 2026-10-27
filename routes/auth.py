@@ -8,6 +8,7 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 NAME_RE = re.compile(r"^[A-Za-zÀ-ÿ .'\-]+$")
 PASSWORD_RE = re.compile(r'^(?=.*[A-Za-z])(?=.*\d).{8,}$')
+ACTIVATION_DAYS = 7
 
 
 def show_home(auth_open):
@@ -21,6 +22,7 @@ def clean_name(value):
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
+    """Pampublikong Register: applicant lang ang nagagawa rito."""
     if request.method == 'GET':
         return redirect(url_for('public.index', auth='register'))
 
@@ -68,9 +70,9 @@ def login():
     if request.method == 'GET':
         return redirect(url_for('public.index', auth='login'))
 
-    email = request.form.get('email', '').strip().lower()
+    identifier = request.form.get('identifier', '').strip().lower()   # email o Student ID
     password = request.form.get('password', '')
-    user = User.find_by_email(email)
+    user = User.find_by_login(identifier)
 
     if user and user.is_locked():
         flash('Too many failed attempts. Please try again in 15 minutes.', 'danger')
@@ -79,11 +81,15 @@ def login():
     if user is None or not user.check_password(password):
         if user:
             user.register_failed_login()
-        flash('Incorrect email or password.', 'danger')   # iisang mensahe, hindi sinasabi kung alin ang mali
+        flash('Incorrect login details.', 'danger')      # iisang mensahe, hindi sinasabi kung alin ang mali
         return show_home('login')
 
+    # Tama na ang password: ngayon lang sasabihin kung hindi pa activated o naka-deactivate
+    if not user.is_activated:
+        flash('Your account is not yet activated. Please use the activation link sent to you by the school.', 'warning')
+        return show_home('login')
     if not user.is_active:
-        flash('This account has been deactivated. Please contact the registrar.', 'danger')
+        flash('This account has been deactivated. Please contact the school.', 'danger')
         return show_home('login')
 
     user.record_login()
@@ -91,7 +97,21 @@ def login():
     session['user_id'] = user.id
     session['session_version'] = user.session_version
     session.permanent = True                         # may timeout ayon sa app.py
-    return redirect(url_for('dashboard.home'))
+    return redirect(url_for('dashboard.home'))       # papalitan ng redirect ayon sa role sa Hakbang 8
+
+
+@auth_bp.route('/activate/<token>')
+def activate(token):
+    """Ang activation link na ipinapadala ng school. May bisa ng 7 araw."""
+    user = User.from_token(token, 'activate', max_age=ACTIVATION_DAYS * 24 * 3600)
+    if user is None:
+        flash('This activation link is invalid or has expired. Please contact the school.', 'danger')
+    elif user.is_activated:
+        flash('This account is already activated. You can log in.', 'info')
+    else:
+        user.activate()
+        flash('Your account is activated. You can now log in.', 'success')
+    return redirect(url_for('public.index', auth='login'))
 
 
 @auth_bp.route('/logout', methods=['POST'])         # POST, para hindi ma-logout ng isang link lang

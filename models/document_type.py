@@ -7,3 +7,4 @@ class DocumentType(BaseModel):
     @classmethod
     def active(cls):
         return cls.run("SELECT * FROM document_types WHERE is_active = 1 ORDER BY id", fetch='all')
+    

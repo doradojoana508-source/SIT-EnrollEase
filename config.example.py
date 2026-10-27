@@ -10,3 +10,6 @@ db_config = {
 
 MAIL_USERNAME = ''     # Gmail address
 MAIL_PASSWORD = ''     # Gmail App Password (16 letters, no spaces)
+
+ADMIN_EMAIL = ''
+ADMIN_PASSWORD = ''
