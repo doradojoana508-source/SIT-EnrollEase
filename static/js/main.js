@@ -40,6 +40,14 @@ document.addEventListener('DOMContentLoaded', () => {
       register: document.getElementById('tab-register'),
     };
 
+        // Kusang bumukas kapag may error, o galing sa redirect na may ?auth=login
+    const autoOpen = modalEl.dataset.authOpen;
+    if (autoOpen && tabs[autoOpen]) {
+      bootstrap.Tab.getOrCreateInstance(tabs[autoOpen]).show();
+      bootstrap.Modal.getOrCreateInstance(modalEl).show();
+      if (window.location.search) history.replaceState({}, '', window.location.pathname);
+    }
+
     // Buksan sa tamang tab ayon sa pinindot na button (data-auth-tab)
     modalEl.addEventListener('show.bs.modal', (event) => {
       const wanted = event.relatedTarget ? event.relatedTarget.dataset.authTab : null;

@@ -1,5 +1,6 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from models.base import BaseModel
+from datetime import datetime, timedelta
 
 
 class User(BaseModel):
@@ -77,6 +78,25 @@ class User(BaseModel):
         user.locked_until = row['locked_until']
         user.session_version = row['session_version']
         return user
+    
+        # ---- lockout at login record ----
+    def is_locked(self):
+        return self.locked_until is not None and self.locked_until > datetime.now()
+
+    def register_failed_login(self, max_attempts=5, minutes=15):
+        """Bawat maling password ay binibilang. Sa ika-5, naka-lock ang account nang 15 minuto."""
+        self.failed_attempts += 1
+        if self.failed_attempts >= max_attempts:
+            self.locked_until = datetime.now() + timedelta(minutes=minutes)
+            self.failed_attempts = 0
+        self.run("UPDATE users SET failed_attempts=%s, locked_until=%s WHERE id=%s",
+                 (self.failed_attempts, self.locked_until, self.id))
+
+    def record_login(self):
+        self.failed_attempts = 0
+        self.locked_until = None
+        self.run("UPDATE users SET failed_attempts=0, locked_until=NULL, last_login=NOW() WHERE id=%s",
+                 (self.id,))
 
     @classmethod
     def find(cls, user_id):

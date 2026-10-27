@@ -13,7 +13,11 @@
       application and stay connected with the school.
     </p>
     <div class="d-flex flex-wrap gap-2 mt-4">
+      {% if current_user %}
+      <a href="{{ url_for('dashboard.home') }}" class="btn btn-light px-4">Go to Dashboard</a>
+      {% else %}
       <button class="btn btn-light px-4" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="register">Get Started</button>
+      {% endif %}
       <a href="#process" class="btn btn-outline-light px-4">Learn More</a>
     </div>
   </div>

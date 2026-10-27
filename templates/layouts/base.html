@@ -12,7 +12,7 @@
 </head>
 <body>
   {% block navbar %}{% include 'partials/_navbar.html' %}{% endblock %}
-  {% include 'partials/_flash.html' %}
+  {% if not auth_open %}{% include 'partials/_flash.html' %}{% endif %}
 
   {% block content %}{% endblock %}
 
@@ -22,7 +22,7 @@
   </footer>
   {% endblock %}
 
-  {% block modals %}{% include 'partials/_auth_modal.html' %}{% endblock %}
+  {% block modals %}{% if not current_user %}{% include 'partials/_auth_modal.html' %}{% endif %}{% endblock %}
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   {% block scripts %}{% endblock %}

@@ -121,3 +121,6 @@ h1, h2, h3, .brand-serif { font-family: 'Cormorant Garamond', Georgia, serif; fo
   .auth-content { border-radius: 0; }
   .auth-form-panel { padding: 1.5rem; }
 }
+
+.was-validated .auth-input:valid { border-color: var(--sit-soft); }
+.was-validated .auth-input:valid:focus { border-color: var(--sit-primary); }
