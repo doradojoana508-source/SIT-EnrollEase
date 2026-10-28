@@ -1,7 +1,9 @@
 import re
+import time
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
 from models.user import User
 from routes.public import home_context
+from mailer import send_email
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -9,6 +11,8 @@ EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 NAME_RE = re.compile(r"^[A-Za-zÀ-ÿ .'\-]+$")
 PASSWORD_RE = re.compile(r'^(?=.*[A-Za-z])(?=.*\d).{8,}$')
 ACTIVATION_DAYS = 7
+VERIFY_HOURS = 24
+RESET_HOURS = 1
 
 
 def show_home(auth_open):
@@ -18,6 +22,11 @@ def show_home(auth_open):
 
 def clean_name(value):
     return ' '.join(value.split())            # inaalis ang sobrang espasyo
+
+
+def send_verification(user):
+    link = url_for('auth.verify', token=user.get_token('verify'), _external=True)
+    return send_email('Verify your SIT-EnrollEase account', user.email, 'verify', user=user, link=link)
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
@@ -61,18 +70,36 @@ def register():
     user.set_password(password)               # naka-hash
     user.save()
 
-    flash('Account created! You can now log in.', 'success')
+    if send_verification(user):
+        flash(f'Account created! We sent a verification link to {email}. Please verify before logging in.', 'success')
+    else:
+        flash('Account created, but we could not send the verification email. '
+              'Try logging in and we will send a new link.', 'warning')
+    return redirect(url_for('public.index', auth='login'))
+
+
+@auth_bp.route('/verify/<token>')
+def verify(token):
+    user = User.from_token(token, 'verify', max_age=VERIFY_HOURS * 3600)
+    if user is None:
+        flash('This verification link is invalid or has expired. Log in to receive a new one.', 'danger')
+    else:
+        if not user.is_verified:
+            user.mark_verified()
+        flash('Your email is verified. You can now log in.', 'success')
     return redirect(url_for('public.index', auth='login'))
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    """Login ng APPLICANT lang (email). Student at staff ay may sariling portal."""
     if request.method == 'GET':
         return redirect(url_for('public.index', auth='login'))
 
-    identifier = request.form.get('identifier', '').strip().lower()   # email o Student ID
+    email = request.form.get('email', '').strip().lower()
     password = request.form.get('password', '')
-    user = User.find_by_login(identifier)
+    remember = bool(request.form.get('remember'))
+    user = User.find_by_email(email) if email else None
 
     if user and user.is_locked():
         flash('Too many failed attempts. Please try again in 15 minutes.', 'danger')
@@ -81,23 +108,28 @@ def login():
     if user is None or not user.check_password(password):
         if user:
             user.register_failed_login()
-        flash('Incorrect login details.', 'danger')      # iisang mensahe, hindi sinasabi kung alin ang mali
+        flash('Incorrect login details.', 'danger')
         return show_home('login')
 
-    # Tama na ang password: ngayon lang sasabihin kung hindi pa activated o naka-deactivate
-    if not user.is_activated:
-        flash('Your account is not yet activated. Please use the activation link sent to you by the school.', 'warning')
+    if user.role != 'applicant':
+        flash('Students and school staff sign in through their own portal, not through EnrollEase.', 'info')
         return show_home('login')
     if not user.is_active:
         flash('This account has been deactivated. Please contact the school.', 'danger')
         return show_home('login')
+    if not user.is_verified:
+        send_verification(user)
+        flash('Please verify your email first. We just sent you a new verification link.', 'warning')
+        return show_home('login')
 
     user.record_login()
-    session.clear()                                  # bagong session, iwas session fixation
+    session.clear()
     session['user_id'] = user.id
     session['session_version'] = user.session_version
-    session.permanent = True                         # may timeout ayon sa app.py
-    return redirect(url_for('dashboard.home'))       # papalitan ng redirect ayon sa role sa Hakbang 8
+    session['remember'] = remember
+    session['last_seen'] = int(time.time())
+    session.permanent = remember
+    return redirect(url_for('dashboard.home'))
 
 
 @auth_bp.route('/activate/<token>')
@@ -112,6 +144,50 @@ def activate(token):
         user.activate()
         flash('Your account is activated. You can now log in.', 'success')
     return redirect(url_for('public.index', auth='login'))
+
+
+@auth_bp.route('/forgot', methods=['GET', 'POST'])
+def forgot():
+    if request.method == 'GET':
+        return redirect(url_for('public.index', auth='forgot'))
+
+    email = request.form.get('email', '').strip().lower()
+    user = User.find_by_email(email) if email else None
+    if user and user.role == 'applicant' and user.is_active:
+        link = url_for('auth.reset', token=user.get_reset_token(), _external=True)
+        send_email('Reset your SIT-EnrollEase password', user.email, 'reset', user=user, link=link)
+    flash('If that account exists, a password reset link has been sent to its email.', 'info')
+    return redirect(url_for('public.index', auth='login'))
+
+@auth_bp.route('/reset/<token>', methods=['GET', 'POST'])
+def reset(token):
+    user = User.from_reset_token(token, max_age=RESET_HOURS * 3600)
+    if user is None:
+        flash('This reset link is invalid or has expired. Please request a new one.', 'danger')
+        return redirect(url_for('public.index', auth='forgot'))
+
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        confirm = request.form.get('confirm', '')
+        errors = []
+        if not PASSWORD_RE.match(password):
+            errors.append('Password needs at least 8 characters with a letter and a number.')
+        if password != confirm:
+            errors.append('Passwords do not match.')
+        if errors:
+            for message in errors:
+                flash(message, 'danger')
+            return render_template('auth/reset.html', token=token)
+
+        user.set_password(password)
+        user.failed_attempts = 0
+        user.locked_until = None
+        user.session_version += 1                    # ma-logout ang lahat ng device
+        user.save()
+        flash('Your password has been changed. Please log in.', 'success')
+        return redirect(url_for('public.index', auth='login'))
+
+    return render_template('auth/reset.html', token=token)
 
 
 @auth_bp.route('/logout', methods=['POST'])         # POST, para hindi ma-logout ng isang link lang

@@ -1,0 +1,6 @@
+Hello {{ user.first_name }},
+
+We received a request to reset your password. Open this link (valid for 1 hour, one use only):
+{{ link }}
+
+If you did not ask for this, ignore this message. Your password will not change.

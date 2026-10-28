@@ -1,0 +1,6 @@
+Hello {{ user.first_name }},
+
+Thank you for registering with SIT-EnrollEase. Verify your email by opening this link (valid for 24 hours):
+{{ link }}
+
+If you did not register, ignore this message.

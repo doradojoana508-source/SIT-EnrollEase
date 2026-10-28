@@ -66,9 +66,15 @@ class User(BaseModel):
                  (self.id,))
 
     def activate(self):
+        """Ang activation link ay nagpapatunay din na sa kanya ang email."""
         self.is_activated = 1
-        self.run("UPDATE users SET is_activated=1 WHERE id=%s", (self.id,))
-
+        self.is_verified = 1
+        self.run("UPDATE users SET is_activated=1, is_verified=1 WHERE id=%s", (self.id,))
+    
+    def mark_verified(self):
+        self.is_verified = 1
+        self.run("UPDATE users SET is_verified=1 WHERE id=%s", (self.id,))
+    
     # ---- token para sa activation at verification link ----
     def get_token(self, purpose):
         """Pirmadong token (gamit ang SECRET_KEY). Hindi puwedeng hulaan o gawin ng iba."""
@@ -83,6 +89,23 @@ class User(BaseModel):
         except (BadSignature, SignatureExpired):
             return None
         return cls.find(data['id'])
+    
+        # ---- token ng reset: namamatay kapag napalitan na ang password ----
+    def get_reset_token(self):
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        return serializer.dumps({'id': self.id, 'fp': self.__password_hash[-10:]}, salt='reset')
+
+    @classmethod
+    def from_reset_token(cls, token, max_age=3600):
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        try:
+            data = serializer.loads(token, salt='reset', max_age=max_age)
+        except (BadSignature, SignatureExpired):
+            return None
+        user = cls.find(data['id'])
+        if user is None or user.__password_hash[-10:] != data['fp']:
+            return None                       # nagamit na ang link, nagbago na ang password
+        return user
 
     # ---- database ----
     def save(self):

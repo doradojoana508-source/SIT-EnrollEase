@@ -15,3 +15,7 @@ with app.app_context():
         user.save()
     print('Activation link (valid for 7 days):')
     print(f"http://127.0.0.1:5000/auth/activate/{user.get_token('activate')}")
+    from mailer import send_email
+    link = f"http://127.0.0.1:5000/auth/activate/{user.get_token('activate')}"
+    sent = send_email('Activate your SIT-EnrollEase account', user.email, 'activate', user=user, link=link)
+    print('Email sent:', sent)

@@ -1,0 +1,45 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Reset Password | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 520px">
+  <div class="card">
+    <div class="card-body p-4">
+      <h1 class="h2">Set a new password</h1>
+      <p class="text-muted">Choose a new password for your account.</p>
+
+      <form method="post" action="{{ url_for('auth.reset', token=token) }}" class="needs-validation" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="mb-3">
+          <label for="new-password" class="visually-hidden">New password</label>
+          <div class="password-field">
+            <input type="password" class="form-control auth-input" id="new-password" name="password"
+                   placeholder="New password" required minlength="8"
+                   pattern="(?=.*[A-Za-z])(?=.*\d).{8,}" autocomplete="new-password">
+            <button type="button" class="toggle-password" data-toggle-password="new-password" aria-label="Show or hide password">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+          <div class="form-text">At least 8 characters, with a letter and a number.</div>
+          <div class="invalid-feedback">Use at least 8 characters with a letter and a number.</div>
+        </div>
+
+        <div class="mb-4">
+          <label for="confirm-password" class="visually-hidden">Confirm password</label>
+          <div class="password-field">
+            <input type="password" class="form-control auth-input" id="confirm-password" name="confirm"
+                   placeholder="Confirm password" required data-match="new-password" autocomplete="new-password">
+            <button type="button" class="toggle-password" data-toggle-password="confirm-password" aria-label="Show or hide password">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+          <div class="invalid-feedback">Passwords do not match.</div>
+        </div>
+
+        <button type="submit" class="btn btn-sit auth-submit w-100">Change Password</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

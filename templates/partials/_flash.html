@@ -1,12 +1,16 @@
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-  <div class="container mt-3">
+{% set icons = {'success': 'bi-check-circle-fill', 'danger': 'bi-x-octagon-fill',
+                'warning': 'bi-exclamation-triangle-fill', 'info': 'bi-info-circle-fill'} %}
+{% set times = {'success': 5000, 'info': 5000, 'warning': 7000, 'danger': 8000} %}
+<div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="true">
+  {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages %}
-    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-      {{ message }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+      {% set cat = category if category in icons else 'info' %}
+      <div class="sit-toast sit-toast-{{ cat }}" role="alert" style="--toast-ms: {{ times[cat] }}ms">
+        <i class="bi {{ icons[cat] }} sit-toast-icon"></i>
+        <div class="sit-toast-body">{{ message }}</div>
+        <button type="button" class="sit-toast-close" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        <span class="sit-toast-bar"></span>
+      </div>
     {% endfor %}
-  </div>
-  {% endif %}
-{% endwith %}
+  {% endwith %}
+</div>

@@ -12,7 +12,7 @@
 </head>
 <body>
   {% block navbar %}{% include 'partials/_navbar.html' %}{% endblock %}
-  {% if not auth_open %}{% include 'partials/_flash.html' %}{% endif %}
+  {% include 'partials/_flash.html' %}
 
   {% block content %}{% endblock %}
 
