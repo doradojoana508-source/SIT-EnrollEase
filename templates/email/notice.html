@@ -1,0 +1,21 @@
+{% extends 'email/base_email.html' %}
+{% block body %}
+<p>Hello {{ user.first_name }},</p>
+<h2 style="margin:0 0 8px;font-size:18px;color:#1b6b63">{{ heading }}</h2>
+<p>{{ message }}</p>
+{% if details %}
+<table style="border-collapse:collapse;margin:8px 0 16px">
+  {% for label, value in details %}
+  <tr>
+    <td style="padding:4px 14px 4px 0;color:#5b6b68">{{ label }}</td>
+    <td style="padding:4px 0"><strong>{{ value }}</strong></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% if checklist %}
+<p style="margin-bottom:4px"><strong>Please bring:</strong></p>
+<ul style="margin-top:0">{% for item in checklist %}<li>{{ item }}</li>{% endfor %}</ul>
+{% endif %}
+<p><a href="{{ link }}" style="background:#1b6b63;color:#ffffff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Open my dashboard</a></p>
+{% endblock %}

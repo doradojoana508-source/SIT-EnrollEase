@@ -96,3 +96,83 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   INDEX idx_audit_user (user_id),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS applications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL UNIQUE,
+  term_id INT NULL,
+  program_id INT NULL,
+  applicant_type VARCHAR(20) NOT NULL DEFAULT 'New',
+  status VARCHAR(30) NOT NULL DEFAULT 'Draft',
+  birthdate DATE NULL,
+  birthplace VARCHAR(120) NULL,
+  sex VARCHAR(10) NULL,
+  civil_status VARCHAR(20) NULL,
+  nationality VARCHAR(60) NULL,
+  mobile VARCHAR(20) NULL,
+  address VARCHAR(255) NULL,
+  guardian_name VARCHAR(120) NULL,
+  guardian_relationship VARCHAR(40) NULL,
+  guardian_mobile VARCHAR(20) NULL,
+  last_school VARCHAR(150) NULL,
+  education_level VARCHAR(60) NULL,
+  year_graduated SMALLINT NULL,
+  occupation VARCHAR(100) NULL,
+  employer VARCHAR(150) NULL,
+  church_name VARCHAR(150) NULL,
+  church_address VARCHAR(255) NULL,
+  pastor_name VARCHAR(120) NULL,
+  pastor_mobile VARCHAR(20) NULL,
+  is_baptized TINYINT(1) NULL,
+  ministry_experience TEXT NULL,
+  remarks TEXT NULL,
+  submitted_at DATETIME NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_app_status (status),
+  INDEX idx_app_program (program_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+ALTER TABLE applications ADD CONSTRAINT fk_app_program FOREIGN KEY (program_id) REFERENCES programs(id);
+
+CREATE TABLE IF NOT EXISTS application_documents (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  application_id INT NOT NULL,
+  document_type_id INT NOT NULL,
+  stored_name VARCHAR(80) NOT NULL,
+  original_name VARCHAR(150) NOT NULL,
+  mime_type VARCHAR(60) NOT NULL,
+  size_bytes INT NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'Uploaded',
+  remarks VARCHAR(255) NULL,
+  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_app_doc (application_id, document_type_id),
+  FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS interviews (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  application_id INT NOT NULL,
+  interviewer VARCHAR(40) NOT NULL,
+  scheduled_at DATETIME NOT NULL,
+  venue VARCHAR(150) NOT NULL,
+  notes VARCHAR(255) NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'Scheduled',
+  created_by INT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_interview_app (application_id),
+  FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  title VARCHAR(120) NOT NULL,
+  message VARCHAR(500) NOT NULL,
+  is_read TINYINT(1) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_notice_user (user_id, is_read),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;

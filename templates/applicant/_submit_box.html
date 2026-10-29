@@ -1,0 +1,17 @@
+{% if application.is_editable %}
+<div class="card h-100"><div class="card-body p-4">
+  <h2 class="h5">Submit your application</h2>
+  {% if problems %}
+    <p class="small mb-1">Before you can submit:</p>
+    <ul class="small text-muted">{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul>
+  {% else %}
+    <p class="text-success small"><i class="bi bi-check-circle-fill"></i> Everything is ready. After you submit,
+      the form is locked and the Registrar reviews your documents.</p>
+  {% endif %}
+  <form method="post" action="{{ url_for('applicant.submit') }}"
+        onsubmit="return window.confirm('Submit your application now? You cannot edit the form after submitting.')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-sit" {{ 'disabled' if problems }}>Submit application</button>
+  </form>
+</div></div>
+{% endif %}

@@ -1,0 +1,149 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Dashboard | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">Welcome, {{ current_user.first_name }}!</h1>
+<p class="text-muted">Track your application to Simons Institute of Theology.</p>
+
+{% for n in notices %}
+<div class="alert alert-success d-flex align-items-start gap-3 notice-card" role="status">
+  <i class="bi bi-bell-fill fs-5"></i>
+  <div class="flex-grow-1">
+    <strong>{{ n.title }}</strong>
+    <div class="small">{{ n.message }}</div>
+    <div class="small text-muted">{{ n.created_at.strftime('%b %d, %Y %I:%M %p') }}</div>
+  </div>
+  <form method="post" action="{{ url_for('applicant.notice_read', notice_id=n.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn-close" aria-label="Dismiss"></button>
+  </form>
+</div>
+{% endfor %}
+
+{% if not application %}
+  <div class="card"><div class="card-body p-4 text-center">
+    <i class="bi bi-journal-text display-5 text-sit"></i>
+    <h2 class="h4 mt-2">Start your application</h2>
+    <p class="text-muted">Fill in your details, upload the requirements, then submit.</p>
+    <a class="btn btn-sit" href="{{ url_for('applicant.application') }}">Start application</a>
+  </div></div>
+
+{% else %}
+  {% set status = application.status %}
+  {% set badge = {'Draft': 'secondary', 'Submitted': 'primary', 'Approved': 'success', 'Interview Scheduled': 'success',
+                  'For Enrollment': 'success', 'Enrolled': 'success', 'Rejected': 'danger', 'Withdrawn': 'secondary'} %}
+
+  {% if application.is_closed %}
+    <div class="alert alert-{{ 'danger' if status == 'Rejected' else 'secondary' }}">
+      <strong>Application {{ status|lower }}.</strong>
+      {% if application.remarks %}<div class="mt-1">{{ application.remarks }}</div>{% endif %}
+    </div>
+  {% else %}
+    <div class="card mb-3"><div class="card-body p-4">
+      {% set idx = application.step_index + (1 if status == 'Enrolled' else 0) %}
+      <ol class="tracker">
+        {% for label in steps %}
+          {% set state = 'done' if loop.index0 < idx else ('current' if loop.index0 == idx else '') %}
+          <li class="tracker-step {{ state }}">
+            <span class="tracker-dot">{% if state == 'done' %}<i class="bi bi-check-lg"></i>{% else %}{{ loop.index }}{% endif %}</span>
+            <span class="tracker-label">{{ label }}</span>
+          </li>
+        {% endfor %}
+      </ol>
+    </div></div>
+  {% endif %}
+
+  <div class="row g-3 mb-3">
+    <div class="col-lg-6">
+      <div class="card h-100"><div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h2 class="h5 mb-0">Application status</h2>
+          <span class="badge text-bg-{{ badge.get(status, 'secondary') }}">{{ status }}</span>
+        </div>
+        <p class="mb-1"><strong>Program:</strong> {{ program or 'Not chosen yet' }}</p>
+        {% if application.submitted_at %}
+          <p class="mb-1"><strong>Submitted:</strong> {{ application.submitted_at.strftime('%b %d, %Y %I:%M %p') }}</p>
+        {% endif %}
+        {% if status == 'Submitted' %}
+          <p class="text-muted small mt-2 mb-0">The Registrar is reviewing your application and documents. You will be notified here and by email.</p>
+        {% elif status == 'Approved' %}
+          <p class="text-muted small mt-2 mb-0">Your application is approved. Your interview schedule will be posted here soon.</p>
+        {% endif %}
+        {% if application.remarks and not application.is_closed %}
+          <div class="alert alert-info mt-3 mb-0 small"><strong>Note from the school:</strong> {{ application.remarks }}</div>
+        {% endif %}
+      </div></div>
+    </div>
+
+    <div class="col-lg-6">
+      {% if interview %}
+      <div class="card h-100 border-success"><div class="card-body p-4">
+        <h2 class="h5"><i class="bi bi-calendar-check text-success"></i> Your interview</h2>
+        <p class="mb-1"><strong>With:</strong> {{ interview.interviewer }}</p>
+        <p class="mb-1"><strong>Date:</strong> {{ interview.scheduled_at.strftime('%A, %B %d, %Y') }}</p>
+        <p class="mb-1"><strong>Time:</strong> {{ interview.scheduled_at.strftime('%I:%M %p').lstrip('0') }}</p>
+        <p class="mb-2"><strong>Venue:</strong> {{ interview.venue }}</p>
+        {% if interview.notes %}<p class="small text-muted">{{ interview.notes }}</p>{% endif %}
+        <p class="small fw-bold mb-1">Bring these on the day of your interview:</p>
+        <ul class="small mb-0">
+          {% for name in bring %}<li>{{ name }} <span class="text-muted">(original and photocopy)</span></li>{% endfor %}
+        </ul>
+      </div></div>
+
+      {% elif application.is_editable %}
+      {% set done, total = application.progress %}
+      <div class="card h-100"><div class="card-body p-4">
+        <h2 class="h5">Application form</h2>
+        <div class="progress mb-2" role="progressbar" aria-valuenow="{{ done }}" aria-valuemin="0" aria-valuemax="{{ total }}">
+          <div class="progress-bar bg-success" style="width: {{ (done * 100 / total)|round|int }}%"></div>
+        </div>
+        <p class="text-muted small">{{ done }} of {{ total }} required details filled in.</p>
+        {% if application.missing() %}
+          <ul class="small text-muted mb-3">
+            {% for label in application.missing()[:5] %}<li>{{ label }}</li>{% endfor %}
+            {% if application.missing()|length > 5 %}<li>and {{ application.missing()|length - 5 }} more</li>{% endif %}
+          </ul>
+        {% else %}
+          <p class="text-success small"><i class="bi bi-check-circle-fill"></i> Your form is complete.</p>
+        {% endif %}
+        <a href="{{ url_for('applicant.application') }}" class="btn btn-sit btn-sm">Continue application</a>
+      </div></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    {% if application.program_id %}
+    <div class="col-lg-6">
+      <div class="card h-100"><div class="card-body p-4">
+        <h2 class="h5">Documents</h2>
+        {% if doc_total %}
+          <div class="progress mb-2" role="progressbar" aria-valuenow="{{ doc_done }}" aria-valuemin="0" aria-valuemax="{{ doc_total }}">
+            <div class="progress-bar bg-success" style="width: {{ (doc_done * 100 / doc_total)|round|int }}%"></div>
+          </div>
+          <p class="text-muted small">{{ doc_done }} of {{ doc_total }} requirements uploaded.</p>
+        {% endif %}
+        {% if rejected %}
+          <div class="alert alert-warning small">
+            <strong>Please replace:</strong> {% for r in rejected %}{{ r.name }}{{ ', ' if not loop.last }}{% endfor %}
+          </div>
+        {% endif %}
+        <a href="{{ url_for('applicant.documents') }}" class="btn btn-outline-secondary btn-sm">
+          {{ 'Manage documents' if application.is_editable or rejected else 'View documents' }}</a>
+      </div></div>
+    </div>
+    {% endif %}
+    {% if application.is_editable %}
+    <div class="col-lg-6">{% include 'applicant/_submit_box.html' %}</div>
+    {% endif %}
+  </div>
+
+  {% if application.can_withdraw %}
+  <form method="post" action="{{ url_for('applicant.withdraw') }}"
+        onsubmit="return window.confirm('Withdraw your application? This cannot be undone.')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-link text-danger btn-sm p-0">Withdraw my application</button>
+  </form>
+  {% endif %}
+{% endif %}
+{% endblock %}

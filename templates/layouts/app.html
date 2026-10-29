@@ -30,15 +30,16 @@
             <span>SIT-EnrollEase</span>
           </div>
 
+          {% set exact = (menu + account_menu)|selectattr('2', 'equalto', request.endpoint)|list %}
           <nav class="sidebar-nav">
             {% for label, icon, endpoint in menu %}
-              <a href="{{ url_for(endpoint) }}" class="sidebar-link {{ 'active' if request.blueprint == endpoint.split('.')[0] }}">
+              <a href="{{ url_for(endpoint) }}" class="sidebar-link {{ 'active' if request.endpoint == endpoint or (not exact and request.blueprint == endpoint.split('.')[0]) }}">
                 <i class="bi {{ icon }}"></i> {{ label }}
               </a>
             {% endfor %}
             <div class="sidebar-section">Account</div>
             {% for label, icon, endpoint in account_menu %}
-              <a href="{{ url_for(endpoint) }}" class="sidebar-link {{ 'active' if request.blueprint == endpoint.split('.')[0] }}">
+              <a href="{{ url_for(endpoint) }}" class="sidebar-link {{ 'active' if request.endpoint == endpoint or (not exact and request.blueprint == endpoint.split('.')[0]) }}">
                 <i class="bi {{ icon }}"></i> {{ label }}
               </a>
             {% endfor %}

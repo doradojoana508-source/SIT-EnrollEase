@@ -1,0 +1,61 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Documents | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<div style="max-width: 860px">
+  <h1 class="h2 mb-1">Requirements</h1>
+  <p class="text-muted">
+    Upload clear PDF, JPG or PNG files, up to {{ max_mb }} MB each.
+    {% if application.is_editable %}You can replace or delete a file until you submit.
+    {% else %}Only files rejected by the Registrar can be replaced.{% endif %}
+  </p>
+
+  {% for r in rows %}
+  <div class="card mb-3"><div class="card-body p-3 p-md-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+      <div>
+        <h2 class="h6 mb-1">{{ r.name }}</h2>
+        {% if r.online %}
+          {% if application.missing() %}<span class="badge text-bg-secondary">Complete the application form</span>
+          {% else %}<span class="badge text-bg-success">Filled out online</span>{% endif %}
+        {% elif not r.upload %}<span class="badge text-bg-secondary">Not uploaded</span>
+        {% elif r.upload.status == 'Verified' %}<span class="badge text-bg-success">Verified</span>
+        {% elif r.upload.status == 'Rejected' %}<span class="badge text-bg-danger">Rejected</span>
+        {% else %}<span class="badge text-bg-primary">Uploaded &middot; waiting for review</span>{% endif %}
+      </div>
+      {% if r.upload %}
+      <div class="text-end small">
+        <a href="{{ url_for('applicant.document_file', type_id=r.id) }}" target="_blank" rel="noopener">
+          <i class="bi bi-eye"></i> View file</a>
+        <div class="text-muted">{{ r.upload.original_name }} &middot; {{ (r.upload.size_bytes / 1024)|round|int }} KB</div>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if r.upload and r.upload.remarks %}
+      <div class="alert alert-warning small mt-3 mb-0"><strong>Note from the Registrar:</strong> {{ r.upload.remarks }}</div>
+    {% endif %}
+
+    {% if r.can_change %}
+    <div class="d-flex flex-wrap gap-2 mt-3">
+      <form method="post" action="{{ url_for('applicant.document_upload', type_id=r.id) }}"
+            enctype="multipart/form-data" class="d-flex flex-wrap gap-2 flex-grow-1">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="file" name="file" class="form-control" style="max-width: 360px" accept=".pdf,.jpg,.jpeg,.png" required>
+        <button type="submit" class="btn btn-sit btn-sm">{{ 'Replace' if r.upload else 'Upload' }}</button>
+      </form>
+      {% if r.can_delete %}
+      <form method="post" action="{{ url_for('applicant.document_delete', type_id=r.id) }}"
+            onsubmit="return window.confirm('Delete this file?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div></div>
+  {% endfor %}
+
+  <div class="mt-4">{% include 'applicant/_submit_box.html' %}</div>
+</div>
+{% endblock %}

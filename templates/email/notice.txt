@@ -1,0 +1,11 @@
+Hello {{ user.first_name }},
+
+{{ heading }}
+{{ message }}
+{% for label, value in details %}
+{{ label }}: {{ value }}{% endfor %}
+{% if checklist %}
+Please bring:
+{% for item in checklist %}- {{ item }}
+{% endfor %}{% endif %}
+Open your dashboard: {{ link }}

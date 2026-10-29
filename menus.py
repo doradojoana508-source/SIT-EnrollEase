@@ -5,7 +5,10 @@ ROLE_LABELS = {
 
 # (label, bootstrap icon, endpoint). Dadagdagan natin ito sa bawat susunod na hakbang.
 MENUS = {
-    'applicant': [('Dashboard', 'bi-speedometer2', 'applicant.dashboard')],
+    'applicant': [
+        ('Dashboard', 'bi-speedometer2', 'applicant.dashboard'),
+        ('My Application', 'bi-journal-text', 'applicant.application'),
+        ('Documents', 'bi-folder2-open', 'applicant.documents'),],
     'student':   [('Dashboard', 'bi-speedometer2', 'portal.dashboard')],
     'admin': [
         ('Dashboard', 'bi-speedometer2', 'admin.dashboard'),
