@@ -7,7 +7,10 @@ ROLE_LABELS = {
 MENUS = {
     'applicant': [('Dashboard', 'bi-speedometer2', 'applicant.dashboard')],
     'student':   [('Dashboard', 'bi-speedometer2', 'portal.dashboard')],
-    'admin':     [('Dashboard', 'bi-speedometer2', 'admin.dashboard')],
+    'admin': [
+        ('Dashboard', 'bi-speedometer2', 'admin.dashboard'),
+        ('Users', 'bi-people', 'admin_users.index'),
+        ('Audit Logs', 'bi-clipboard-data', 'admin_audit.index'),],
     'registrar': [('Dashboard', 'bi-speedometer2', 'registrar.dashboard')],
     'finance':   [('Dashboard', 'bi-speedometer2', 'finance.dashboard')],
     'faculty':   [('Dashboard', 'bi-speedometer2', 'faculty.dashboard')],

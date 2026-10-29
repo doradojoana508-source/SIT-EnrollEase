@@ -2,11 +2,14 @@
 {% block body %}
 <p>Hello {{ user.first_name }},</p>
 <p>Your SIT account has been created by the school. Activate it using the button below.</p>
+{% if user.username %}
 <p>
-  <strong>{% if user.username %}Student ID (username){% else %}Username{% endif %}:</strong>
-  {{ user.username or user.email }}<br>
+  <strong>Student ID (username):</strong> {{ user.username }}<br>
   <strong>Initial password:</strong> your birth date in YY/MM/DD format
 </p>
+{% else %}
+<p>After you click the button, you will choose your own password. Log in with this email address.</p>
+{% endif %}
 <p><a href="{{ link }}" style="background:#1b6b63;color:#ffffff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block">Activate my account</a></p>
 <p style="font-size:12px;color:#5b6b68">This link is valid for 7 days. You cannot log in until your account is activated.</p>
 {% endblock %}

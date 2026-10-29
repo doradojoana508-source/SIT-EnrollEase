@@ -1,0 +1,103 @@
+{% extends 'layouts/app.html' %}
+{% block title %}{{ 'New account' if mode == 'create' else 'Edit account' }} | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<div style="max-width: 640px">
+  <a href="{{ url_for('admin_users.index') }}" class="text-decoration-none"><i class="bi bi-arrow-left"></i> Back to users</a>
+  <h1 class="h2 mt-2 mb-3">{{ 'New account' if mode == 'create' else 'Edit account' }}</h1>
+
+  <div class="card"><div class="card-body p-4">
+    <form method="post" class="needs-validation" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      {% if mode == 'create' %}
+      <div class="mb-3">
+        <label for="role" class="form-label">Role</label>
+        <select class="form-select" id="role" name="role" required>
+          <option value="">Choose a role</option>
+          {% for value, label in [('student', 'Student'), ('registrar', 'Registrar'), ('finance', 'Finance'), ('faculty', 'Faculty')] %}
+            <option value="{{ value }}" {{ 'selected' if form.get('role') == value }}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <div class="invalid-feedback">Choose a role.</div>
+      </div>
+      {% else %}
+      <p class="text-muted">
+        <strong>Role:</strong> {{ target.role|title }}
+        {% if target.username %} &middot; <strong>Student ID:</strong> {{ target.username }}{% endif %}
+      </p>
+      {% endif %}
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-4">
+          <label for="first_name" class="form-label">First name</label>
+          <input type="text" class="form-control" id="first_name" name="first_name" value="{{ form.get('first_name', '') }}"
+                 required minlength="2" maxlength="50">
+          <div class="invalid-feedback">Enter the first name.</div>
+        </div>
+        <div class="col-md-4">
+          <label for="middle_name" class="form-label">Middle name <small class="text-muted">(optional)</small></label>
+          <input type="text" class="form-control" id="middle_name" name="middle_name" value="{{ form.get('middle_name', '') }}" maxlength="50">
+        </div>
+        <div class="col-md-4">
+          <label for="last_name" class="form-label">Last name</label>
+          <input type="text" class="form-control" id="last_name" name="last_name" value="{{ form.get('last_name', '') }}"
+                 required minlength="2" maxlength="50">
+          <div class="invalid-feedback">Enter the last name.</div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" name="email" value="{{ form.get('email', '') }}" required maxlength="120">
+        <div class="invalid-feedback">Enter a valid email address.</div>
+      </div>
+
+      {% if mode == 'create' %}
+      <div id="student-fields" class="d-none">
+        <div class="alert alert-info small">
+          Enter the <strong>Student ID given by Finance or the Registrar</strong>. The initial password will be the
+          student's birth date in <strong>YY/MM/DD</strong> format. If this email already has an applicant account,
+          that account becomes the student account.
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label for="student_id" class="form-label">Student ID</label>
+            <input type="text" class="form-control" id="student_id" name="student_id" value="{{ form.get('student_id', '') }}"
+                   placeholder="23-1-0096" pattern="\d{2}-[1-3]-\d{4}" maxlength="10">
+            <div class="invalid-feedback">Use the format 23-1-0096.</div>
+          </div>
+          <div class="col-md-6">
+            <label for="birthdate" class="form-label">Birth date</label>
+            <input type="date" class="form-control" id="birthdate" name="birthdate" value="{{ form.get('birthdate', '') }}" max="{{ today }}">
+            <div class="invalid-feedback">Enter a valid birth date.</div>
+          </div>
+        </div>
+      </div>
+      <p id="staff-note" class="text-muted small d-none">The staff member will choose their own password when they open the activation link.</p>
+      {% endif %}
+
+      <button type="submit" class="btn btn-sit">{{ 'Create account and send activation link' if mode == 'create' else 'Save changes' }}</button>
+    </form>
+  </div></div>
+</div>
+
+{% if mode == 'create' %}
+<script>
+  (function () {
+    const role = document.getElementById('role');
+    const box = document.getElementById('student-fields');
+    const note = document.getElementById('staff-note');
+    const inputs = box.querySelectorAll('input');
+    function sync() {
+      const student = role.value === 'student';
+      box.classList.toggle('d-none', !student);
+      note.classList.toggle('d-none', student || !role.value);
+      inputs.forEach((i) => { i.required = student; });
+    }
+    role.addEventListener('change', sync);
+    sync();
+  })();
+</script>
+{% endif %}
+{% endblock %}

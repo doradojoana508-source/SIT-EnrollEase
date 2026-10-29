@@ -3,6 +3,7 @@ from flask import current_app
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from werkzeug.security import generate_password_hash, check_password_hash
 from models.base import BaseModel
+from db import query, execute
 
 
 class User(BaseModel):
@@ -158,3 +159,52 @@ class User(BaseModel):
         row = cls.run("SELECT * FROM users WHERE email = %s OR username = %s",
                       (identifier, identifier), fetch='one')
         return cls.from_row(row) if row else None
+    
+        # ---------- Para sa Admin: paghahanap at mga aksyon ----------
+    @classmethod
+    def search(cls, q='', role='', limit=10, offset=0):
+        """Ibinabalik ang (listahan ng User, kabuuang bilang). Ang values ay parameterized."""
+        where, params = [], []
+        if q:
+            like = f'%{q}%'
+            where.append("(first_name LIKE %s OR last_name LIKE %s OR email LIKE %s OR username LIKE %s)")
+            params += [like, like, like, like]
+        if role:
+            where.append("role = %s")
+            params.append(role)
+        clause = ('WHERE ' + ' AND '.join(where)) if where else ''
+        total = query(f"SELECT COUNT(*) AS n FROM users {clause}", params, one=True)['n']
+        rows = query(
+            f"SELECT * FROM users {clause} ORDER BY id DESC LIMIT %s OFFSET %s",
+            params + [limit, offset],
+        )
+        return [cls.from_row(r) for r in rows], total
+
+    @classmethod
+    def find_by_username(cls, username):
+        row = query("SELECT * FROM users WHERE username = %s", (username,), one=True)
+        return cls.from_row(row) if row else None
+
+    def update_details(self, first, middle, last, email):
+        execute("UPDATE users SET first_name=%s, middle_name=%s, last_name=%s, email=%s WHERE id=%s",
+                (first, middle, last, email, self.id))
+
+    def set_active(self, flag):
+        # Tumataas ang session_version, kaya ma-logout agad kapag na-deactivate
+        execute("UPDATE users SET is_active=%s, session_version=session_version+1 WHERE id=%s",
+                (1 if flag else 0, self.id))
+
+    def force_logout(self):
+        execute("UPDATE users SET session_version=session_version+1 WHERE id=%s", (self.id,))
+
+    def unlock(self):
+        execute("UPDATE users SET failed_attempts=0, locked_until=NULL WHERE id=%s", (self.id,))
+
+    def promote_to_student(self, student_id, initial_password):
+        """Ang applicant account ay nagiging student account (parehong email, iisang row)."""
+        self.set_password(initial_password)
+        execute(
+            "UPDATE users SET role='student', username=%s, password_hash=%s, is_activated=0, "
+            "session_version=session_version+1 WHERE id=%s",
+            (student_id, self.__password_hash, self.id),
+        )

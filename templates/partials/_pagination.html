@@ -1,0 +1,21 @@
+{% if pager.pages > 1 %}
+<nav aria-label="Pagination">
+  <ul class="pagination pagination-sm mb-0 flex-wrap">
+    <li class="page-item {{ 'disabled' if pager.page == 1 }}">
+      <a class="page-link" href="{{ url_for(request.endpoint, page=pager.page - 1, **pager.args) }}">Previous</a>
+    </li>
+    {% for p in range(1, pager.pages + 1) %}
+      {% if p == 1 or p == pager.pages or (p - pager.page)|abs <= 2 %}
+        <li class="page-item {{ 'active' if p == pager.page }}">
+          <a class="page-link" href="{{ url_for(request.endpoint, page=p, **pager.args) }}">{{ p }}</a>
+        </li>
+      {% elif (p - pager.page)|abs == 3 %}
+        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+      {% endif %}
+    {% endfor %}
+    <li class="page-item {{ 'disabled' if pager.page == pager.pages }}">
+      <a class="page-link" href="{{ url_for(request.endpoint, page=pager.page + 1, **pager.args) }}">Next</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}

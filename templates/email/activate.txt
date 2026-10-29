@@ -2,8 +2,8 @@ Hello {{ user.first_name }},
 
 Your SIT account has been created by the school.
 
-{% if user.username %}Student ID (username){% else %}Username{% endif %}: {{ user.username or user.email }}
-Initial password: your birth date in YY/MM/DD format
+{% if user.username %}Student ID (username): {{ user.username }}
+Initial password: your birth date in YY/MM/DD format{% else %}After you open the link, you will choose your own password. Log in with this email address.{% endif %}
 
 Activate your account (valid for 7 days):
 {{ link }}

@@ -133,19 +133,42 @@ def login():
     return redirect(url_for('dashboard.home'))
 
 
-@auth_bp.route('/activate/<token>')
+@auth_bp.route('/activate/<token>', methods=['GET', 'POST'])
 def activate(token):
-    """Ang activation link na ipinapadala ng school. May bisa ng 7 araw."""
+    """Activation link na ipinapadala ng school. May bisa ng 7 araw."""
     user = User.from_token(token, 'activate', max_age=ACTIVATION_DAYS * 24 * 3600)
     if user is None:
         flash('This activation link is invalid or has expired. Please contact the school.', 'danger')
-    elif user.is_activated:
+        return redirect(url_for('public.index', auth='login'))
+    if user.is_activated:
         flash('This account is already activated. You can log in.', 'info')
-    else:
+        return redirect(login_url_for(user.role))
+
+    if user.role == 'student':              # may initial password na (birthday), i-activate na lang
+        user.activate()
+        flash('Your account is activated. Log in with your Student ID.', 'success')
+        return redirect(login_url_for('student'))
+
+    # Staff: sila mismo ang pipili ng password nila
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        confirm = request.form.get('confirm', '')
+        errors = []
+        if not PASSWORD_RE.match(password):
+            errors.append('Password needs at least 8 characters with a letter and a number.')
+        if password != confirm:
+            errors.append('Passwords do not match.')
+        if errors:
+            for message in errors:
+                flash(message, 'danger')
+            return render_template('auth/set_password.html', token=token, user=user)
+        user.set_password(password)
+        user.save()
         user.activate()
         flash('Your account is activated. You can now log in.', 'success')
-    return redirect(url_for('public.index', auth='login'))
+        return redirect(login_url_for(user.role))
 
+    return render_template('auth/set_password.html', token=token, user=user)
 
 @auth_bp.route('/forgot', methods=['GET', 'POST'])
 def forgot():

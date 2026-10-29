@@ -1,0 +1,41 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Audit Logs | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">Audit Logs</h1>
+<p class="text-muted">Who did what, when, and from which IP address.</p>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col"><input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Search action, details or user" maxlength="80"></div>
+  <div class="col-auto"><button type="submit" class="btn btn-outline-secondary">Search</button></div>
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th><th>IP</th></tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td class="text-nowrap">{{ r.created_at.strftime('%b %d, %Y %I:%M %p') }}</td>
+          <td>
+            {% if r.first_name %}{{ r.first_name }} {{ r.last_name }} <span class="badge text-bg-light border">{{ r.role|title }}</span>
+            {% else %}<span class="text-muted">System</span>{% endif %}
+          </td>
+          <td class="fw-semibold">{{ r.action }}</td>
+          <td>{{ r.details or '' }}</td>
+          <td class="text-nowrap">{{ r.ip_address or '' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No activity yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+  <small class="text-muted">Showing {{ pager.start }}&ndash;{{ pager.end }} of {{ pager.total }}</small>
+  {% include 'partials/_pagination.html' %}
+</div>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Users | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+{% macro act(url, label, icon, ask=None, danger=False) %}
+<li>
+  <form method="post" action="{{ url }}" {% if ask %}onsubmit="return window.confirm('{{ ask }}')"{% endif %}>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="dropdown-item {{ 'text-danger' if danger }}"><i class="bi {{ icon }} me-2"></i>{{ label }}</button>
+  </form>
+</li>
+{% endmacro %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h1 class="h2 mb-0">Users</h1>
+    <p class="text-muted mb-0">Create and manage accounts.</p>
+  </div>
+  <a href="{{ url_for('admin_users.create') }}" class="btn btn-sit"><i class="bi bi-person-plus"></i> New account</a>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col-12 col-md">
+    <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Search name, email or Student ID" maxlength="80">
+  </div>
+  <div class="col-8 col-md-3">
+    <select name="role" class="form-select" aria-label="Filter by role">
+      <option value="">All roles</option>
+      {% for r in roles %}<option value="{{ r }}" {{ 'selected' if r == role }}>{{ r|title }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-4 col-md-auto"><button type="submit" class="btn btn-outline-secondary w-100">Search</button></div>
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th>Name</th><th>Login</th><th>Role</th><th>Status</th><th class="text-end">Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td class="fw-semibold">{{ u.full_name }}</td>
+          <td>
+            {{ u.username or u.email }}
+            {% if u.username %}<div class="small text-muted">{{ u.email }}</div>{% endif %}
+          </td>
+          <td><span class="badge text-bg-light border">{{ u.role|title }}</span></td>
+          <td>
+            {% if not u.is_active %}<span class="badge text-bg-secondary">Deactivated</span>
+            {% elif not u.is_activated %}<span class="badge text-bg-warning">Not activated</span>
+            {% elif not u.is_verified %}<span class="badge text-bg-info">Unverified</span>
+            {% else %}<span class="badge text-bg-success">Active</span>{% endif %}
+            {% if u.is_locked() %}<span class="badge text-bg-danger">Locked</span>{% endif %}
+          </td>
+          <td class="text-end">
+            {% if u.role != 'admin' %}
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown"
+                      data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" aria-label="Actions">
+                <i class="bi bi-three-dots"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{{ url_for('admin_users.edit', user_id=u.id) }}"><i class="bi bi-pencil me-2"></i>Edit</a></li>
+                {% if not u.is_activated %}
+                  {{ act(url_for('admin_users.resend', user_id=u.id), 'Resend activation link', 'bi-envelope') }}
+                {% else %}
+                  {{ act(url_for('admin_users.reset', user_id=u.id), 'Send password reset link', 'bi-key') }}
+                {% endif %}
+                {% if u.is_locked() %}
+                  {{ act(url_for('admin_users.unlock', user_id=u.id), 'Unlock account', 'bi-unlock') }}
+                {% endif %}
+                {{ act(url_for('admin_users.force_logout', user_id=u.id), 'Force logout', 'bi-box-arrow-right', 'Log this user out of all devices?') }}
+                <li><hr class="dropdown-divider"></li>
+                {% if u.is_active %}
+                  {{ act(url_for('admin_users.toggle', user_id=u.id), 'Deactivate', 'bi-person-x', 'Deactivate this account?', True) }}
+                {% else %}
+                  {{ act(url_for('admin_users.toggle', user_id=u.id), 'Activate', 'bi-person-check') }}
+                {% endif %}
+              </ul>
+            </div>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No accounts found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+  <small class="text-muted">Showing {{ pager.start }}&ndash;{{ pager.end }} of {{ pager.total }}</small>
+  {% include 'partials/_pagination.html' %}
+</div>
+{% endblock %}

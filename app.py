@@ -12,6 +12,8 @@ from routes.dashboard import dashboard_bp
 from routes.applicant import applicant_bp
 from routes.portals import PORTALS, create_portal
 from menus import menu_for, ROLE_LABELS, ACCOUNT_MENU
+from routes.admin_users import admin_users_bp
+from routes.admin_audit import admin_audit_bp
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -77,6 +79,8 @@ app.register_blueprint(dashboard_bp)
 app.register_blueprint(applicant_bp)
 for key, cfg in PORTALS.items():
     app.register_blueprint(create_portal(key, cfg))
+app.register_blueprint(admin_users_bp)
+app.register_blueprint(admin_audit_bp)
 
 if __name__ == '__main__':
     app.run(debug=True)
