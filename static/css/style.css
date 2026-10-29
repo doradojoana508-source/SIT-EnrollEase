@@ -172,3 +172,39 @@ h1, h2, h3, .brand-serif { font-family: 'Cormorant Garamond', Georgia, serif; fo
 }
 
 .form-check-input:checked { background-color: #1b6b63; border-color: #1b6b63; }
+
+/* ===== App layout with sidebar ===== */
+.app-body { background: #f4f8f7; }
+.app-shell { display: flex; min-height: 100vh; }
+.offcanvas-lg.app-sidebar { background-color: #0f3f3a !important; color: #d7ece8; --bs-offcanvas-width: 280px; }
+.app-sidebar .offcanvas-header { border-bottom: 1px solid rgba(255, 255, 255, .1); }
+.sidebar-flex { flex: 1; display: flex; flex-direction: column; min-height: 100%; padding: 1.25rem 1rem; }
+.sidebar-brand { display: flex; align-items: center; gap: .6rem; color: #fff; font-weight: 700;
+                 font-size: 1.1rem; padding: 0 .5rem 1.25rem; }
+.sidebar-nav { display: flex; flex-direction: column; gap: .25rem; }
+.sidebar-section { margin: 1.25rem .85rem .4rem; font-size: .72rem; letter-spacing: .08em;
+                   text-transform: uppercase; opacity: .55; }
+.sidebar-link { display: flex; align-items: center; gap: .7rem; padding: .65rem .85rem; border-radius: 10px;
+                color: #cfe4e0; text-decoration: none; font-weight: 500; transition: background .15s; }
+.sidebar-link:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+.sidebar-link.active { background: #1b6b63; color: #fff; }
+.sidebar-user { margin-top: auto; padding-top: 1.25rem; border-top: 1px solid rgba(255, 255, 255, .1); color: #fff; }
+.sidebar-avatar { width: 40px; height: 40px; border-radius: 50%; background: #1b6b63;
+                  display: grid; place-items: center; font-weight: 700; }
+.app-main { flex: 1; min-width: 0; }
+.app-content { padding: 1.25rem; }
+.app-topbar { position: sticky; top: 0; z-index: 1020; display: flex; align-items: center; gap: .6rem;
+              padding: .5rem .75rem; background: #0f3f3a; color: #fff; }
+@media (min-width: 992px) {
+  .offcanvas-lg.app-sidebar { flex: 0 0 260px; position: sticky; top: 0; align-self: flex-start; min-height: 100vh; }
+  .app-content { padding: 2rem 2.5rem; }
+}
+
+/* ===== Portal login page ===== */
+.portal-login-body { min-height: 100vh; display: flex; align-items: center; justify-content: center;
+                     padding: 1rem; background: radial-gradient(circle at top, #1b6b63, #0f3f3a); }
+.portal-login-card { width: 100%; max-width: 420px; background: #fff; border-radius: 20px;
+                     padding: 2rem 1.75rem; box-shadow: 0 24px 60px rgba(0, 0, 0, .25); }
+.portal-logo { height: 64px; width: auto; }
+.portal-badge { display: inline-flex; align-items: center; gap: .4rem; margin-top: .75rem; padding: .3rem .85rem;
+                border-radius: 999px; background: #e3f2ef; color: #1b6b63; font-weight: 700; font-size: .85rem; }

@@ -1,9 +1,0 @@
-{% extends 'layouts/base.html' %}
-{% block title %}Dashboard | SIT-EnrollEase{% endblock %}
-{% block content %}
-<div class="container py-5">
-  <h1>Welcome, {{ current_user.first_name }}!</h1>
-  <p>Role: <strong>{{ current_user.role|capitalize }}</strong></p>
-  <a href="{{ url_for('account.change_password') }}" class="btn btn-outline-sit">Change Password</a>
-</div>
-{% endblock %}

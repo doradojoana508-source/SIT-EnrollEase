@@ -1,9 +1,10 @@
 import re
 import time
-from flask import Blueprint, render_template, redirect, url_for, request, session, flash
+from flask import Blueprint, render_template, redirect, url_for, request, session, flash, g
 from models.user import User
 from routes.public import home_context
 from mailer import send_email
+from utils import login_url_for
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -185,13 +186,14 @@ def reset(token):
         user.session_version += 1                    # ma-logout ang lahat ng device
         user.save()
         flash('Your password has been changed. Please log in.', 'success')
-        return redirect(url_for('public.index', auth='login'))
+        return redirect(login_url_for(user.role))
 
     return render_template('auth/reset.html', token=token)
 
 
-@auth_bp.route('/logout', methods=['POST'])         # POST, para hindi ma-logout ng isang link lang
+@auth_bp.route('/logout', methods=['POST'])
 def logout():
+    role = g.user.role if g.user else None
     session.clear()
     flash('You have been logged out.', 'info')
-    return redirect(url_for('public.index'))
+    return redirect(login_url_for(role, open_modal=False) if role else url_for('public.index'))

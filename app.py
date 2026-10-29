@@ -9,6 +9,9 @@ from routes.public import public_bp
 from routes.auth import auth_bp
 from routes.account import account_bp
 from routes.dashboard import dashboard_bp
+from routes.applicant import applicant_bp
+from routes.portals import PORTALS, create_portal
+from menus import menu_for, ROLE_LABELS, ACCOUNT_MENU
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -60,13 +63,20 @@ def load_current_user():
 
 @app.context_processor
 def inject_user():
-    return {'current_user': g.get('user')}
-
+    user = g.get('user')
+    context = {'current_user': user}
+    if user:
+        context.update(menu=menu_for(user.role), account_menu=ACCOUNT_MENU,
+                       role_label=ROLE_LABELS.get(user.role, user.role.title()))
+    return context
 
 app.register_blueprint(public_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(account_bp)
 app.register_blueprint(dashboard_bp)
+app.register_blueprint(applicant_bp)
+for key, cfg in PORTALS.items():
+    app.register_blueprint(create_portal(key, cfg))
 
 if __name__ == '__main__':
     app.run(debug=True)
