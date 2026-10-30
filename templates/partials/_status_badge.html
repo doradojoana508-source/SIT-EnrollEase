@@ -1,0 +1,4 @@
+{% set colors = {'Draft': 'secondary', 'Submitted': 'primary', 'Approved': 'success', 'Interview Scheduled': 'success',
+                 'For Enrollment': 'success', 'Enrolled': 'success', 'Rejected': 'danger', 'Withdrawn': 'secondary',
+                 'Withdrawal Requested': 'warning', 'Uploaded': 'info', 'Verified': 'success'} %}
+<span class="badge text-bg-{{ colors.get(status, 'secondary') }}">{{ status }}</span>

@@ -65,6 +65,12 @@ class ApplicationDocument:
             execute("DELETE FROM application_documents WHERE application_id = %s AND document_type_id = %s",
                     (application_id, type_id))
             cls._remove_file(cls.folder(application_id), old['stored_name'])
+            
+    @staticmethod
+    def set_status(application_id, type_id, status, remarks=None):
+        execute("UPDATE application_documents SET status = %s, remarks = %s "
+                "WHERE application_id = %s AND document_type_id = %s",
+                (status, remarks, application_id, type_id))
 
     @staticmethod
     def _remove_file(folder, stored_name):
@@ -72,3 +78,9 @@ class ApplicationDocument:
             os.remove(os.path.join(folder, stored_name))
         except OSError:
             pass
+        
+        @staticmethod
+        def set_status(application_id, type_id, status, remarks=None):
+            execute("UPDATE application_documents SET status = %s, remarks = %s "
+                "WHERE application_id = %s AND document_type_id = %s",
+                (status, remarks, application_id, type_id))

@@ -14,7 +14,9 @@ MENUS = {
         ('Dashboard', 'bi-speedometer2', 'admin.dashboard'),
         ('Users', 'bi-people', 'admin_users.index'),
         ('Audit Logs', 'bi-clipboard-data', 'admin_audit.index'),],
-    'registrar': [('Dashboard', 'bi-speedometer2', 'registrar.dashboard')],
+    'registrar': [
+        ('Dashboard', 'bi-speedometer2', 'registrar.dashboard'),
+        ('Applications', 'bi-inboxes', 'registrar_applications.index'),],
     'finance':   [('Dashboard', 'bi-speedometer2', 'finance.dashboard')],
     'faculty':   [('Dashboard', 'bi-speedometer2', 'faculty.dashboard')],
 }

@@ -208,6 +208,33 @@ class Application:
     def find_by_user(cls, user_id):
         row = query("SELECT * FROM applications WHERE user_id = %s", (user_id,), one=True)
         return cls(row) if row else None
+    
+    @classmethod
+    def find(cls, application_id):
+        row = query("SELECT * FROM applications WHERE id = %s", (application_id,), one=True)
+        return cls(row) if row else None
+
+    @classmethod
+    def search(cls, q='', status='', limit=10, offset=0):
+        """Para sa Registrar: mga na-submit na application (walang Draft). Ibinabalik ang (rows, total)."""
+        where, params = ["a.status <> 'Draft'"], []
+        if status:
+            where.append('a.status = %s')
+            params.append(status)
+        if q:
+            like = f'%{q}%'
+            where.append('(u.first_name LIKE %s OR u.last_name LIKE %s OR u.email LIKE %s)')
+            params += [like, like, like]
+        base = 'FROM applications a JOIN users u ON u.id = a.user_id WHERE ' + ' AND '.join(where)
+        total = query(f'SELECT COUNT(*) AS n {base}', params, one=True)['n']
+        rows = query(
+            'SELECT a.id, a.status, a.program_id, a.submitted_at, u.first_name, u.last_name, u.email, '
+            '(SELECT COUNT(*) FROM application_documents d WHERE d.application_id = a.id) AS docs_uploaded, '
+            "(SELECT COUNT(*) FROM application_documents d WHERE d.application_id = a.id AND d.status = 'Verified') AS docs_verified, "
+            "(SELECT COUNT(*) FROM application_documents d WHERE d.application_id = a.id AND d.status = 'Rejected') AS docs_rejected "
+            f"{base} ORDER BY (a.status = 'Submitted') DESC, a.submitted_at DESC, a.id DESC LIMIT %s OFFSET %s",
+            params + [limit, offset])
+        return rows, total
 
     @staticmethod
     def program_options():

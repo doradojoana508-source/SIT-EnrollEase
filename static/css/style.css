@@ -231,3 +231,5 @@ h1, h2, h3, .brand-serif { font-family: 'Cormorant Garamond', Georgia, serif; fo
 }
 
 .notice-card { border-left: 5px solid #1b8a5a; }
+
+@media (min-width: 1200px) { .review-docs { position: sticky; top: 1rem; } }

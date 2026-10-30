@@ -1,0 +1,57 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Applications | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">Applications</h1>
+<p class="text-muted">Review submitted applications and their documents.</p>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col-12 col-md">
+    <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Search name or email" maxlength="80">
+  </div>
+  <div class="col-8 col-md-3">
+    <select name="status" class="form-select" aria-label="Filter by status">
+      <option value="">All statuses</option>
+      {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if s == status }}>{{ s }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-4 col-md-auto"><button type="submit" class="btn btn-outline-secondary w-100">Search</button></div>
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th>Applicant</th><th>Program</th><th>Submitted</th><th>Documents</th><th>Status</th><th class="text-end"></th></tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>
+            <div class="fw-semibold">{{ r.first_name }} {{ r.last_name }}</div>
+            <div class="small text-muted">{{ r.email }}</div>
+          </td>
+          <td class="small">{{ programs.get(r.program_id, '-') }}</td>
+          <td class="small text-nowrap">{{ r.submitted_at.strftime('%b %d, %Y') if r.submitted_at else '-' }}</td>
+          <td class="small text-nowrap">
+            {{ r.docs_verified }} verified / {{ r.docs_uploaded }} uploaded
+            {% if r.docs_rejected %}<span class="badge text-bg-danger">{{ r.docs_rejected }} rejected</span>{% endif %}
+          </td>
+          <td>{% with status = r.status %}{% include 'partials/_status_badge.html' %}{% endwith %}</td>
+          <td class="text-end">
+            <a href="{{ url_for('registrar_applications.review', application_id=r.id) }}" class="btn btn-sit btn-sm">Review</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">No applications found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+  <small class="text-muted">Showing {{ pager.start }}&ndash;{{ pager.end }} of {{ pager.total }}</small>
+  {% include 'partials/_pagination.html' %}
+</div>
+{% endblock %}

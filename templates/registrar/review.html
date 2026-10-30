@@ -1,0 +1,159 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Review Application | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+{% macro item(label, value, col='col-sm-6') %}
+<div class="{{ col }}">
+  <div class="small text-muted">{{ label }}</div>
+  <div>{{ value if value not in (None, '') else '-' }}</div>
+</div>
+{% endmacro %}
+
+<a href="{{ url_for('registrar_applications.index') }}" class="text-decoration-none">
+  <i class="bi bi-arrow-left"></i> Back to applications</a>
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mt-2 mb-3">
+  <div>
+    <h1 class="h2 mb-0">{{ owner.last_name }}, {{ owner.first_name }} {{ owner.middle_name or '' }}</h1>
+    <div class="text-muted">{{ program or 'No program chosen' }}
+      {% if application.submitted_at %}&middot; Submitted {{ application.submitted_at.strftime('%b %d, %Y %I:%M %p') }}{% endif %}</div>
+  </div>
+  {% with status = application.status %}{% include 'partials/_status_badge.html' %}{% endwith %}
+</div>
+
+{% if interview %}
+<div class="alert alert-success small">
+  <i class="bi bi-calendar-check"></i>
+  Interview with the <strong>{{ interview.interviewer }}</strong> on
+  <strong>{{ interview.scheduled_at.strftime('%A, %B %d, %Y') }}, {{ interview.scheduled_at.strftime('%I:%M %p').lstrip('0') }}</strong>
+  at {{ interview.venue }}.
+</div>
+{% endif %}
+
+<div class="row g-3">
+  <!-- KALIWA: ang form -->
+  <div class="col-xl-7">
+    <div class="card"><div class="card-body p-4">
+      <h2 class="h5 mb-3">Application form</h2>
+
+      <h3 class="h6 text-uppercase text-muted">Applicant</h3>
+      <div class="row g-3 mb-4">
+        {{ item('Complete address', application.address, 'col-12') }}
+        {{ item('Home tel. no.', application.home_tel) }}
+        {{ item('Phone number', application.phone) }}
+        {{ item('Email address', owner.email, 'col-12') }}
+      </div>
+
+      <h3 class="h6 text-uppercase text-muted">Guardian</h3>
+      <div class="row g-3 mb-4">
+        {{ item('Name of father', application.father_name) }}
+        {{ item('Contact no.', application.father_mobile) }}
+        {{ item('Name of mother', application.mother_name) }}
+        {{ item('Contact no.', application.mother_mobile) }}
+      </div>
+
+      <h3 class="h6 text-uppercase text-muted">Birth and personal information</h3>
+      <div class="row g-3 mb-4">
+        {{ item('Date of birth', application.birthdate.strftime('%B %d, %Y') if application.birthdate else None) }}
+        {{ item('Place of birth', application.birthplace) }}
+        {{ item('Age', application.age, 'col-6 col-sm-3') }}
+        {{ item('Gender', application.gender, 'col-6 col-sm-3') }}
+        {{ item('Civil status', application.civil_status, 'col-6 col-sm-3') }}
+        {{ item('Nationality', application.nationality, 'col-6 col-sm-3') }}
+      </div>
+
+      <h3 class="h6 text-uppercase text-muted">Educational background</h3>
+      <div class="row g-3 mb-4">
+        {{ item('Name of school', application.school_name, 'col-sm-5') }}
+        {{ item('Place', application.school_place, 'col-sm-4') }}
+        {{ item('Year graduated', application.year_graduated, 'col-sm-3') }}
+      </div>
+
+      <h3 class="h6 text-uppercase text-muted">Present employment</h3>
+      <div class="row g-3 mb-4">
+        {{ item('Position', application.job_position) }}
+        {{ item('Employer', application.employer) }}
+      </div>
+
+      <h3 class="h6 text-uppercase text-muted">Church information</h3>
+      <div class="row g-3 mb-4">
+        {{ item('Name of church', application.church_name, 'col-sm-4') }}
+        {{ item('Address', application.church_address, 'col-sm-5') }}
+        {{ item('Pastor', application.pastor_name, 'col-sm-3') }}
+      </div>
+
+      <h3 class="h6 text-uppercase text-muted">Ministry experience / commitment</h3>
+      <div class="row g-3 mb-4">
+        {{ item('Responsibility', application.responsibility) }}
+        {{ item('Ministry', application.ministry) }}
+      </div>
+
+      <h3 class="h6 text-uppercase text-muted">Certification</h3>
+      <p class="small mb-0">
+        Signed by <strong>{{ application.certified_name or '-' }}</strong>
+        {% if application.certified_at %}on {{ application.certified_at.strftime('%B %d, %Y') }}{% endif %}.
+      </p>
+    </div></div>
+  </div>
+
+  <!-- KANAN: ang mga dokumento -->
+  <div class="col-xl-5">
+    <div class="card review-docs"><div class="card-body p-4">
+      <h2 class="h5 mb-3">Documents</h2>
+      {% if not can_review %}
+        <p class="small text-muted">Documents can only be verified or rejected while the application is under review.</p>
+      {% endif %}
+
+      {% for r in rows %}
+      <div class="border rounded-3 p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+          <div class="fw-semibold">{{ r.name }}</div>
+          {% if r.online %}<span class="badge text-bg-success">Online</span>
+          {% elif not r.upload %}<span class="badge text-bg-secondary">Not uploaded</span>
+          {% else %}{% with status = r.upload.status %}{% include 'partials/_status_badge.html' %}{% endwith %}{% endif %}
+        </div>
+
+        {% if r.online %}
+          <div class="small text-muted">Filled out online (see the form).</div>
+        {% elif r.upload %}
+          <div class="small mt-1">
+            <a href="{{ url_for('registrar_applications.document_file', application_id=application.id, type_id=r.id) }}"
+               target="_blank" rel="noopener"><i class="bi bi-eye"></i> View file</a>
+            <span class="text-muted">&middot; {{ r.upload.original_name }} &middot; {{ (r.upload.size_bytes / 1024)|round|int }} KB</span>
+          </div>
+          {% if r.upload.status == 'Rejected' and r.upload.remarks %}
+            <div class="small text-danger mt-1">Reason: {{ r.upload.remarks }} (waiting for a new file)</div>
+          {% endif %}
+
+          {% if can_review %}
+          <div class="d-flex flex-wrap gap-2 mt-2">
+            {% if r.upload.status != 'Verified' %}
+            <form method="post" action="{{ url_for('registrar_applications.verify_document', application_id=application.id, type_id=r.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check-lg"></i> Verify</button>
+            </form>
+            {% endif %}
+            {% if r.upload.status != 'Rejected' %}
+            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="collapse"
+                    data-bs-target="#reject-{{ r.id }}" aria-expanded="false"><i class="bi bi-x-lg"></i> Reject</button>
+            {% endif %}
+          </div>
+          <div class="collapse mt-2" id="reject-{{ r.id }}">
+            <form method="post" action="{{ url_for('registrar_applications.reject_document', application_id=application.id, type_id=r.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <label for="remarks-{{ r.id }}" class="form-label small mb-1">Reason (the applicant will see this)</label>
+              <input type="text" class="form-control form-control-sm mb-2" id="remarks-{{ r.id }}" name="remarks"
+                     required minlength="3" maxlength="255" placeholder="e.g. The photo is blurry. Please upload a clearer copy.">
+              <button type="submit" class="btn btn-danger btn-sm">Reject and notify</button>
+            </form>
+          </div>
+          {% endif %}
+        {% else %}
+          <div class="small text-muted">Not uploaded yet.</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}
