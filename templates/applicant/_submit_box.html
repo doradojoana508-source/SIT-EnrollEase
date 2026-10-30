@@ -1,16 +1,31 @@
 {% if application.is_editable %}
 <div class="card h-100"><div class="card-body p-4">
-  <h2 class="h5">Submit your application</h2>
+  <h2 class="h5">Certify and submit</h2>
   {% if problems %}
     <p class="small mb-1">Before you can submit:</p>
     <ul class="small text-muted">{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul>
   {% else %}
-    <p class="text-success small"><i class="bi bi-check-circle-fill"></i> Everything is ready. After you submit,
-      the form is locked and the Registrar reviews your documents.</p>
+    <p class="text-success small"><i class="bi bi-check-circle-fill"></i> Your form and documents are complete.
+      After you submit, the form is locked and the Registrar reviews your documents.</p>
   {% endif %}
+
   <form method="post" action="{{ url_for('applicant.submit') }}"
         onsubmit="return window.confirm('Submit your application now? You cannot edit the form after submitting.')">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" id="certify" name="certify" value="1" required {{ 'disabled' if problems }}>
+      <label class="form-check-label small" for="certify">
+        I certify that I have given full and truthful information in this application for admission to the
+        SIMONS Institute of Theology. Furthermore, if admitted, I pledge to conduct myself in accordance with
+        the standards set in this packet.
+      </label>
+    </div>
+    <div class="mb-3">
+      <label for="signature" class="form-label small mb-1">Applicant's full name (your signature)</label>
+      <input type="text" class="form-control" id="signature" name="signature" maxlength="120" required
+             placeholder="Type your given name and surname" autocomplete="off" {{ 'disabled' if problems }}>
+      <div class="form-text">The date is recorded when you submit.</div>
+    </div>
     <button type="submit" class="btn btn-sit" {{ 'disabled' if problems }}>Submit application</button>
   </form>
 </div></div>

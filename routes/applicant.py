@@ -5,6 +5,7 @@ from models.application import Application
 from models.application_document import ApplicationDocument
 from models.notification import Notification
 from utils import roles_required
+from routes.auth import NAME_RE, clean_name
 
 applicant_bp = Blueprint('applicant', __name__, url_prefix='/applicant')
 
@@ -56,11 +57,24 @@ def application():
                 max_birth=(date.today() - timedelta(days=365 * 10)).isoformat(), year=date.today().year)
 
     if request.method == 'POST':
+        first = clean_name(request.form.get('first_name', ''))
+        middle = clean_name(request.form.get('middle_name', ''))
+        last = clean_name(request.form.get('last_name', ''))
         data, errors = Application.clean(request.form, {pid for pid, _ in options})
+
+        if not (2 <= len(first) <= 50 and NAME_RE.match(first)):
+            errors.append('Given name must be 2 to 50 letters.')
+        if middle and not (len(middle) <= 50 and NAME_RE.match(middle)):
+            errors.append('Middle name may only contain letters, up to 50 characters.')
+        if not (2 <= len(last) <= 50 and NAME_RE.match(last)):
+            errors.append('Surname must be 2 to 50 letters.')
+
         if errors:
             for message in errors:
                 flash(message, 'danger')
             return render_template('applicant/application_form.html', form=request.form, **page)
+
+        g.user.update_details(first, middle or None, last, g.user.email)   # ina-update ang pangalan ng account
 
         current = current or Application()
         current.user_id = g.user.id
@@ -132,8 +146,11 @@ def submit():
     current = my_application()
     if current is None:
         abort(404)
+    if not request.form.get('certify'):
+        flash('Please certify that the information you gave is true.', 'danger')
+        return redirect(url_for('applicant.dashboard'))
     try:
-        current.submit()
+        current.submit(request.form.get('signature', ''))
         flash('Application submitted! We will notify you here and by email once there is an update.', 'success')
     except ValueError as exc:
         flash(str(exc), 'danger')

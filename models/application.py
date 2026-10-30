@@ -7,46 +7,49 @@ from models.application_document import ApplicationDocument
 
 TEXT_RE = re.compile(r"^[\w\s.,'’\-&()/#]+$", re.UNICODE)
 PHONE_RE = re.compile(r'^(09\d{9}|\+639\d{9})$')
-
+HOME_TEL_RE = re.compile(r'^[\d\s()+\-]{5,20}$')
 
 class Application:
     """Isang application ng isang applicant (isa lang bawat user)."""
 
     # --- mga field na puwedeng i-edit ng applicant ---
     FIELDS = (
-        'program_id', 'birthdate', 'birthplace', 'sex', 'civil_status', 'nationality', 'mobile', 'address',
-        'guardian_name', 'guardian_relationship', 'guardian_mobile',
-        'last_school', 'education_level', 'year_graduated',
-        'occupation', 'employer',
-        'church_name', 'church_address', 'pastor_name', 'pastor_mobile', 'is_baptized', 'ministry_experience',
+        'program_id', 'address', 'home_tel', 'phone',
+        'father_name', 'father_mobile', 'mother_name', 'mother_mobile',
+        'birthdate', 'birthplace', 'gender', 'civil_status', 'nationality',
+        'school_name', 'school_place', 'year_graduated',
+        'job_position', 'employer',
+        'church_name', 'church_address', 'pastor_name',
+        'responsibility', 'ministry',
     )
 
-    # kailangang kumpleto bago mag-submit (ang occupation, employer, church_address at ministry_experience ay optional)
+    # Kailangang kumpleto bago mag-submit. Optional: Home Tel., Employment, Ministry.
+    # Dagdag na patakaran: kailangan ng kahit isa sa father o mother (pangalan at contact).
     REQUIRED = {
-        'program_id': 'Program', 'birthdate': 'Birth date', 'birthplace': 'Place of birth', 'sex': 'Sex',
-        'civil_status': 'Civil status', 'nationality': 'Nationality', 'mobile': 'Mobile number',
-        'address': 'Home address', 'guardian_name': "Parent or guardian's name",
-        'guardian_relationship': 'Guardian relationship', 'guardian_mobile': "Guardian's mobile number",
-        'last_school': 'Last school attended', 'education_level': 'Highest education',
-        'year_graduated': 'Year graduated', 'church_name': 'Church name', 'pastor_name': "Pastor's name",
-        'pastor_mobile': "Pastor's mobile number", 'is_baptized': 'Baptism',
+        'program_id': 'Degree program', 'address': 'Complete address', 'phone': 'Phone number',
+        'birthdate': 'Date of birth', 'birthplace': 'Place of birth', 'gender': 'Gender',
+        'civil_status': 'Civil status', 'nationality': 'Nationality',
+        'school_name': 'Name of school', 'school_place': 'Place of school', 'year_graduated': 'Year graduated',
+        'church_name': 'Name of church', 'church_address': 'Church address', 'pastor_name': 'Pastor',
     }
+    PARENT_LABEL = 'Father or mother (name and contact number)'
 
     TEXT_FIELDS = {
-        'birthplace': ('Place of birth', 120), 'nationality': ('Nationality', 60), 'address': ('Home address', 255),
-        'guardian_name': ("Parent or guardian's name", 120), 'guardian_relationship': ('Guardian relationship', 40),
-        'last_school': ('Last school attended', 150), 'occupation': ('Occupation', 100),
-        'employer': ('Employer', 150), 'church_name': ('Church name', 150),
-        'church_address': ('Church address', 255), 'pastor_name': ("Pastor's name", 120),
+        'address': ('Complete address', 255), 'birthplace': ('Place of birth', 120),
+        'nationality': ('Nationality', 60), 'father_name': ('Name of father', 120),
+        'mother_name': ('Name of mother', 120), 'school_name': ('Name of school', 150),
+        'school_place': ('Place of school', 150), 'job_position': ('Position', 100),
+        'employer': ('Employer', 150), 'church_name': ('Name of church', 150),
+        'church_address': ('Church address', 255), 'pastor_name': ('Pastor', 120),
+        'responsibility': ('Responsibility', 150), 'ministry': ('Ministry', 150),
     }
-    PHONE_FIELDS = {'mobile': 'Mobile number', 'guardian_mobile': "Guardian's mobile number",
-                    'pastor_mobile': "Pastor's mobile number"}
+    PHONE_FIELDS = {'phone': 'Phone number', 'father_mobile': "Father's contact number",
+                    'mother_mobile': "Mother's contact number"}
     CHOICES = {
-        'sex': ('Male', 'Female'),
+        'gender': ('Male', 'Female'),
         'civil_status': ('Single', 'Married', 'Widowed', 'Separated'),
-        'education_level': ('High School', 'Senior High School', 'College Undergraduate',
-                            'College Graduate', "Master's Degree"),
     }
+    
 
     # --- status at tracker ---
     STATUSES = ('Draft', 'Submitted', 'Approved', 'Interview Scheduled', 'For Enrollment',
@@ -58,7 +61,7 @@ class Application:
     WITHDRAWABLE = ('Draft', 'Submitted', 'Approved', 'Interview Scheduled', 'For Enrollment')
     
     def __init__(self, row=None):
-        for name in ('id', 'user_id', 'remarks', 'submitted_at') + self.FIELDS:
+        for name in ('id', 'user_id', 'remarks', 'submitted_at', 'certified_name', 'certified_at') + self.FIELDS:
             setattr(self, name, None)
         self.status = 'Draft'
         self.applicant_type = 'New'
@@ -121,13 +124,19 @@ class Application:
     def _owner(self):
         return User.find(self.user_id)
 
-    def submit(self):
+    def submit(self, signature=''):
         if self.status != 'Draft':
             raise ValueError('This application was already submitted.')
         problems = self.readiness()
         if problems:
             raise ValueError(' '.join(problems))
-        execute("UPDATE applications SET status = 'Submitted', submitted_at = NOW() WHERE id = %s", (self.id,))
+        owner = self._owner()
+        signature = ' '.join((signature or '').split())
+        # Ang pirma ay ang buong pangalan na tina-type niya; dapat nandoon ang given name at surname ng account
+        if not all(part.lower() in signature.lower() for part in (owner.first_name, owner.last_name)):
+            raise ValueError("Sign by typing your full name (given name and surname) as it appears in your account.")
+        execute("UPDATE applications SET status = 'Submitted', submitted_at = NOW(), "
+                "certified_name = %s, certified_at = NOW() WHERE id = %s", (signature[:120], self.id))
         self.status = 'Submitted'
         Notification.notify(self._owner(), 'We received your SIT application', 'Application received',
                             'Thank you! Your application and documents are now with the Registrar for review. '
@@ -227,13 +236,26 @@ class Application:
         return self.STEP_OF.get(self.status, 0)
 
     def missing(self):
-        """Mga kailangang field na wala pang laman."""
-        return [label for name, label in self.REQUIRED.items() if getattr(self, name) in (None, '')]
+        """Mga kailangang detalye na wala pang laman."""
+        gaps = [label for name, label in self.REQUIRED.items() if getattr(self, name) in (None, '')]
+        has_parent = (self.father_name and self.father_mobile) or (self.mother_name and self.mother_mobile)
+        if not has_parent:
+            gaps.append(self.PARENT_LABEL)
+        return gaps
 
     @property
     def progress(self):
-        total = len(self.REQUIRED)
+        total = len(self.REQUIRED) + 1                      # +1 para sa father/mother
         return total - len(self.missing()), total
+
+    @property
+    def age(self):
+        """Kinukuwenta mula sa birthdate, kaya hindi na kailangang i-save."""
+        born = self.birthdate
+        if not born:
+            return None
+        today = date.today()
+        return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
 
     def to_form(self):
         """Ang mga value bilang text, para sa form."""
@@ -263,7 +285,7 @@ class Application:
 
         raw = form.get('program_id', '').strip()
         if raw and (not raw.isdigit() or int(raw) not in valid_programs):
-            errors.append('Choose a valid program.')
+            errors.append('Choose a valid degree program.')
             raw = ''
         data['program_id'] = int(raw) if raw else None
 
@@ -272,12 +294,11 @@ class Application:
         if raw:
             try:
                 born = date.fromisoformat(raw)
-                age = (today - born).days / 365.25
-                if not 10 <= age <= 100:
+                if not 10 <= (today - born).days / 365.25 <= 100:
                     raise ValueError
                 data['birthdate'] = born
             except ValueError:
-                errors.append('Enter a valid birth date.')
+                errors.append('Enter a valid date of birth.')
 
         for name, (label, limit) in cls.TEXT_FIELDS.items():
             value = ' '.join(form.get(name, '').split())
@@ -290,6 +311,11 @@ class Application:
             if digits and not PHONE_RE.match(digits):
                 errors.append(f'{label} must look like 09171234567.')
             data[name] = digits or None
+
+        home = ' '.join(form.get('home_tel', '').split())
+        if home and not HOME_TEL_RE.match(home):
+            errors.append('Home telephone may only contain digits, spaces, + ( ) and -.')
+        data['home_tel'] = home or None
 
         for name, options in cls.CHOICES.items():
             value = form.get(name, '')
@@ -306,15 +332,6 @@ class Application:
             else:
                 errors.append(f'Year graduated must be between 1950 and {today.year}.')
 
-        raw = form.get('is_baptized', '')
-        if raw not in ('', '0', '1'):
-            errors.append('Please choose a valid baptism answer.')
-            raw = ''
-        data['is_baptized'] = int(raw) if raw else None
-
-        text = form.get('ministry_experience', '').strip()
-        if len(text) > 1000:
-            errors.append('Ministry experience must be 1000 characters or fewer.')
-        data['ministry_experience'] = text or None
-
         return data, errors
+
+        

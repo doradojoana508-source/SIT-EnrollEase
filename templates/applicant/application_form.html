@@ -21,18 +21,41 @@
 </div>
 {% endmacro %}
 
-<div style="max-width: 860px">
-  <h1 class="h2 mb-1">Application Form</h1>
-  <p class="text-muted">You can save a draft anytime and finish later. Required details must be complete before you submit.</p>
+{% macro ro(label, value, col='col-md-4') %}
+<div class="{{ col }}">
+  <label class="form-label">{{ label }}</label>
+  <input type="text" class="form-control" value="{{ value or '' }}" disabled>
+</div>
+{% endmacro %}
+
+{% macro nm(name, label, current, req=True) %}
+<div class="col-md-4">
+  <label for="{{ name }}" class="form-label">{{ label }}</label>
+  <input type="text" class="form-control" id="{{ name }}" name="{{ name }}"
+         value="{{ form.get(name, current) or '' }}" maxlength="50" {{ 'required minlength="2"' if req }}>
+  <div class="invalid-feedback">Enter 2 to 50 letters.</div>
+</div>
+{% endmacro %}
+
+{% set phone_attrs = 'pattern="(09\\d{9}|\\+639\\d{9})" maxlength="16"' %}
+
+<div style="max-width: 900px">
+  <h1 class="h2 mb-1">Application for Admission</h1>
+  <p class="text-muted">Simons Institute of Theology. You can save a draft anytime and finish later.
+    Required details must be complete before you submit.</p>
 
   <form method="post" class="needs-validation" novalidate>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <div class="card mb-3"><div class="card-body p-4">
-      <h2 class="h5 mb-3">Program</h2>
+      <h2 class="h5 mb-3">Applicant</h2>
       <div class="row g-3">
-        <div class="col-12">
-          <label for="program_id" class="form-label">Program you are applying for</label>
+        {{ nm('last_name', 'Surname', current_user.last_name) }}
+        {{ nm('first_name', 'Given name', current_user.first_name) }}
+        {{ nm('middle_name', 'Middle name (optional)', current_user.middle_name, False) }}
+        {{ inp('address', 'Complete address', col='col-md-7', attrs='maxlength="255"') }}
+        <div class="col-md-5">
+          <label for="program_id" class="form-label">Degree program</label>
           <select class="form-select" id="program_id" name="program_id">
             <option value="">Choose a program...</option>
             {% for pid, label in options %}
@@ -41,66 +64,79 @@
           </select>
         </div>
       </div>
+           <p class="form-text mb-0 mt-2">Check that your name is written exactly as in your official documents.
+        Your email comes from your account.</p>
     </div></div>
 
     <div class="card mb-3"><div class="card-body p-4">
-      <h2 class="h5 mb-3">Personal information</h2>
+      <h2 class="h5 mb-3">Contact information</h2>
       <div class="row g-3">
-        {{ inp('birthdate', 'Birth date', 'date', attrs='max="' ~ max_birth ~ '"', hint='Enter a valid birth date.') }}
-        {{ inp('birthplace', 'Place of birth', attrs='maxlength="120"') }}
-        {{ sel('sex', 'Sex', choices['sex']) }}
-        {{ sel('civil_status', 'Civil status', choices['civil_status']) }}
-        {{ inp('nationality', 'Nationality', ph='Filipino', attrs='maxlength="60"') }}
-        {{ inp('mobile', 'Mobile number', 'tel', ph='09171234567', attrs='pattern="(09\\d{9}|\\+639\\d{9})" maxlength="16"', hint='Use the format 09171234567.') }}
-        {{ inp('address', 'Home address', col='col-12', attrs='maxlength="255"') }}
+        {{ inp('home_tel', 'Home tel. no. (optional)', 'tel', col='col-md-4', attrs='maxlength="20"') }}
+        {{ inp('phone', 'Phone number', 'tel', col='col-md-4', ph='09171234567', attrs=phone_attrs, hint='Use the format 09171234567.') }}
+        {{ ro('Email address', current_user.email) }}
       </div>
     </div></div>
 
     <div class="card mb-3"><div class="card-body p-4">
-      <h2 class="h5 mb-3">Parent or guardian</h2>
+      <h2 class="h5 mb-1">Guardian</h2>
+      <p class="text-muted small">Give at least one: your father or your mother, with a contact number.</p>
       <div class="row g-3">
-        {{ inp('guardian_name', 'Full name', col='col-md-12', attrs='maxlength="120"') }}
-        {{ inp('guardian_relationship', 'Relationship', ph='Mother, Father, Guardian...', attrs='maxlength="40"') }}
-        {{ inp('guardian_mobile', 'Mobile number', 'tel', ph='09171234567', attrs='pattern="(09\\d{9}|\\+639\\d{9})" maxlength="16"', hint='Use the format 09171234567.') }}
+        {{ inp('father_name', 'Name of father', attrs='maxlength="120"') }}
+        {{ inp('father_mobile', 'Contact no.', 'tel', ph='09171234567', attrs=phone_attrs, hint='Use the format 09171234567.') }}
+        {{ inp('mother_name', 'Name of mother', attrs='maxlength="120"') }}
+        {{ inp('mother_mobile', 'Contact no.', 'tel', ph='09171234567', attrs=phone_attrs, hint='Use the format 09171234567.') }}
       </div>
     </div></div>
 
     <div class="card mb-3"><div class="card-body p-4">
-      <h2 class="h5 mb-3">Educational background</h2>
+      <h2 class="h5 mb-3">Birth and personal information</h2>
       <div class="row g-3">
-        {{ inp('last_school', 'Last school attended', col='col-12', attrs='maxlength="150"') }}
-        {{ sel('education_level', 'Highest education completed', choices['education_level']) }}
-        {{ inp('year_graduated', 'Year graduated', 'number', attrs='min="1950" max="' ~ year ~ '"', hint='Enter a year from 1950 to ' ~ year ~ '.') }}
+        {{ inp('birthdate', 'Date of birth', 'date', col='col-md-4', attrs='max="' ~ max_birth ~ '"', hint='Enter a valid date of birth.') }}
+        {{ inp('birthplace', 'Place of birth', col='col-md-8', attrs='maxlength="120"') }}
+        <div class="col-md-3">
+          <label for="age" class="form-label">Age</label>
+          <input type="text" class="form-control" id="age" disabled>
+        </div>
+        {{ sel('gender', 'Gender', choices['gender'], col='col-md-3') }}
+        {{ sel('civil_status', 'Civil status', choices['civil_status'], col='col-md-3') }}
+        {{ inp('nationality', 'Nationality', col='col-md-3', ph='Filipino', attrs='maxlength="60"') }}
       </div>
     </div></div>
 
     <div class="card mb-3"><div class="card-body p-4">
-      <h2 class="h5 mb-3">Employment <small class="text-muted fw-normal">(optional)</small></h2>
+      <h2 class="h5 mb-1">Educational background</h2>
+      <p class="text-muted small">Most recent educational attainment.</p>
       <div class="row g-3">
-        {{ inp('occupation', 'Occupation', attrs='maxlength="100"') }}
+        {{ inp('school_name', 'Name of school', col='col-md-5', attrs='maxlength="150"') }}
+        {{ inp('school_place', 'Place', col='col-md-4', attrs='maxlength="150"') }}
+        {{ inp('year_graduated', 'Year graduated', 'number', col='col-md-3', attrs='min="1950" max="' ~ year ~ '"', hint='Enter a year from 1950 to ' ~ year ~ '.') }}
+      </div>
+    </div></div>
+
+    <div class="card mb-3"><div class="card-body p-4">
+      <h2 class="h5 mb-1">Present employment</h2>
+      <p class="text-muted small">Only if you are bi-vocational. Otherwise leave blank.</p>
+      <div class="row g-3">
+        {{ inp('job_position', 'Position', attrs='maxlength="100"') }}
         {{ inp('employer', 'Employer', attrs='maxlength="150"') }}
       </div>
     </div></div>
 
-    <div class="card mb-4"><div class="card-body p-4">
-      <h2 class="h5 mb-3">Church and ministry</h2>
+    <div class="card mb-3"><div class="card-body p-4">
+      <h2 class="h5 mb-3">Church information</h2>
       <div class="row g-3">
-        {{ inp('church_name', 'Church you attend', attrs='maxlength="150"') }}
-        {{ inp('church_address', 'Church address', attrs='maxlength="255"') }}
-        {{ inp('pastor_name', "Pastor's name", attrs='maxlength="120"') }}
-        {{ inp('pastor_mobile', "Pastor's mobile number", 'tel', ph='09171234567', attrs='pattern="(09\\d{9}|\\+639\\d{9})" maxlength="16"', hint='Use the format 09171234567.') }}
-        <div class="col-md-6">
-          <label for="is_baptized" class="form-label">Are you baptized?</label>
-          <select class="form-select" id="is_baptized" name="is_baptized">
-            <option value="">Choose...</option>
-            <option value="1" {{ 'selected' if form.get('is_baptized', '')|string == '1' }}>Yes</option>
-            <option value="0" {{ 'selected' if form.get('is_baptized', '')|string == '0' }}>Not yet</option>
-          </select>
-        </div>
-        <div class="col-12">
-          <label for="ministry_experience" class="form-label">Ministry experience <small class="text-muted">(optional)</small></label>
-          <textarea class="form-control" id="ministry_experience" name="ministry_experience" rows="4" maxlength="1000">{{ form.get('ministry_experience', '') }}</textarea>
-        </div>
+        {{ inp('church_name', 'Name of church', col='col-md-4', attrs='maxlength="150"') }}
+        {{ inp('church_address', 'Address', col='col-md-5', attrs='maxlength="255"') }}
+        {{ inp('pastor_name', 'Pastor', col='col-md-3', attrs='maxlength="120"') }}
+      </div>
+    </div></div>
+
+    <div class="card mb-4"><div class="card-body p-4">
+      <h2 class="h5 mb-1">Ministry experience / commitment</h2>
+      <p class="text-muted small">Optional.</p>
+      <div class="row g-3">
+        {{ inp('responsibility', 'Responsibility', attrs='maxlength="150"') }}
+        {{ inp('ministry', 'Ministry', attrs='maxlength="150"') }}
       </div>
     </div></div>
 
@@ -108,6 +144,23 @@
       <button type="submit" class="btn btn-sit"><i class="bi bi-save"></i> Save draft</button>
       <a href="{{ url_for('applicant.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
     </div>
+    <p class="text-muted small mt-3">You will certify and sign your application when you submit it.</p>
   </form>
 </div>
+
+<script>
+  (function () {
+    const birth = document.getElementById('birthdate');
+    const age = document.getElementById('age');
+    function calc() {
+      if (!birth.value) { age.value = ''; return; }
+      const b = new Date(birth.value), t = new Date();
+      let n = t.getFullYear() - b.getFullYear();
+      if (t.getMonth() < b.getMonth() || (t.getMonth() === b.getMonth() && t.getDate() < b.getDate())) n--;
+      age.value = n >= 0 ? n : '';
+    }
+    birth.addEventListener('input', calc);
+    calc();
+  })();
+</script>
 {% endblock %}
