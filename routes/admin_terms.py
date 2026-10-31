@@ -16,7 +16,8 @@ def get_term(term_id):
 @admin_terms_bp.route('/')
 @roles_required('admin')
 def index():
-    return render_template('admin/terms.html', terms=Term.all())
+    return render_template('admin/terms.html', terms=Term.all(), ep='admin_terms', can_add=True,
+                           heading='Terms & Admission')
 
 
 @admin_terms_bp.route('/new', methods=['GET', 'POST'])
@@ -31,7 +32,7 @@ def new():
             return redirect(url_for('admin_terms.index'))
         except ValueError as exc:
             flash(str(exc), 'danger')
-    return render_template('admin/term_form.html', term=None, form=request.form)
+    return render_template('admin/term_form.html', term=None, form=request.form, ep='admin_terms')
 
 
 @admin_terms_bp.route('/<int:term_id>/edit', methods=['GET', 'POST'])
@@ -50,7 +51,7 @@ def edit(term_id):
     else:
         form = {'admission_open': term.admission_open.isoformat() if term.admission_open else '',
                 'admission_close': term.admission_close.isoformat() if term.admission_close else ''}
-    return render_template('admin/term_form.html', term=term, form=form)
+    return render_template('admin/term_form.html', term=term, form=form, ep='admin_terms')
 
 
 @admin_terms_bp.route('/<int:term_id>/open', methods=['POST'])

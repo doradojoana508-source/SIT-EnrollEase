@@ -1,0 +1,15 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Applications | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-3">Applications</h1>
+<div class="card"><div class="card-body p-5 text-center">
+  <i class="bi bi-calendar-event display-4 text-sit"></i>
+  <h2 class="h4 mt-3">Prepare for the next admission</h2>
+  <p class="text-muted mx-auto col-lg-6">
+    There is no active admission window right now. When the next trimester starts, open its window
+    under <strong>Admission</strong> and the new applications will appear here.
+  </p>
+  <a href="{{ url_for('registrar_admission.index') }}" class="btn btn-sit">Go to Admission</a>
+</div></div>
+{% endblock %}

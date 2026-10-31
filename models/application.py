@@ -251,9 +251,12 @@ class Application:
         return cls(row) if row else None
 
     @classmethod
-    def search(cls, q='', status='', limit=10, offset=0):
+    def search(cls, q='', status='', limit=10, offset=0, term_id=None):
         """Para sa Registrar: mga na-submit na application (walang Draft). Ibinabalik ang (rows, total)."""
         where, params = ["a.status <> 'Draft'"], []
+        if term_id:
+            where.append('a.term_id = %s')
+            params.append(term_id)
         if status:
             where.append('a.status = %s')
             params.append(status)

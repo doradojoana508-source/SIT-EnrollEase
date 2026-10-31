@@ -6,6 +6,7 @@ from models.audit_log import AuditLog
 from models.notification import Notification
 from models.user import User
 from utils import roles_required, Pager
+from models.term import Term
 
 registrar_applications_bp = Blueprint('registrar_applications', __name__, url_prefix='/registrar/applications')
 
@@ -14,11 +15,14 @@ PER_PAGE = 10
 
 
 def get_application(application_id):
-    """Hindi nakikita ng Registrar ang Draft."""
+    """Hindi nakikita ng Registrar ang Draft, o ang application ng term na naka-archive na."""
     application = Application.find(application_id)
     if application is None or application.status == 'Draft':
         abort(404)
-    return application
+    term = Term.find(application.term_id) if application.term_id else None
+    if term and term.admission_status == 'Archived':
+        abort(404)
+    return application 
 
 
 def get_doc_row(application, type_id):
@@ -31,15 +35,21 @@ def get_doc_row(application, type_id):
 @registrar_applications_bp.route('/')
 @roles_required('registrar')
 def index():
+    terms = Term.active()
+    if not terms:
+        return render_template('registrar/admission_empty.html')
+    term = next((t for t in terms if t.id == request.args.get('term', type=int)), terms[0])
+
     q = request.args.get('q', '').strip()
     status = request.args.get('status', '')
     if status not in STATUS_FILTERS:
         status = ''
     page = request.args.get('page', 1, type=int)
-    rows, total = Application.search(q, status, PER_PAGE, (max(page, 1) - 1) * PER_PAGE)
+    rows, total = Application.search(q, status, PER_PAGE, (max(page, 1) - 1) * PER_PAGE, term.id)
     pager = Pager(total, page, PER_PAGE)
     return render_template('registrar/applications.html', rows=rows, pager=pager, q=q, status=status,
-                           statuses=STATUS_FILTERS, programs=dict(Application.program_options()))
+                           statuses=STATUS_FILTERS, programs=dict(Application.program_options()),
+                           terms=terms, term=term)
 
 
 @registrar_applications_bp.route('/<int:application_id>')

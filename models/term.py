@@ -51,6 +51,14 @@ class Term:
         row = query("SELECT * FROM academic_terms WHERE admission_status = 'Open' ORDER BY id DESC LIMIT 1", one=True)
         return cls(row) if row else None
 
+    @classmethod
+    def active(cls):
+        """Mga term na may aktibong admission (Open o Closed pa lang, hindi pa naka-archive). Una ang bukas."""
+        cls.sync()
+        rows = query("SELECT * FROM academic_terms WHERE admission_status IN ('Open', 'Closed') "
+                     "ORDER BY (admission_status = 'Open') DESC, academic_year DESC, term_no DESC")
+        return [cls(r) for r in rows]
+
     # ---------- validation ----------
     @staticmethod
     def _to_date(raw, label):

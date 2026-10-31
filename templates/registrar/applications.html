@@ -3,9 +3,20 @@
 
 {% block content %}
 <h1 class="h2 mb-1">Applications</h1>
-<p class="text-muted">Review submitted applications and their documents.</p>
+<p class="text-muted mb-3">
+  <span class="fw-semibold">{{ term.name }}</span>
+  <span class="badge text-bg-{{ 'success' if term.is_open else 'warning' }} ms-1">Admission {{ term.admission_status|lower }}</span>
+  {% if not term.is_open %}<span class="small d-block">The window is closed. Applicants already in the process can still be reviewed.</span>{% endif %}
+</p>
 
 <form method="get" class="row g-2 mb-3">
+  {% if terms|length > 1 %}
+  <div class="col-12 col-md-3">
+    <select name="term" class="form-select" aria-label="Term" onchange="this.form.submit()">
+      {% for t in terms %}<option value="{{ t.id }}" {{ 'selected' if t.id == term.id }}>{{ t.short }}</option>{% endfor %}
+    </select>
+  </div>
+  {% endif %}
   <div class="col-12 col-md">
     <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Search name or email" maxlength="80">
   </div>

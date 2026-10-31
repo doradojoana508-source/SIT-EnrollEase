@@ -2,7 +2,7 @@
 {% block title %}{{ 'Edit dates' if term else 'Add term' }} | SIT-EnrollEase{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('admin_terms.index') }}" class="text-decoration-none"><i class="bi bi-arrow-left"></i> Back to terms</a>
+<a href="{{ url_for(ep ~ '.index') }}" class="text-decoration-none"><i class="bi bi-arrow-left"></i> Back</a>
 <h1 class="h2 mt-2 mb-3">{{ term.name if term else 'Add term' }}</h1>
 
 <div class="card col-lg-6"><div class="card-body p-4">
@@ -39,7 +39,7 @@
     </div>
 
     <button type="submit" class="btn btn-sit">Save</button>
-    <a href="{{ url_for('admin_terms.index') }}" class="btn btn-outline-secondary">Cancel</a>
+    <a href="{{ url_for(ep ~ '.index') }}" class="btn btn-outline-secondary">Cancel</a>
   </form>
 </div></div>
 {% endblock %}
