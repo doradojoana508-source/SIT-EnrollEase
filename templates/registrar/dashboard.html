@@ -1,0 +1,111 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Dashboard | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+{% set bar_colors = {'Submitted': 'primary', 'Approved': 'info', 'Interview Scheduled': 'success',
+                     'For Enrollment': 'success', 'Enrolled': 'success', 'Rejected': 'danger'} %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="h2 mb-1">Welcome, {{ current_user.first_name }}!</h1>
+    {% if term %}
+      <p class="text-muted mb-0">
+        <span class="fw-semibold">{{ term.name }}</span>
+        <span class="badge text-bg-{{ 'success' if term.is_open else 'warning' }} ms-1">Admission {{ term.admission_status|lower }}</span>
+      </p>
+    {% else %}
+      <p class="text-muted mb-0">Registrar</p>
+    {% endif %}
+  </div>
+  {% if terms|length > 1 %}
+  <form method="get">
+    <select name="term" class="form-select form-select-sm" aria-label="Term" onchange="this.form.submit()">
+      {% for t in terms %}<option value="{{ t.id }}" {{ 'selected' if t.id == term.id }}>{{ t.short }}</option>{% endfor %}
+    </select>
+  </form>
+  {% endif %}
+</div>
+
+{% if not term %}
+<div class="card mb-3"><div class="card-body p-5 text-center">
+  <i class="bi bi-calendar-event display-4 text-sit"></i>
+  <h2 class="h4 mt-3">Prepare for the next admission</h2>
+  <p class="text-muted mx-auto col-lg-6">
+    There is no active admission window. Open the next trimester under <strong>Admission</strong>
+    and its applications will appear here.</p>
+  <a href="{{ url_for('registrar_admission.index') }}" class="btn btn-sit">Go to Admission</a>
+</div></div>
+
+{% else %}
+<!-- Mga kailangang gawin -->
+<div class="row g-3 mb-3">
+  {% for s, label, icon, color in [('Submitted', 'To review', 'bi-inbox', 'primary'),
+                                   ('Approved', 'To schedule', 'bi-calendar-plus', 'info'),
+                                   ('Interview Scheduled', 'Interviews', 'bi-calendar-check', 'success'),
+                                   ('For Enrollment', 'For enrollment', 'bi-mortarboard', 'success')] %}
+  <div class="col-6 col-lg-3">
+    <a href="{{ url_for('registrar_applications.index', term=term.id, status=s) }}" class="text-decoration-none">
+      <div class="card h-100"><div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="display-6 fw-bold text-{{ color }}">{{ counts.get(s, 0) }}</div>
+          <i class="bi {{ icon }} fs-3 text-{{ color }}"></i>
+        </div>
+        <div class="text-muted small">{{ label }}</div>
+      </div></div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="row g-3 mb-3">
+  <!-- Graph ng status -->
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body p-4">
+      <h2 class="h5 mb-3">Applications by status</h2>
+      {% if total %}
+        {% for s in ['Submitted', 'Approved', 'Interview Scheduled', 'For Enrollment', 'Enrolled', 'Rejected'] %}
+          {% set n = counts.get(s, 0) %}
+          <div class="mb-3">
+            <div class="d-flex justify-content-between small"><span>{{ s }}</span><strong>{{ n }}</strong></div>
+            <div class="progress" style="height: 10px" role="progressbar" aria-label="{{ s }}"
+                 aria-valuenow="{{ n }}" aria-valuemin="0" aria-valuemax="{{ total }}">
+              <div class="progress-bar bg-{{ bar_colors[s] }}" style="width: {{ (n * 100 / total)|round|int }}%"></div>
+            </div>
+          </div>
+        {% endfor %}
+        <p class="small text-muted mb-0">{{ total }} submitted{% if drafts %} &middot; {{ drafts }} still drafting{% endif %}</p>
+      {% else %}
+        <p class="text-muted mb-0">No submitted applications yet.{% if drafts %} {{ drafts }} still drafting.{% endif %}</p>
+      {% endif %}
+    </div></div>
+  </div>
+
+  <!-- Graph ng program -->
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body p-4">
+      <h2 class="h5 mb-3">Applicants per program</h2>
+      {% for p in programs %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between small"><span title="{{ p.name }}">{{ p.code }} <span class="text-muted">{{ p.name }}</span></span><strong>{{ p.n }}</strong></div>
+          <div class="progress" style="height: 10px" role="progressbar" aria-label="{{ p.code }}"
+               aria-valuenow="{{ p.n }}" aria-valuemin="0" aria-valuemax="{{ total }}">
+            <div class="progress-bar bg-secondary" style="width: {{ (p.n * 100 / total)|round|int }}%"></div>
+          </div>
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">No submitted applications yet.</p>
+      {% endfor %}
+    </div></div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Mga kasalukuyang student -->
+<div class="card"><div class="card-body p-4 d-flex align-items-center gap-3">
+  <i class="bi bi-people fs-1 text-sit"></i>
+  <div>
+    <div class="display-6 fw-bold">{{ students }}</div>
+    <div class="text-muted">Currently enrolled students</div>
+  </div>
+</div></div>
+{% endblock %}

@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from models.user import User
 from mailer import send_email
 from utils import roles_required, start_session
+from models.stats import Stats
 
 # Isang config bawat portal. Ang key ang pangalan ng blueprint.
 PORTALS = {
@@ -86,6 +87,8 @@ def create_portal(key, cfg):
     @bp.route('/dashboard')
     @roles_required(cfg['role'])
     def dashboard():
+        if key == 'registrar':
+            return render_template('registrar/dashboard.html', **Stats.registrar(request.args.get('term', type=int)))
         return render_template('app_home.html', heading=cfg['title'])
 
     return bp
