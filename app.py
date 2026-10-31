@@ -15,6 +15,7 @@ from menus import menu_for, ROLE_LABELS, ACCOUNT_MENU
 from routes.admin_users import admin_users_bp
 from routes.admin_audit import admin_audit_bp
 from routes.registrar_applications import registrar_applications_bp
+from routes.admin_terms import admin_terms_bp
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -83,6 +84,7 @@ for key, cfg in PORTALS.items():
 app.register_blueprint(admin_users_bp)
 app.register_blueprint(admin_audit_bp)
 app.register_blueprint(registrar_applications_bp)
+app.register_blueprint(admin_terms_bp)
 
 if __name__ == '__main__':
     app.run(debug=True)

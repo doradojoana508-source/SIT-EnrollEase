@@ -1,0 +1,45 @@
+{% extends 'layouts/app.html' %}
+{% block title %}{{ 'Edit dates' if term else 'Add term' }} | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('admin_terms.index') }}" class="text-decoration-none"><i class="bi bi-arrow-left"></i> Back to terms</a>
+<h1 class="h2 mt-2 mb-3">{{ term.name if term else 'Add term' }}</h1>
+
+<div class="card col-lg-6"><div class="card-body p-4">
+  <form method="post" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    {% if not term %}
+    <div class="mb-3">
+      <label for="term_no" class="form-label">Trimester</label>
+      <select class="form-select" id="term_no" name="term_no" required>
+        {% for n, label in [(1, 'First (1)'), (2, 'Second (2)'), (3, 'Third (3)')] %}
+          <option value="{{ n }}" {{ 'selected' if form.get('term_no') == n|string }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="academic_year" class="form-label">Academic year</label>
+      <input type="text" class="form-control" id="academic_year" name="academic_year" required
+             pattern="\d{4}-\d{4}" maxlength="9" placeholder="2026-2027" value="{{ form.get('academic_year', '') }}">
+      <div class="form-text">Format: 2026-2027</div>
+    </div>
+    {% endif %}
+
+    <div class="row g-3 mb-3">
+      <div class="col-sm-6">
+        <label for="admission_open" class="form-label">Admission opens</label>
+        <input type="date" class="form-control" id="admission_open" name="admission_open" value="{{ form.get('admission_open', '') }}">
+      </div>
+      <div class="col-sm-6">
+        <label for="admission_close" class="form-label">Admission closes</label>
+        <input type="date" class="form-control" id="admission_close" name="admission_close" value="{{ form.get('admission_close', '') }}">
+        <div class="form-text">Required before the window can be opened. It closes by itself after this date.</div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-sit">Save</button>
+    <a href="{{ url_for('admin_terms.index') }}" class="btn btn-outline-secondary">Cancel</a>
+  </form>
+</div></div>
+{% endblock %}

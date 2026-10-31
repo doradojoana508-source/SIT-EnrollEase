@@ -1,0 +1,51 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Terms &amp; Admission | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+{% set colors = {'Draft': 'secondary', 'Open': 'success', 'Closed': 'warning', 'Archived': 'dark'} %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="h2 mb-1">Terms &amp; Admission</h1>
+    <p class="text-muted mb-0">Create trimesters and open or close their admission window. Only the open window appears on the public site.</p>
+  </div>
+  <a href="{{ url_for('admin_terms.new') }}" class="btn btn-sit"><i class="bi bi-plus-lg"></i> Add term</a>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Trimester</th><th>Academic year</th><th>Admission window</th><th>Opens</th><th>Closes</th><th class="text-end">Actions</th></tr></thead>
+      <tbody>
+        {% for t in terms %}
+        <tr>
+          <td class="fw-semibold">{{ t.NAMES.get(t.term_no) }} ({{ t.term_no }})</td>
+          <td>{{ t.academic_year }}</td>
+          <td><span class="badge text-bg-{{ colors.get(t.admission_status, 'secondary') }}">{{ t.admission_status }}</span></td>
+          <td>{{ t.admission_open.strftime('%b %d, %Y') if t.admission_open else '-' }}</td>
+          <td>{{ t.admission_close.strftime('%b %d, %Y') if t.admission_close else '-' }}</td>
+          <td class="text-end text-nowrap">
+            {% if t.admission_status != 'Archived' %}
+              <a href="{{ url_for('admin_terms.edit', term_id=t.id) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i> Dates</a>
+            {% endif %}
+            {% if t.admission_status in ('Draft', 'Closed') %}
+              <form method="post" action="{{ url_for('admin_terms.open_window', term_id=t.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-door-open"></i> Open</button>
+              </form>
+            {% elif t.admission_status == 'Open' %}
+              <form method="post" action="{{ url_for('admin_terms.close_window', term_id=t.id) }}" class="d-inline"
+                    onsubmit="return confirm('Close admission for this term? Applicants will no longer be able to apply.');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-warning btn-sm"><i class="bi bi-door-closed"></i> Close</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">No terms yet. Add the first one.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

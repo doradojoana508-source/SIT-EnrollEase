@@ -33,6 +33,9 @@ CREATE TABLE IF NOT EXISTS academic_terms (
   academic_year VARCHAR(9) NOT NULL,
   start_date DATE NULL,
   end_date DATE NULL,
+  admission_status ENUM('Draft','Open','Closed','Archived') NOT NULL DEFAULT 'Draft',
+  admission_open DATE NULL,
+  admission_close DATE NULL,
   is_current TINYINT(1) NOT NULL DEFAULT 0,
   UNIQUE KEY uq_term (term_no, academic_year)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
