@@ -9,8 +9,8 @@
 </div>
 {% endmacro %}
 
-<a href="{{ url_for('registrar_applications.index') }}" class="text-decoration-none">
-  <i class="bi bi-arrow-left"></i> Back to applications</a>
+<a href="{{ back_url }}" class="text-decoration-none">
+  <i class="bi bi-arrow-left"></i> Back</a>
 
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mt-2 mb-3">
   <div>
@@ -19,11 +19,17 @@
       {% if application.submitted_at %}&middot; Submitted {{ application.submitted_at.strftime('%b %d, %Y %I:%M %p') }}{% endif %}</div>
   </div>
   <div class="d-flex align-items-center gap-2">
+    {% if not read_only %}
     <a href="{{ url_for('registrar_applications.print_form', application_id=application.id) }}" target="_blank"
        rel="noopener" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer"></i> Print form</a>
+    {% endif %}
     {% with status = application.status %}{% include 'partials/_status_badge.html' %}{% endwith %}
   </div>
 </div>
+
+{% if read_only %}
+<div class="alert alert-secondary small"><i class="bi bi-archive"></i> This record is archived and read-only.</div>
+{% endif %}
 
 {% if interview %}
 <div class="alert alert-success small">
@@ -121,7 +127,7 @@
           <div class="small text-muted">Filled out online (see the form).</div>
         {% elif r.upload %}
           <div class="small mt-1">
-            <a href="{{ url_for('registrar_applications.document_file', application_id=application.id, type_id=r.id) }}"
+            <a href="{{ url_for(file_ep, application_id=application.id, type_id=r.id) }}"
                target="_blank" rel="noopener"><i class="bi bi-eye"></i> View file</a>
             <span class="text-muted">&middot; {{ r.upload.original_name }} &middot; {{ (r.upload.size_bytes / 1024)|round|int }} KB</span>
           </div>
@@ -186,7 +192,7 @@
     </div>
     {% endmacro %}
 
-    {% if application.status in ('Submitted', 'Approved', 'Interview Scheduled', 'For Enrollment') %}
+    {% if not read_only and application.status in ('Submitted', 'Approved', 'Interview Scheduled', 'For Enrollment') %}
     <div class="card mt-3"><div class="card-body p-4">
       <h2 class="h5 mb-3">Decision</h2>
 

@@ -78,3 +78,15 @@ def close_window(term_id):
     except ValueError as exc:
         flash(str(exc), 'danger')
     return redirect(url_for('admin_terms.index'))
+
+@admin_terms_bp.route('/<int:term_id>/archive', methods=['POST'])
+@roles_required('admin')
+def archive(term_id):
+    term = get_term(term_id)
+    try:
+        Term.archive(term.id)
+        AuditLog.record('Term archived', term.short)
+        flash(f'{term.short} was archived.', 'success')
+    except ValueError as exc:
+        flash(str(exc), 'danger')
+    return redirect(url_for('admin_terms.index'))

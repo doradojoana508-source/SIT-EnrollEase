@@ -9,6 +9,7 @@ class Term:
     """Isang trimester ng isang academic year, kasama ang admission window nito."""
 
     NAMES = {1: 'First', 2: 'Second', 3: 'Third'}
+    IN_PROCESS = ('Submitted', 'Approved', 'Interview Scheduled', 'For Enrollment')
 
     def __init__(self, row):
         self.__dict__.update(row)
@@ -127,3 +128,30 @@ class Term:
         if term is None or term.admission_status != 'Open':
             raise ValueError('Only an open admission window can be closed.')
         execute("UPDATE academic_terms SET admission_status = 'Closed' WHERE id = %s", (term_id,))
+
+    @classmethod
+    def in_process_count(cls, term_id):
+        marks = ', '.join(['%s'] * len(cls.IN_PROCESS))
+        return query(f"SELECT COUNT(*) AS n FROM applications WHERE term_id = %s AND status IN ({marks})",
+                     (term_id, *cls.IN_PROCESS), one=True)['n']
+
+    @classmethod
+    def archive(cls, term_id):
+        term = cls.find(term_id)
+        if term is None or term.admission_status != 'Closed':
+            raise ValueError('Close the admission window first, then archive it.')
+        pending = cls.in_process_count(term_id)
+        if pending:
+            raise ValueError(f'{pending} application(s) are still in process. Finish or reject them before archiving.')
+        execute("UPDATE academic_terms SET admission_status = 'Archived' WHERE id = %s", (term_id,))
+
+    @classmethod
+    def archived(cls):
+        rows = query(
+            "SELECT t.*, "
+            "(SELECT COUNT(*) FROM applications a WHERE a.term_id = t.id AND a.status <> 'Draft') AS n_total, "
+            "(SELECT COUNT(*) FROM applications a WHERE a.term_id = t.id AND a.status = 'Enrolled') AS n_enrolled, "
+            "(SELECT COUNT(*) FROM applications a WHERE a.term_id = t.id AND a.status = 'Rejected') AS n_rejected "
+            "FROM academic_terms t WHERE t.admission_status = 'Archived' "
+            "ORDER BY t.academic_year DESC, t.term_no DESC")
+        return [cls(r) for r in rows]

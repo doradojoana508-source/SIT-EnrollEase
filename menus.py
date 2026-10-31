@@ -18,7 +18,8 @@ MENUS = {
     'registrar': [
         ('Dashboard', 'bi-speedometer2', 'registrar.dashboard'),
         ('Applications', 'bi-inboxes', 'registrar_applications.index'),
-        ('Admission', 'bi-calendar-range', 'registrar_admission.index'),],
+        ('Admission', 'bi-calendar-range', 'registrar_admission.index'),
+        ('Archive', 'bi-archive', 'registrar_archive.index'),],
     'finance':   [('Dashboard', 'bi-speedometer2', 'finance.dashboard')],
     'faculty':   [('Dashboard', 'bi-speedometer2', 'faculty.dashboard')],
 }

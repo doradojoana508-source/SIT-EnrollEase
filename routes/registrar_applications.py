@@ -57,11 +57,13 @@ def index():
 def review(application_id):
     application = get_application(application_id)
     return render_template('registrar/review.html', application=application,
-                           owner=User.find(application.user_id),
-                           program=dict(Application.program_options()).get(application.program_id),
-                           rows=application.document_rows(),
-                           interview=application.current_interview(),
-                           can_review=application.status == 'Submitted')
+                        owner=User.find(application.user_id),
+                        program=dict(Application.program_options()).get(application.program_id),
+                        rows=application.document_rows(),
+                        interview=application.current_interview(),
+                        can_review=application.status == 'Submitted',
+                        read_only=False, file_ep='registrar_applications.document_file',
+                        back_url=url_for('registrar_applications.index'))
 
 
 @registrar_applications_bp.route('/<int:application_id>/documents/<int:type_id>/file')
