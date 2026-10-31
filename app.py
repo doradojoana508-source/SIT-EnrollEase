@@ -16,6 +16,7 @@ from routes.admin_users import admin_users_bp
 from routes.admin_audit import admin_audit_bp
 from routes.registrar_applications import registrar_applications_bp
 from routes.admin_terms import admin_terms_bp
+from models.term import Term
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -73,6 +74,15 @@ def inject_user():
         context.update(menu=menu_for(user.role), account_menu=ACCOUNT_MENU,
                        role_label=ROLE_LABELS.get(user.role, user.role.title()))
     return context
+
+@app.context_processor
+def inject_admission():
+    """Para sa mga template: admission_window() ay ang bukas na term, o None. Isang query lang kada request."""
+    def admission_window():
+        if 'admission' not in g:
+            g.admission = Term.open_term()
+        return g.admission
+    return {'admission_window': admission_window}
 
 app.register_blueprint(public_bp)
 app.register_blueprint(auth_bp)

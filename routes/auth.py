@@ -5,6 +5,7 @@ from models.user import User
 from routes.public import home_context
 from mailer import send_email
 from utils import login_url_for
+from models.term import Term
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -33,6 +34,10 @@ def send_verification(user):
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     """Pampublikong Register: applicant lang ang nagagawa rito."""
+    if Term.open_term() is None:
+        flash('Admission is closed right now. Please check this page for the next admission window.', 'info')
+        return redirect(url_for('public.index'))
+        
     if request.method == 'GET':
         return redirect(url_for('public.index', auth='register'))
 

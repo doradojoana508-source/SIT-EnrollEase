@@ -6,17 +6,34 @@
 <!-- HERO -->
 <section class="hero">
   <div class="container">
+    {% set window = admission_window() %}
     <p class="eyebrow">WELCOME TO</p>
     <h1>SIT-EnrollEase</h1>
     <p class="lead col-lg-6 px-0">
       Your journey in theological education starts here. Enroll online, track your
       application and stay connected with the school.
     </p>
+
+    {% if window %}
+    <div class="d-inline-flex align-items-center gap-2 bg-white text-dark rounded-pill px-3 py-2 small">
+      <i class="bi bi-door-open-fill text-success"></i>
+      <span><strong>Admission is open</strong> for the {{ window.name }}{% if window.admission_close %}
+        &middot; until {{ window.admission_close.strftime('%B %d, %Y') }}{% endif %}</span>
+    </div>
+    {% else %}
+    <div class="d-inline-flex align-items-center gap-2 bg-white text-dark rounded-pill px-3 py-2 small">
+      <i class="bi bi-door-closed-fill text-warning"></i>
+      <span><strong>Admission is closed.</strong> Please check back for the next admission window.</span>
+    </div>
+    {% endif %}
+
     <div class="d-flex flex-wrap gap-2 mt-4">
       {% if current_user %}
       <a href="{{ url_for('dashboard.home') }}" class="btn btn-light px-4">Go to Dashboard</a>
-      {% else %}
+      {% elif window %}
       <button class="btn btn-light px-4" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="register">Get Started</button>
+      {% else %}
+      <button class="btn btn-light px-4" disabled>Admission closed</button>
       {% endif %}
       <a href="#process" class="btn btn-outline-light px-4">Learn More</a>
     </div>
@@ -69,12 +86,13 @@
     <div class="row g-4">
       <div class="col-lg-7">
         <ol class="steps">
-          <li><strong>Create an account</strong> and verify your email address.</li>
-          <li><strong>Fill out the application form</strong> and choose your program.</li>
-          <li><strong>Upload your requirements</strong> for review by the registrar.</li>
-          <li><strong>Follow your schedule</strong> for the exam, interview and medical.</li>
-          <li><strong>Submit your original documents</strong> to the school for evaluation and payment of fees.</li>
-          <li><strong>Receive your student number</strong> and your institutional email account.</li>
+          <li><strong>Create an account</strong> and verify your email address while admission is open.</li>
+          <li><strong>Fill out the Admission Form</strong>, choose your program, then print and sign it.</li>
+          <li><strong>Upload your requirements</strong> for review by the Registrar.</li>
+          <li><strong>Interview</strong> with the Executive Director or the Academic Dean about your ministry call and direction.</li>
+          <li><strong>Submit your original documents</strong> to the Registrar once you pass the interview.</li>
+          <li><strong>Get your tuition quotation</strong> from the Finance office.</li>
+          <li><strong>Receive your Certificate of Enrolment</strong> from the Registrar. You are now enrolled.</li>
         </ol>
       </div>
       <div class="col-lg-5">

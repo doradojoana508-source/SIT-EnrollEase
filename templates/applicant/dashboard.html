@@ -20,13 +20,27 @@
 </div>
 {% endfor %}
 
+{% if application and application.is_editable and not can_apply %}
+<div class="alert alert-warning"><i class="bi bi-door-closed"></i>
+  <strong>Admission is closed.</strong> This application can no longer be edited or submitted.
+  Please watch the school website for the next admission window.</div>
+{% endif %}
+
 {% if not application %}
+  {% if can_apply %}
   <div class="card"><div class="card-body p-4 text-center">
     <i class="bi bi-journal-text display-5 text-sit"></i>
     <h2 class="h4 mt-2">Start your application</h2>
     <p class="text-muted">Fill in your details, upload the requirements, then submit.</p>
     <a class="btn btn-sit" href="{{ url_for('applicant.application') }}">Start application</a>
   </div></div>
+  {% else %}
+  <div class="card"><div class="card-body p-4 text-center">
+    <i class="bi bi-door-closed display-5 text-muted"></i>
+    <h2 class="h4 mt-2">Admission is closed</h2>
+    <p class="text-muted mb-0">Applications are not being accepted right now. Please check the school FB page for the next admission window.</p>
+  </div></div>
+  {% endif %}
 
 {% else %}
   {% set status = application.status %}
@@ -61,6 +75,7 @@
           <span class="badge text-bg-{{ badge.get(status, 'secondary') }}">{{ status }}</span>
         </div>
         <p class="mb-1"><strong>Program:</strong> {{ program or 'Not chosen yet' }}</p>
+        {% if term %}<p class="mb-1"><strong>Admission:</strong> {{ term.name }}</p>{% endif %}
         {% if application.submitted_at %}
           <p class="mb-1"><strong>Submitted:</strong> {{ application.submitted_at.strftime('%b %d, %Y %I:%M %p') }}</p>
         {% endif %}
@@ -135,7 +150,7 @@
       </div></div>
     </div>
     {% endif %}
-    {% if application.is_editable %}
+    {% if application.is_editable and can_apply %}
     <div class="col-lg-6">{% include 'applicant/_submit_box.html' %}</div>
     {% endif %}
   </div>

@@ -60,7 +60,7 @@ class Application:
     INTERVIEWERS = ('Executive Director', 'Dean')
     
     def __init__(self, row=None):
-        for name in ('id', 'user_id', 'remarks', 'submitted_at', 'certified_name', 'certified_at') + self.FIELDS:
+        for name in ('id', 'user_id', 'term_id', 'remarks', 'submitted_at', 'certified_name', 'certified_at') + self.FIELDS:
             setattr(self, name, None)
         self.status = 'Draft'
         self.applicant_type = 'New'
@@ -332,9 +332,10 @@ class Application:
     def save(self):
         values = [getattr(self, name) for name in self.FIELDS]
         if self.id is None:
-            columns = ', '.join(('user_id',) + self.FIELDS)
-            marks = ', '.join(['%s'] * (len(self.FIELDS) + 1))
-            self.id = execute(f"INSERT INTO applications ({columns}) VALUES ({marks})", [self.user_id] + values)
+            columns = ', '.join(('user_id', 'term_id') + self.FIELDS)
+            marks = ', '.join(['%s'] * (len(self.FIELDS) + 2))
+            self.id = execute(f"INSERT INTO applications ({columns}) VALUES ({marks})",
+                              [self.user_id, self.term_id] + values)
         else:
             sets = ', '.join(f'{name} = %s' for name in self.FIELDS)
             execute(f"UPDATE applications SET {sets} WHERE id = %s", values + [self.id])

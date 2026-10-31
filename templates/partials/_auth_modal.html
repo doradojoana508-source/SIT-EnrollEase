@@ -37,10 +37,12 @@
               <button class="nav-link active w-100" id="tab-login" data-bs-toggle="pill" data-bs-target="#pane-login"
                       data-auth-name="login" type="button" role="tab">Log In</button>
             </li>
+            {% if admission_window() %}
             <li class="nav-item flex-fill" role="presentation">
               <button class="nav-link w-100" id="tab-register" data-bs-toggle="pill" data-bs-target="#pane-register"
                       data-auth-name="register" type="button" role="tab">Register</button>
             </li>
+            {% endif %}
           </ul>
 
           <div class="tab-content">

@@ -6,6 +6,7 @@ from models.application_document import ApplicationDocument
 from models.notification import Notification
 from utils import roles_required
 from routes.auth import NAME_RE, clean_name
+from models.term import Term
 
 applicant_bp = Blueprint('applicant', __name__, url_prefix='/applicant')
 
@@ -13,6 +14,12 @@ applicant_bp = Blueprint('applicant', __name__, url_prefix='/applicant')
 def my_application():
     return Application.find_by_user(g.user.id)
 
+def admission_for(application=None):
+    """Ang bukas na term kung puwedeng magsimula o magpatuloy ng application, kung hindi ay None."""
+    window = Term.open_term()
+    if window is None or (application is not None and application.term_id != window.id):
+        return None
+    return window
 
 def doc_row(type_id):
     """Ang application ng naka-login na user at ang isang dokumento nito. 404 kung hindi sa kanya."""
@@ -30,7 +37,11 @@ def doc_row(type_id):
 def dashboard():
     application = my_application()
     ctx = dict(application=application, steps=Application.STATUS_STEPS, notices=Notification.unread_for(g.user.id),
-               program=None, interview=None, doc_done=0, doc_total=0, problems=[], bring=[], rejected=[])
+               program=None, interview=None, doc_done=0, doc_total=0, problems=[], bring=[], rejected=[],
+               term=None, can_apply=admission_for(application) is not None)
+    if application:
+        if application.term_id:
+            ctx['term'] = Term.find(application.term_id)
     if application:
         if application.program_id:
             ctx['program'] = dict(Application.program_options()).get(application.program_id)
@@ -50,6 +61,11 @@ def application():
     current = my_application()
     if current and not current.is_editable:
         flash('Your application is already submitted and can no longer be edited.', 'info')
+        return redirect(url_for('applicant.dashboard'))
+
+    window = admission_for(current)
+    if window is None:
+        flash('Admission is closed, so applications can no longer be started or edited.', 'warning')
         return redirect(url_for('applicant.dashboard'))
 
     options = Application.program_options()
@@ -78,6 +94,8 @@ def application():
 
         current = current or Application()
         current.user_id = g.user.id
+        if current.term_id is None:
+            current.term_id = window.id
         for name, value in data.items():
             setattr(current, name, value)
         current.save()
@@ -162,6 +180,9 @@ def submit():
     current = my_application()
     if current is None:
         abort(404)
+    if admission_for(current) is None:
+        flash('Admission is closed, so this application can no longer be submitted.', 'warning')
+        return redirect(url_for('applicant.dashboard'))
     if not request.form.get('certify'):
         flash('Please certify that the information you gave is true.', 'danger')
         return redirect(url_for('applicant.dashboard'))

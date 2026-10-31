@@ -23,6 +23,8 @@
         </form>
         {% else %}
         <button class="btn btn-outline-sit" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="login">Login</button>
+        {% endif %}
+        {% if admission_window() %}
         <button class="btn btn-sit" data-bs-toggle="modal" data-bs-target="#authModal" data-auth-tab="register">Register</button>
         {% endif %}
       </div>

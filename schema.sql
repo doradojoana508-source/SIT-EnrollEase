@@ -141,6 +141,7 @@ CREATE TABLE IF NOT EXISTS applications (
 ) ENGINE=InnoDB;
 
 ALTER TABLE applications ADD CONSTRAINT fk_app_program FOREIGN KEY (program_id) REFERENCES programs(id);
+ALTER TABLE applications ADD CONSTRAINT fk_app_term FOREIGN KEY (term_id) REFERENCES academic_terms(id);
 
 CREATE TABLE IF NOT EXISTS application_documents (
   id INT AUTO_INCREMENT PRIMARY KEY,
