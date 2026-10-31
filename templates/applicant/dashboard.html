@@ -69,6 +69,8 @@
         {% elif status == 'Approved' %}
           <p class="text-muted small mt-2 mb-0">Your application is approved. Your interview schedule will be posted here soon.</p>
         {% endif %}
+                <a href="{{ url_for('applicant.print_form') }}" target="_blank" rel="noopener"
+           class="btn btn-outline-secondary btn-sm mt-2"><i class="bi bi-printer"></i> Print admission form</a>
         {% if application.remarks and not application.is_closed %}
           <div class="alert alert-info mt-3 mb-0 small"><strong>Note from the school:</strong> {{ application.remarks }}</div>
         {% endif %}
@@ -137,13 +139,5 @@
     <div class="col-lg-6">{% include 'applicant/_submit_box.html' %}</div>
     {% endif %}
   </div>
-
-  {% if application.can_withdraw %}
-  <form method="post" action="{{ url_for('applicant.withdraw') }}"
-        onsubmit="return window.confirm('Withdraw your application? This cannot be undone.')">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button type="submit" class="btn btn-link text-danger btn-sm p-0">Withdraw my application</button>
-  </form>
-  {% endif %}
 {% endif %}
 {% endblock %}

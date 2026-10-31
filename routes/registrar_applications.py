@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, send_from_directory
+from datetime import datetime
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, send_from_directory, g
 from models.application import Application
 from models.application_document import ApplicationDocument
 from models.audit_log import AuditLog
@@ -8,7 +9,7 @@ from utils import roles_required, Pager
 
 registrar_applications_bp = Blueprint('registrar_applications', __name__, url_prefix='/registrar/applications')
 
-STATUS_FILTERS = ('Submitted', 'Approved', 'Interview Scheduled', 'For Enrollment', 'Enrolled', 'Rejected', 'Withdrawn')
+STATUS_FILTERS = ('Submitted', 'Approved', 'Interview Scheduled', 'For Enrollment', 'Enrolled', 'Rejected')
 PER_PAGE = 10
 
 
@@ -100,3 +101,85 @@ def reject_document(application_id, type_id):
             [('Document', row['name']), ('Reason', remarks)])
         flash(f'{row["name"]} rejected. The applicant was notified.', 'success')
     return redirect(url_for('registrar_applications.review', application_id=application.id))
+
+@registrar_applications_bp.route('/<int:application_id>/print')
+@roles_required('registrar')
+def print_form(application_id):
+    application = get_application(application_id)
+    photo_id = application.photo_type_id()
+    return render_template('print/admission_form.html', application=application,
+                           owner=User.find(application.user_id),
+                           program=dict(Application.program_options()).get(application.program_id),
+                           photo_url=url_for('registrar_applications.document_file', application_id=application.id,
+                                             type_id=photo_id) if photo_id else None,
+                           back=url_for('registrar_applications.review', application_id=application.id))
+
+
+
+# ---------------- Desisyon: approve, interview, reject ----------------
+def interview_from_form(form):
+    """Binabasa ang schedule mula sa form. Ibinabalik ang dict, o ValueError kung mali."""
+    try:
+        when = datetime.strptime(form.get('scheduled_at', ''), '%Y-%m-%dT%H:%M')
+    except ValueError:
+        raise ValueError('Choose a valid interview date and time.')
+    return dict(interviewer=form.get('interviewer', ''), scheduled_at=when,
+                venue=form.get('venue', ''), notes=' '.join(form.get('notes', '').split())[:255] or None)
+
+
+def back_to_review(application):
+    return redirect(url_for('registrar_applications.review', application_id=application.id))
+
+
+@registrar_applications_bp.route('/<int:application_id>/approve', methods=['POST'])
+@roles_required('registrar')
+def approve(application_id):
+    application = get_application(application_id)
+    try:
+        # Kung may inilagay na petsa, sabay na ang interview at isang email lang ang ipapadala
+        interview = interview_from_form(request.form) if request.form.get('scheduled_at') else None
+        application.approve(g.user, interview)
+        AuditLog.record('Application approved', f'Application #{application.id}')
+        flash('Application approved. The applicant was notified.', 'success')
+    except ValueError as exc:
+        flash(str(exc), 'danger')
+    return back_to_review(application)
+
+
+@registrar_applications_bp.route('/<int:application_id>/schedule', methods=['POST'])
+@roles_required('registrar')
+def schedule(application_id):
+    application = get_application(application_id)
+    try:
+        application.schedule_interview(g.user, **interview_from_form(request.form))
+        AuditLog.record('Interview scheduled', f'Application #{application.id}')
+        flash('Interview scheduled. The applicant was notified.', 'success')
+    except ValueError as exc:
+        flash(str(exc), 'danger')
+    return back_to_review(application)
+
+
+@registrar_applications_bp.route('/<int:application_id>/passed', methods=['POST'])
+@roles_required('registrar')
+def interview_passed(application_id):
+    application = get_application(application_id)
+    try:
+        application.pass_interview(g.user)
+        AuditLog.record('Interview passed', f'Application #{application.id}')
+        flash('Marked as passed. The applicant is now For Enrollment.', 'success')
+    except ValueError as exc:
+        flash(str(exc), 'danger')
+    return back_to_review(application)
+
+
+@registrar_applications_bp.route('/<int:application_id>/reject-application', methods=['POST'])
+@roles_required('registrar')
+def reject_application(application_id):
+    application = get_application(application_id)
+    try:
+        application.reject(g.user, request.form.get('reason', ''))
+        AuditLog.record('Application rejected', f'Application #{application.id}')
+        flash('Application rejected. The applicant was notified.', 'success')
+    except ValueError as exc:
+        flash(str(exc), 'danger')
+    return back_to_review(application)

@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admission Form | SIT-EnrollEase</title>
+  {% include 'partials/_head.html' %}
+  <style>
+    body { background: #e9eeed; }
+    .toolbar { max-width: 210mm; margin: 1rem auto 0; padding: 0 .5rem; }
+    .sheet { background: #fff; color: #000; max-width: 210mm; margin: 1rem auto; padding: 14mm;
+             box-shadow: 0 6px 24px rgba(0, 0, 0, .15); font-family: "Times New Roman", Times, serif;
+             font-size: 10.5pt; line-height: 1.35; }
+    .head { display: flex; align-items: center; gap: 10pt; margin-bottom: 6pt; }
+    .head img { height: 58px; }
+    .head .titles { flex: 1; text-align: center; }
+    .head .school { font-size: 16pt; }
+    .head .title { font-size: 14pt; margin-top: 4pt; }
+    .top { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 6pt; }
+    .office { width: 52%; border: 1px solid #000; padding: 5pt 8pt; font-size: 9pt; }
+    .office .ln { border-bottom: 1px solid #000; height: 13pt; margin-top: 2pt; }
+    .photo { width: 2in; height: 2in; border: 1px solid #000; display: flex; align-items: center;
+             justify-content: center; text-align: center; font-size: 10pt; overflow: hidden; }
+    .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sec { margin-top: 11pt; font-weight: 700; }
+    .sec small { font-weight: 400; }
+    .r { display: flex; gap: 10pt; margin-top: 8pt; }
+    .f { min-width: 0; }
+    /* Fixed ang taas at lapad ng bawat linya. Ang text ang umaangkop, hindi ang layout. */
+    .f .val { height: 22pt; border-bottom: 1px solid #000; padding: 0 3pt; overflow: hidden;
+              display: flex; align-items: center; justify-content: center; text-align: center; }
+    .f .lbl { font-size: 8pt; font-style: italic; text-align: center; color: #222; }
+    .cert { margin-top: 14pt; text-align: justify; font-size: 9.5pt; }
+    @media print {
+      @page { size: A4; margin: 12mm; }
+      body { background: #fff; }
+      .no-print { display: none !important; }
+      .sheet { box-shadow: none; margin: 0; padding: 0; max-width: none; }
+    }
+  </style>
+</head>
+<body>
+{% macro f(label, value, flex=1) %}
+<div class="f" style="flex: {{ flex }}">
+  <div class="val"><span>{{ value if value not in (None, '') else '' }}</span></div>
+  <div class="lbl">{{ label }}</div>
+</div>
+{% endmacro %}
+
+<div class="toolbar no-print">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <a href="{{ back }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+    <button type="button" class="btn btn-sit btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print or save as PDF</button>
+  </div>
+  <div class="alert alert-info small mt-2 mb-0">
+    Print this form, <strong>sign it</strong>, then scan or take a clear photo and upload it under
+    <strong>Documents</strong>. Bring the printed original on your interview day.
+    {% if not photo_url %}<br><strong>Your 2x2 photo will appear in the box once you upload it under Documents.</strong>{% endif %}
+  </div>
+</div>
+
+<main class="sheet">
+  <div class="head">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="SIT logo">
+    <div class="titles">
+      <div class="school">SIMONS Institute of Theology</div>
+      <div class="title">Admission Form</div>
+    </div>
+  </div>
+
+  <div class="top">
+    <div class="office">
+      <div class="text-center">FOR ADMISSION OFFICE USE<br>Please do not write anything here.</div>
+      <div class="mt-1">Date received:</div><div class="ln"></div>
+      <div class="mt-1">Fee Paid:</div><div class="ln"></div>
+      <div class="mt-1">Remarks:</div><div class="ln"></div>
+    </div>
+    <div class="photo">
+      {% if photo_url %}<img src="{{ photo_url }}" alt="2x2 photo">
+      {% else %}<span>2x2 photo with<br>White background</span>{% endif %}
+    </div>
+  </div>
+
+  <div class="sec">Applicant:</div>
+  <div class="r">
+    {{ f('Surname', owner.last_name, 3) }}
+    {{ f('Given Name', owner.first_name, 3) }}
+    {{ f('Middle Name', owner.middle_name, 2) }}
+  </div>
+  <div class="r">
+    {{ f('Complete Address', application.address, 3) }}
+    {{ f('Degree Program', program, 2) }}
+  </div>
+
+  <div class="sec">Contact Information:</div>
+  <div class="r">
+    {{ f('Home Tel. No.', application.home_tel) }}
+    {{ f('Phone Number', application.phone) }}
+    {{ f('Email Address', owner.email, 1.5) }}
+  </div>
+
+  <div class="sec">Guardian:</div>
+  <div class="r">
+    {{ f('Name of Father', application.father_name, 3) }}
+    {{ f('Contact No.', application.father_mobile, 2) }}
+  </div>
+  <div class="r">
+    {{ f('Name of Mother', application.mother_name, 3) }}
+    {{ f('Contact No.', application.mother_mobile, 2) }}
+  </div>
+
+  <div class="sec">Birth Information:</div>
+  <div class="r">
+    {{ f('Date', application.birthdate.strftime('%B %d, %Y') if application.birthdate else '', 2) }}
+    {{ f('Place', application.birthplace, 3) }}
+  </div>
+
+  <div class="sec">Personal Information:</div>
+  <div class="r">
+    {{ f('Age', application.age) }}
+    {{ f('Gender', application.gender) }}
+    {{ f('Civil Status', application.civil_status) }}
+    {{ f('Nationality', application.nationality) }}
+  </div>
+
+  <div class="sec">Educational Background <small>(most recent educational attainment)</small></div>
+  <div class="r">
+    {{ f('Name of School', application.school_name, 3) }}
+    {{ f('Place', application.school_place, 2) }}
+    {{ f('Year Graduated', application.year_graduated, 1.2) }}
+  </div>
+
+  <div class="sec">Present Employment: <small>(if bi-vocational)</small></div>
+  <div class="r">
+    {{ f('Position', application.job_position) }}
+    {{ f('Employer', application.employer) }}
+  </div>
+
+  <div class="sec">Church Information:</div>
+  <div class="r">
+    {{ f('Name of Church', application.church_name, 2) }}
+    {{ f('Address', application.church_address, 2) }}
+    {{ f('Pastor', application.pastor_name, 2) }}
+  </div>
+
+  <div class="sec">Ministry Experience/Commitment</div>
+  <div class="r">
+    {{ f('Responsibility', application.responsibility) }}
+    {{ f('Ministry', application.ministry) }}
+  </div>
+
+  <p class="cert">
+    I certify that I have given full and truthful information in this application for admission to the
+    SIMONS Institute of Theology. Furthermore, if admitted, I pledge to conduct myself in accordance with
+    the standards set in this packet.
+  </p>
+
+  <div class="r" style="margin-top: 26pt">
+    {{ f("Applicant's Full Name", application.certified_name or (owner.first_name ~ ' ' ~ owner.last_name), 3) }}
+    {{ f('Signature', '', 2) }}
+    {{ f('Date', application.certified_at.strftime('%B %d, %Y') if application.certified_at else '', 1.5) }}
+  </div>
+</main>
+
+<script>
+/* Pinaliliit ang text hanggang magkasya sa linya. Kung kulang pa, hahati sa dalawang linya. */
+(function () {
+  function fit(box) {
+    var s = box.firstElementChild;
+    if (!s || !s.textContent.trim()) return;
+    var size = 10.5;
+    s.style.cssText = 'white-space:nowrap;line-height:1.1;font-size:' + size + 'pt';
+    while (s.offsetWidth > box.clientWidth && size > 7) { size -= 0.25; s.style.fontSize = size + 'pt'; }
+    if (s.offsetWidth > box.clientWidth) {
+      size = 8.5;
+      s.style.cssText = 'white-space:normal;display:block;width:100%;line-height:1.05;font-size:' + size + 'pt';
+      while (s.offsetHeight > box.clientHeight && size > 5.5) { size -= 0.25; s.style.fontSize = size + 'pt'; }
+    }
+  }
+  function run() { document.querySelectorAll('.f .val').forEach(fit); }
+  window.addEventListener('load', run);
+  window.addEventListener('beforeprint', run);
+})();
+</script>
+</body>
+</html>

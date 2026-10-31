@@ -5,7 +5,7 @@ from models.user import User
 from models.notification import Notification
 from models.application_document import ApplicationDocument
 
-TEXT_RE = re.compile(r"^[\w\s.,'’\-&()/#]+$", re.UNICODE)
+TEXT_RE = re.compile(r"^[\w\s.,'\u2019\-&()/#]+$", re.UNICODE)
 PHONE_RE = re.compile(r'^(09\d{9}|\+639\d{9})$')
 HOME_TEL_RE = re.compile(r'^[\d\s()+\-]{5,20}$')
 
@@ -53,12 +53,11 @@ class Application:
 
     # --- status at tracker ---
     STATUSES = ('Draft', 'Submitted', 'Approved', 'Interview Scheduled', 'For Enrollment',
-                'Enrolled', 'Rejected', 'Withdrawn')
+                'Enrolled', 'Rejected')
     STATUS_STEPS = ('Application', 'Review', 'Interview', 'Enrollment', 'Enrolled')
     STEP_OF = {'Draft': 0, 'Submitted': 1, 'Approved': 2, 'Interview Scheduled': 2,
                'For Enrollment': 3, 'Enrolled': 4}
     INTERVIEWERS = ('Executive Director', 'Dean')
-    WITHDRAWABLE = ('Draft', 'Submitted', 'Approved', 'Interview Scheduled', 'For Enrollment')
     
     def __init__(self, row=None):
         for name in ('id', 'user_id', 'remarks', 'submitted_at', 'certified_name', 'certified_at') + self.FIELDS:
@@ -80,7 +79,7 @@ class Application:
         for r in rows:
             name = r.get('name') or r.get('title') or r.get('document_name') or f'Document {r["id"]}'
             docs.append({'id': r['id'], 'name': name,
-                         'online': 'admission form' in name.lower()})   # ang Admission Form ay online na
+                         'online': False})   # lahat ay ina-upload na, pati ang pirmadong Admission Form
         return docs
 
     def document_rows(self):
@@ -112,9 +111,13 @@ class Application:
             problems.append('Upload: ' + ', '.join(lacking) + '.')
         return problems
 
-    @property
-    def can_withdraw(self):
-        return self.status in self.WITHDRAWABLE
+    def photo_type_id(self):
+        """Ang document_type_id ng na-upload na 2x2 na larawan (JPG o PNG lang), kung mayroon."""
+        for row in self.document_rows():
+            upload = row['upload']
+            if '2x2' in row['name'].lower() and upload and upload['mime_type'] in ('image/jpeg', 'image/png'):
+                return row['id']
+        return None
 
     # ---------- pagbabago ng status (ito ang tatawagin ng Registrar sa Hakbang 11) ----------
     def _set_status(self, status):
@@ -142,21 +145,30 @@ class Application:
                             'Thank you! Your application and documents are now with the Registrar for review. '
                             'We will notify you here and by email once there is an update.')
 
-    def withdraw(self):
-        if not self.can_withdraw:
-            raise ValueError('This application can no longer be withdrawn.')
-        self._set_status('Withdrawn')
-        Notification.notify(self._owner(), 'Your SIT application was withdrawn', 'Application withdrawn',
-                            'Your application has been withdrawn as you requested.')
-
     def current_interview(self):
         return query("SELECT * FROM interviews WHERE application_id = %s AND status = 'Scheduled' "
                      "ORDER BY id DESC LIMIT 1", (self.id,), one=True)
+
+        # ---------- Approval ----------
+    def approval_blockers(self):
+        """Mga dahilan kung bakit hindi pa puwedeng i-approve."""
+        rows = [r for r in self.document_rows() if not r['online']]
+        problems = []
+        lacking = [r['name'] for r in rows if not r['upload']]
+        unverified = [r['name'] for r in rows if r['upload'] and r['upload']['status'] != 'Verified']
+        if lacking:
+            problems.append('Not yet uploaded: ' + ', '.join(lacking) + '.')
+        if unverified:
+            problems.append('Verify first: ' + ', '.join(unverified) + '.')
+        return problems
 
     def approve(self, by_user, interview=None):
         """Aprubahan ang application. Kung may `interview`, sabay na ang schedule at isang email lang."""
         if self.status != 'Submitted':
             raise ValueError('Only submitted applications can be approved.')
+        blockers = self.approval_blockers()
+        if blockers:
+            raise ValueError(' '.join(blockers))
         if interview:
             booked = self._book(by_user, **interview)
             self._notify_interview(booked, approved=True)
@@ -165,6 +177,30 @@ class Application:
             Notification.notify(self._owner(), 'Your SIT application was approved', 'Application approved',
                                 'Congratulations! Your application has been approved. '
                                 'Your interview schedule will be sent to you soon.')
+
+    def reject(self, by_user, reason):
+        if self.status not in ('Submitted', 'Approved', 'Interview Scheduled', 'For Enrollment'):
+            raise ValueError('This application can no longer be rejected.')
+        reason = ' '.join((reason or '').split())
+        if not 3 <= len(reason) <= 500:
+            raise ValueError('Give a short reason (3 to 500 characters).')
+        execute("UPDATE applications SET status = 'Rejected', remarks = %s WHERE id = %s", (reason, self.id))
+        execute("UPDATE interviews SET status = 'Cancelled' WHERE application_id = %s AND status = 'Scheduled'",
+                (self.id,))
+        self.status = 'Rejected'
+        Notification.notify(self._owner(), 'Update on your SIT application', 'Application not approved',
+                            f'We are sorry, your application was not approved. Reason: {reason}',
+                            [('Reason', reason)])
+
+    def pass_interview(self, by_user):
+        if self.status != 'Interview Scheduled':
+            raise ValueError('Only applicants with a scheduled interview can be marked as passed.')
+        execute("UPDATE interviews SET status = 'Done' WHERE application_id = %s AND status = 'Scheduled'",
+                (self.id,))
+        self._set_status('For Enrollment')
+        Notification.notify(self._owner(), 'Your SIT interview is complete', 'Interview complete',
+                            'Your interview is complete and you are now cleared for enrollment. '
+                            'The school will contact you about the next steps.')
 
     def schedule_interview(self, by_user, **interview):
         if self.status not in ('Approved', 'Interview Scheduled'):
@@ -256,7 +292,7 @@ class Application:
 
     @property
     def is_closed(self):
-        return self.status in ('Rejected', 'Withdrawn')
+        return self.status == 'Rejected'
 
     @property
     def step_index(self):

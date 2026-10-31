@@ -179,3 +179,4 @@ CREATE TABLE IF NOT EXISTS notifications (
   INDEX idx_notice_user (user_id, is_read),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+

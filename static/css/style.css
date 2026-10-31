@@ -233,3 +233,13 @@ h1, h2, h3, .brand-serif { font-family: 'Cormorant Garamond', Georgia, serif; fo
 .notice-card { border-left: 5px solid #1b8a5a; }
 
 @media (min-width: 1200px) { .review-docs { position: sticky; top: 1rem; } }
+
+    .head { display: flex; align-items: center; gap: 10pt; text-align: left; margin-bottom: 6pt; }
+    .head .titles { flex: 1; text-align: center; }
+    .head .school { font-size: 16pt; letter-spacing: 0; margin: 0; }
+    .head .title { font-size: 14pt; font-weight: 400; margin-top: 4pt; letter-spacing: 0; }
+    .top { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 6pt; }
+    .office { width: 52%; border: 1px solid #000; padding: 5pt 8pt; font-size: 9pt; }
+    .office .ln { border-bottom: 1px solid #000; height: 13pt; margin-top: 2pt; }
+    .photo { width: 2in; height: 2in; border: 1px solid #000; display: flex; align-items: center;
+             justify-content: center; text-align: center; font-size: 10pt; }

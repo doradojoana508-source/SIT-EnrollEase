@@ -87,6 +87,19 @@ def application():
     form = current.to_form() if current else {}
     return render_template('applicant/application_form.html', form=form, **page)
 
+@applicant_bp.route('/application/print')
+@roles_required('applicant')
+def print_form():
+    current = my_application()
+    if current is None:
+        flash('Fill in your application form first.', 'info')
+        return redirect(url_for('applicant.application'))
+    photo_id = current.photo_type_id()
+    return render_template('print/admission_form.html', application=current, owner=g.user,
+                           program=dict(Application.program_options()).get(current.program_id),
+                           photo_url=url_for('applicant.document_file', type_id=photo_id) if photo_id else None,
+                           back=url_for('applicant.dashboard'))
+
 
 # ---------------- Mga dokumento (CRUD) ----------------
 @applicant_bp.route('/documents')
@@ -105,10 +118,13 @@ def documents():
 @roles_required('applicant')
 def document_upload(type_id):
     current, row = doc_row(type_id)
+    file = request.files.get('file')
     if not row['can_change']:
         flash('This document can no longer be changed.', 'warning')
+    elif '2x2' in row['name'].lower() and not (file and file.filename.lower().endswith(('.jpg', '.jpeg', '.png'))):
+        flash('The 2x2 photo must be a JPG or PNG image.', 'danger')
     else:
-        ok, message = ApplicationDocument.store(current.id, type_id, request.files.get('file'))
+        ok, message = ApplicationDocument.store(current.id, type_id, file)
         flash(message, 'success' if ok else 'danger')
     return redirect(url_for('applicant.documents'))
 
@@ -139,7 +155,7 @@ def document_file(type_id):
     return response
 
 
-# ---------------- Submit, Withdraw, Notices ----------------
+# ---------------- Submit, Notices ----------------
 @applicant_bp.route('/submit', methods=['POST'])
 @roles_required('applicant')
 def submit():
@@ -152,20 +168,6 @@ def submit():
     try:
         current.submit(request.form.get('signature', ''))
         flash('Application submitted! We will notify you here and by email once there is an update.', 'success')
-    except ValueError as exc:
-        flash(str(exc), 'danger')
-    return redirect(url_for('applicant.dashboard'))
-
-
-@applicant_bp.route('/withdraw', methods=['POST'])
-@roles_required('applicant')
-def withdraw():
-    current = my_application()
-    if current is None:
-        abort(404)
-    try:
-        current.withdraw()
-        flash('Your application has been withdrawn.', 'info')
     except ValueError as exc:
         flash(str(exc), 'danger')
     return redirect(url_for('applicant.dashboard'))
