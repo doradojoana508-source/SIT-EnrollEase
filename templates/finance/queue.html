@@ -1,0 +1,21 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Quotation Queue | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">Quotation Queue</h1>
+<p class="text-muted mb-3">Applicants who passed the interview and whose original documents were received by the Registrar.</p>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col-8 col-md">
+    <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Search name or email" maxlength="80">
+  </div>
+  <div class="col-4 col-md-auto"><button type="submit" class="btn btn-outline-secondary w-100">Search</button></div>
+</form>
+
+<div class="card">{% include 'finance/_queue_table.html' %}</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+  <small class="text-muted">Showing {{ pager.start }}&ndash;{{ pager.end }} of {{ pager.total }}</small>
+  {% include 'partials/_pagination.html' %}
+</div>
+{% endblock %}

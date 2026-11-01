@@ -4,7 +4,7 @@
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   email VARCHAR(120) NOT NULL UNIQUE,
-  username VARCHAR(30) NULL UNIQUE
+  username VARCHAR(30) NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   role ENUM('admin','registrar','finance','faculty','student','applicant') NOT NULL DEFAULT 'applicant',
   first_name VARCHAR(50) NOT NULL,
@@ -198,3 +198,22 @@ CREATE TABLE IF NOT EXISTS enrollments (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (term_id) REFERENCES academic_terms(id)
 ) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS quotations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  application_id INT NOT NULL UNIQUE,
+  student_id VARCHAR(10) NOT NULL UNIQUE,
+  account_no VARCHAR(20) NOT NULL UNIQUE,
+  units DECIMAL(4,1) NOT NULL,
+  tuition_fee DECIMAL(10,2) NOT NULL DEFAULT 0,
+  energy_fee DECIMAL(10,2) NOT NULL DEFAULT 0,
+  book_fee DECIMAL(10,2) NOT NULL DEFAULT 0,
+  printouts_fee DECIMAL(10,2) NOT NULL DEFAULT 0,
+  admission_fee DECIMAL(10,2) NOT NULL DEFAULT 0,
+  total DECIMAL(10,2) NOT NULL,
+  created_by INT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE,
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

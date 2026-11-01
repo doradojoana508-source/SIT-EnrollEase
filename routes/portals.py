@@ -3,6 +3,7 @@ from models.user import User
 from mailer import send_email
 from utils import roles_required, start_session
 from models.stats import Stats
+from models.finance import Finance
 
 # Isang config bawat portal. Ang key ang pangalan ng blueprint.
 PORTALS = {
@@ -89,6 +90,8 @@ def create_portal(key, cfg):
     def dashboard():
         if key == 'registrar':
             return render_template('registrar/dashboard.html', **Stats.registrar(request.args.get('term', type=int)))
+        if key == 'finance':
+            return render_template('finance/dashboard.html', counts=Finance.counts(), rows=Finance.queue(limit=5))
         return render_template('app_home.html', heading=cfg['title'])
 
     return bp

@@ -1,0 +1,101 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Quotation | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('finance_queue.index') }}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Back to queue</a>
+<h1 class="h2 mb-1 mt-2">Tuition quotation</h1>
+<p class="text-muted mb-3">Enter the Student ID and each fee. The total is computed automatically.</p>
+
+{% if errors %}
+<div class="alert alert-danger">
+  <ul class="mb-0 small">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h5">Applicant</h2>
+      <div class="fw-semibold">{{ applicant.full_name }}</div>
+      <div class="small text-muted mb-2">{{ applicant.email }}</div>
+      <span class="badge text-bg-light border">{{ application.applicant_type }}</span>
+      <dl class="small mt-3 mb-0">
+        <dt>Program</dt><dd>{{ program }}</dd>
+        <dt>Originals received</dt><dd>{{ application.originals_received_at.strftime('%B %d, %Y') }}</dd>
+      </dl>
+    </div></div>
+  </div>
+
+  <div class="col-lg-8">
+    <form method="post" class="card"><div class="card-body">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label for="student_id" class="form-label">Student ID</label>
+          <input type="text" class="form-control" id="student_id" name="student_id" value="{{ values.get('student_id', '') }}"
+                 placeholder="26-2-0110" maxlength="10" required autocomplete="off">
+          <div class="form-text">Year-Trimester-Number, typed by Finance.</div>
+        </div>
+        <div class="col-md-6">
+          <label for="account_no" class="form-label">Account No.</label>
+          <input type="text" class="form-control" id="account_no" name="account_no" value="{{ values.get('account_no', '') }}"
+                 maxlength="20" required autocomplete="off">
+          <div class="form-text">Suggested by the system. You may change it.</div>
+        </div>
+      </div>
+
+      <h2 class="h6 text-uppercase text-muted">Fees</h2>
+      <div class="row g-3 align-items-end mb-2">
+        <div class="col-md-8">
+          <label for="tuition_fee" class="form-label">Tuition Fee</label>
+          <div class="input-group">
+            <span class="input-group-text">&#8369;</span>
+            <input type="text" inputmode="decimal" class="form-control fee" id="tuition_fee" name="tuition_fee"
+                   value="{{ values.get('tuition_fee', '') }}" placeholder="0.00" autocomplete="off">
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label for="units" class="form-label">No. of units</label>
+          <input type="text" inputmode="decimal" class="form-control" id="units" name="units"
+                 value="{{ values.get('units', '') }}" placeholder="0" maxlength="4" required autocomplete="off">
+        </div>
+        {% for name, label in fees if name != 'tuition_fee' %}
+        <div class="col-md-8">
+          <label for="{{ name }}" class="form-label">{{ label }}</label>
+          <div class="input-group">
+            <span class="input-group-text">&#8369;</span>
+            <input type="text" inputmode="decimal" class="form-control fee" id="{{ name }}" name="{{ name }}"
+                   value="{{ values.get(name, '') }}" placeholder="0.00" autocomplete="off">
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-3">
+        <span class="fw-semibold">Total</span>
+        <span class="fs-4 fw-bold text-success">&#8369; <span id="total">0.00</span></span>
+      </div>
+
+      <div class="d-flex gap-2 mt-3">
+        <button type="submit" class="btn btn-sit">{{ 'Update quotation' if existing else 'Save quotation' }}</button>
+        <a href="{{ url_for('finance_queue.index') }}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </div></form>
+  </div>
+</div>
+
+<script>
+  // Preview lang ito. Ang server ang nagkukuwenta ng tunay na total.
+  (function () {
+    var inputs = document.querySelectorAll('.fee'), out = document.getElementById('total');
+    function sum() {
+      var t = 0;
+      inputs.forEach(function (i) { t += parseFloat((i.value || '0').replace(/,/g, '')) || 0; });
+      out.textContent = t.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+    inputs.forEach(function (i) { i.addEventListener('input', sum); });
+    sum();
+  })();
+</script>
+{% endblock %}
