@@ -195,3 +195,15 @@ def reject_application(application_id):
     except ValueError as exc:
         flash(str(exc), 'danger')
     return back_to_review(application)
+
+@registrar_applications_bp.route('/<int:application_id>/originals', methods=['POST'])
+@roles_required('registrar')
+def originals_received(application_id):
+    application = get_application(application_id)
+    try:
+        application.receive_originals(g.user)
+        AuditLog.record('Originals received', f'Application #{application.id}')
+        flash('Marked as received. The applicant was notified.', 'success')
+    except ValueError as exc:
+        flash(str(exc), 'danger')
+    return back_to_review(application)

@@ -133,6 +133,7 @@ CREATE TABLE IF NOT EXISTS applications (
   certified_name VARCHAR(120) NULL,
   certified_at DATETIME NULL,
   submitted_at DATETIME NULL,
+  originals_received_at DATETIME NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_app_status (status),

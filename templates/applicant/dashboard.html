@@ -84,6 +84,12 @@
           <p class="text-muted small mt-2 mb-0">The Registrar is reviewing your application and documents. You will be notified here and by email.</p>
         {% elif status == 'Approved' %}
           <p class="text-muted small mt-2 mb-0">Your application is approved. Your interview schedule will be posted here soon.</p>
+        {% elif status == 'For Enrollment' %}
+          {% if application.originals_received_at %}
+            <p class="text-muted small mt-2 mb-0">The Registrar has your original documents. Please proceed to the Finance office for your tuition quotation.</p>
+          {% else %}
+            <p class="text-muted small mt-2 mb-0">You passed the interview. Please bring your original documents to the Registrar.</p>
+          {% endif %}
         {% endif %}
                 <a href="{{ url_for('applicant.print_form') }}" target="_blank" rel="noopener"
            class="btn btn-outline-secondary btn-sm mt-2"><i class="bi bi-printer"></i> Print admission form</a>

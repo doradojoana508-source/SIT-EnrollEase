@@ -9,12 +9,13 @@ TEXT_RE = re.compile(r"^[\w\s.,'\u2019\-&()/#]+$", re.UNICODE)
 PHONE_RE = re.compile(r'^(09\d{9}|\+639\d{9})$')
 HOME_TEL_RE = re.compile(r'^[\d\s()+\-]{5,20}$')
 
+
 class Application:
     """Isang application ng isang applicant (isa lang bawat user)."""
 
     # --- mga field na puwedeng i-edit ng applicant ---
     FIELDS = (
-        'applicant_type','program_id', 'address', 'home_tel', 'phone',
+        'applicant_type', 'program_id', 'address', 'home_tel', 'phone',
         'father_name', 'father_mobile', 'mother_name', 'mother_mobile',
         'birthdate', 'birthplace', 'gender', 'civil_status', 'nationality',
         'school_name', 'school_place', 'year_graduated',
@@ -50,7 +51,6 @@ class Application:
         'gender': ('Male', 'Female'),
         'civil_status': ('Single', 'Married', 'Widowed', 'Separated'),
     }
-    
 
     # --- status at tracker ---
     STATUSES = ('Draft', 'Submitted', 'Approved', 'Interview Scheduled', 'For Enrollment',
@@ -59,16 +59,17 @@ class Application:
     STEP_OF = {'Draft': 0, 'Submitted': 1, 'Approved': 2, 'Interview Scheduled': 2,
                'For Enrollment': 3, 'Enrolled': 4}
     INTERVIEWERS = ('Executive Director', 'Dean')
-    
+
     def __init__(self, row=None):
-        for name in ('id', 'user_id', 'term_id', 'remarks', 'submitted_at', 'certified_name', 'certified_at') + self.FIELDS:
+        for name in ('id', 'user_id', 'term_id', 'remarks', 'submitted_at', 'originals_received_at',
+                     'certified_name', 'certified_at') + self.FIELDS:
             setattr(self, name, None)
         self.status = 'Draft'
         self.applicant_type = 'New'
         for key, value in (row or {}).items():
             setattr(self, key, value)
-            
-        # ---------- mga kailangang dokumento ----------
+
+    # ---------- mga kailangang dokumento ----------
     def required_documents(self):
         """Mga dokumentong hinihingi para sa program at uri ng applicant (New o Transferee)."""
         if not self.program_id:
@@ -82,6 +83,14 @@ class Application:
             name = r.get('name') or r.get('title') or r.get('document_name') or f'Document {r["id"]}'
             docs.append({'id': r['id'], 'name': name, 'online': False})   # lahat ay ina-upload na
         return docs
+
+    def photo_type_id(self):
+        """Ang document_type_id ng na-upload na 2x2 na larawan (JPG o PNG lang), kung mayroon."""
+        for row in self.document_rows():
+            upload = row['upload']
+            if '2x2' in row['name'].lower() and upload and upload['mime_type'] in ('image/jpeg', 'image/png'):
+                return row['id']
+        return None
 
     def document_rows(self):
         """Bawat kailangang dokumento, kasama ang na-upload at kung puwede pang baguhin."""
@@ -112,15 +121,7 @@ class Application:
             problems.append('Upload: ' + ', '.join(lacking) + '.')
         return problems
 
-    def photo_type_id(self):
-        """Ang document_type_id ng na-upload na 2x2 na larawan (JPG o PNG lang), kung mayroon."""
-        for row in self.document_rows():
-            upload = row['upload']
-            if '2x2' in row['name'].lower() and upload and upload['mime_type'] in ('image/jpeg', 'image/png'):
-                return row['id']
-        return None
-
-    # ---------- pagbabago ng status (ito ang tatawagin ng Registrar sa Hakbang 11) ----------
+    # ---------- pagbabago ng status ----------
     def _set_status(self, status):
         execute("UPDATE applications SET status = %s WHERE id = %s", (status, self.id))
         self.status = status
@@ -150,7 +151,7 @@ class Application:
         return query("SELECT * FROM interviews WHERE application_id = %s AND status = 'Scheduled' "
                      "ORDER BY id DESC LIMIT 1", (self.id,), one=True)
 
-        # ---------- Approval ----------
+    # ---------- Approval ----------
     def approval_blockers(self):
         """Mga dahilan kung bakit hindi pa puwedeng i-approve."""
         rows = [r for r in self.document_rows() if not r['online']]
@@ -203,6 +204,18 @@ class Application:
                             'Your interview is complete and you are now cleared for enrollment. '
                             'The school will contact you about the next steps.')
 
+    def receive_originals(self, by_user):
+        """Natanggap na ng Registrar ang orihinal na dokumento. Pagkatapos nito, puwede nang i-quote ng Finance."""
+        if self.status != 'For Enrollment':
+            raise ValueError('Original documents are received after the interview is passed.')
+        if self.originals_received_at:
+            raise ValueError('The original documents were already received.')
+        execute("UPDATE applications SET originals_received_at = NOW() WHERE id = %s", (self.id,))
+        self.originals_received_at = datetime.now()
+        Notification.notify(self._owner(), 'Original documents received', 'Original documents received',
+                            'The Registrar has received your original documents. '
+                            'Please proceed to the Finance office for your tuition quotation.')
+
     def schedule_interview(self, by_user, **interview):
         if self.status not in ('Approved', 'Interview Scheduled'):
             raise ValueError('Approve the application first.')
@@ -245,7 +258,7 @@ class Application:
     def find_by_user(cls, user_id):
         row = query("SELECT * FROM applications WHERE user_id = %s", (user_id,), one=True)
         return cls(row) if row else None
-    
+
     @classmethod
     def find(cls, application_id):
         row = query("SELECT * FROM applications WHERE id = %s", (application_id,), one=True)
@@ -387,11 +400,12 @@ class Application:
 
         for name, options in cls.CHOICES.items():
             value = form.get(name, '')
-            data['applicant_type'] = data.get('applicant_type') or 'New'
             if value and value not in options:
                 errors.append('Please choose a valid option.')
                 value = ''
             data[name] = value or None
+
+        data['applicant_type'] = data.get('applicant_type') or 'New'
 
         raw = form.get('year_graduated', '').strip()
         data['year_graduated'] = None
@@ -402,5 +416,3 @@ class Application:
                 errors.append(f'Year graduated must be between 1950 and {today.year}.')
 
         return data, errors
-
-        
