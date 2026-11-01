@@ -211,9 +211,29 @@ CREATE TABLE IF NOT EXISTS quotations (
   printouts_fee DECIMAL(10,2) NOT NULL DEFAULT 0,
   admission_fee DECIMAL(10,2) NOT NULL DEFAULT 0,
   total DECIMAL(10,2) NOT NULL,
+  paid_at DATETIME NULL,
   created_by INT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE,
   FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE quotations ADD COLUMN paid_at DATETIME NULL AFTER total;
+
+CREATE TABLE IF NOT EXISTS payments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  quotation_id INT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  receipt_no VARCHAR(20) NOT NULL UNIQUE,
+  paid_on DATE NOT NULL,
+  note VARCHAR(120) NULL,
+  recorded_by INT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  voided_at DATETIME NULL,
+  voided_by INT NULL,
+  INDEX idx_pay_quotation (quotation_id),
+  FOREIGN KEY (quotation_id) REFERENCES quotations(id) ON DELETE CASCADE,
+  FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (voided_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

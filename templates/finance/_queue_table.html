@@ -1,7 +1,7 @@
 <div class="table-responsive">
   <table class="table table-hover align-middle mb-0">
     <thead>
-      <tr><th>Applicant</th><th>Program</th><th>Term</th><th>Originals received</th><th>Quotation</th><th class="text-end"></th></tr>
+      <tr><th>Applicant</th><th>Program</th><th>Term</th><th>Originals received</th><th>Quotation and payment</th><th class="text-end"></th></tr>
     </thead>
     <tbody>
       {% for r in rows %}
@@ -15,17 +15,29 @@
         <td class="small text-nowrap">{% if r.term_no %}Trimester {{ r.term_no }}, {{ r.academic_year }}{% else %}-{% endif %}</td>
         <td class="small text-nowrap">{{ r.originals_received_at.strftime('%b %d, %Y') }}</td>
         <td class="small text-nowrap">
-          {% if r.quotation_id %}
-            <span class="badge text-bg-primary">Quoted</span>
-            <div class="mt-1"><strong>{{ r.student_id }}</strong> &middot; &#8369;{{ '{:,.2f}'.format(r.total) }}</div>
-          {% else %}
+          {% if not r.quotation_id %}
             <span class="badge text-bg-success">Ready for quotation</span>
+          {% else %}
+            <strong>{{ r.student_id }}</strong> &middot; &#8369;{{ '{:,.2f}'.format(r.total) }}
+            <div class="mt-1">
+              {% if r.paid_at %}
+                <span class="badge text-bg-success">Paid</span>
+              {% elif r.paid > 0 %}
+                <span class="badge text-bg-warning">Partial</span>
+                <span class="text-muted">balance &#8369;{{ '{:,.2f}'.format(r.total - r.paid) }}</span>
+              {% else %}
+                <span class="badge text-bg-secondary">Unpaid</span>
+              {% endif %}
+            </div>
           {% endif %}
         </td>
-        <td class="text-end">
-          <a href="{{ url_for('finance_quotations.form', application_id=r.id) }}"
-             class="btn btn-sm {{ 'btn-outline-secondary' if r.quotation_id else 'btn-sit' }}">
-            {{ 'Edit' if r.quotation_id else 'Prepare quotation' }}</a>
+        <td class="text-end text-nowrap">
+          {% if r.quotation_id %}
+            <a href="{{ url_for('finance_quotations.form', application_id=r.id) }}" class="btn btn-outline-secondary btn-sm">Edit</a>
+            <a href="{{ url_for('finance_payments.index', application_id=r.id) }}" class="btn btn-sit btn-sm">Payments</a>
+          {% else %}
+            <a href="{{ url_for('finance_quotations.form', application_id=r.id) }}" class="btn btn-sit btn-sm">Prepare quotation</a>
+          {% endif %}
         </td>
       </tr>
       {% else %}

@@ -106,12 +106,20 @@ class Quotation:
         if not application.term_id:
             raise ValueError('This application has no term yet.')
         existing = cls.find(application.id)
+        if existing:
+            paid = query("SELECT COALESCE(SUM(amount), 0) AS n FROM payments "
+                         "WHERE quotation_id = %s AND voided_at IS NULL", (existing['id'],), one=True)['n']
+            if data['total'] < paid:
+                raise ValueError('The total cannot be lower than the P{:,.2f} already paid.'.format(paid))
+
         fee_cols = [name for name, _label in cls.FEES]
         values = [data['student_id'], data['account_no'], data['units']] + [data[c] for c in fee_cols] + [data['total']]
 
         if existing:
             sets = ', '.join(f'{c} = %s' for c in ['student_id', 'account_no', 'units'] + fee_cols + ['total'])
             execute(f"UPDATE quotations SET {sets} WHERE application_id = %s", values + [application.id])
+            from models.payment import Payment          # kung nagbago ang total, i-update ang Paid
+            Payment.sync(existing['id'])
         else:
             cols = ', '.join(['application_id', 'student_id', 'account_no', 'units'] + fee_cols +
                              ['total', 'created_by'])
@@ -135,6 +143,6 @@ class Quotation:
         else:
             Notification.notify(owner, 'Your SIT tuition quotation', 'Tuition quotation ready',
                                 'Your tuition quotation is ready. Please see the Finance office. '
-                                'After this, the Registrar will give your Certificate of Enrolment.',
+                                'After your payment, the Registrar will prepare your Certificate of Registration.',
                                 details)
         return existing is None

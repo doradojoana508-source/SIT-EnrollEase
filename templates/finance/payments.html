@@ -1,0 +1,103 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Payments | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('finance_queue.index') }}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Back to queue</a>
+<h1 class="h2 mb-1 mt-2">Payments</h1>
+<p class="text-muted mb-3">{{ applicant.full_name }} &middot; {{ quotation.student_id }} &middot; Account {{ quotation.account_no }}</p>
+
+{% if errors %}
+<div class="alert alert-danger"><ul class="mb-0 small">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body">
+    <div class="text-muted small">Total</div>
+    <div class="fs-4 fw-bold">&#8369;{{ '{:,.2f}'.format(summary.total) }}</div>
+  </div></div></div>
+  <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body">
+    <div class="text-muted small">Paid</div>
+    <div class="fs-4 fw-bold text-success">&#8369;{{ '{:,.2f}'.format(summary.paid) }}</div>
+  </div></div></div>
+  <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body">
+    <div class="text-muted small">Balance</div>
+    <div class="fs-4 fw-bold {{ 'text-danger' if summary.balance > 0 else 'text-success' }}">&#8369;{{ '{:,.2f}'.format(summary.balance) }}</div>
+  </div></div></div>
+  <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body">
+    <div class="text-muted small">Status</div>
+    <div class="mt-1">
+      {% if quotation.paid_at %}<span class="badge text-bg-success fs-6">Paid</span>
+      {% elif summary.paid > 0 %}<span class="badge text-bg-warning fs-6">Partial</span>
+      {% else %}<span class="badge text-bg-secondary fs-6">Unpaid</span>{% endif %}
+    </div>
+  </div></div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    {% if quotation.paid_at %}
+      <div class="alert alert-success mb-0"><i class="bi bi-check-circle"></i>
+        Fully paid on {{ quotation.paid_at.strftime('%B %d, %Y') }}. The Registrar can now prepare the COR.</div>
+    {% else %}
+    <form method="post" class="card"><div class="card-body">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <h2 class="h5">Record a payment</h2>
+      <div class="mb-3">
+        <label for="amount" class="form-label">Amount received</label>
+        <div class="input-group">
+          <span class="input-group-text">&#8369;</span>
+          <input type="text" inputmode="decimal" class="form-control" id="amount" name="amount" value="{{ values.get('amount', '') }}" required autocomplete="off">
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="receipt_no" class="form-label">Receipt No.</label>
+        <input type="text" class="form-control" id="receipt_no" name="receipt_no" value="{{ values.get('receipt_no', '') }}" maxlength="20" required autocomplete="off">
+      </div>
+      <div class="mb-3">
+        <label for="paid_on" class="form-label">Date paid</label>
+        <input type="date" class="form-control" id="paid_on" name="paid_on" value="{{ values.get('paid_on', '') }}" max="{{ today }}" required>
+      </div>
+      <div class="mb-3">
+        <label for="note" class="form-label">Note <span class="text-muted">(optional)</span></label>
+        <input type="text" class="form-control" id="note" name="note" value="{{ values.get('note', '') }}" maxlength="120" placeholder="e.g. 1st installment">
+      </div>
+      <button type="submit" class="btn btn-sit">Record payment</button>
+    </div></form>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-body pb-2"><h2 class="h5 mb-0">Payment history</h2></div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Date</th><th>Receipt No.</th><th class="text-end">Amount</th><th>Note</th><th></th></tr></thead>
+          <tbody>
+            {% for p in history %}
+            <tr class="{{ 'text-muted' if p.voided_at }}">
+              <td class="small text-nowrap">{{ p.paid_on.strftime('%b %d, %Y') }}</td>
+              <td class="small">{{ p.receipt_no }}</td>
+              <td class="text-end {{ 'text-decoration-line-through' if p.voided_at }}">&#8369;{{ '{:,.2f}'.format(p.amount) }}</td>
+              <td class="small">{{ p.note or '' }}<div class="text-muted">by {{ p.first_name or '-' }}</div></td>
+              <td class="text-end">
+                {% if p.voided_at %}
+                  <span class="badge text-bg-secondary">Voided</span>
+                {% else %}
+                  <form method="post" action="{{ url_for('finance_payments.void', application_id=application.id, payment_id=p.id) }}"
+                        onsubmit="return confirm('Void this payment?');" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Void</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center text-muted py-4">No payments yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

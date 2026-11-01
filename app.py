@@ -22,6 +22,7 @@ from routes.registrar_archive import registrar_archive_bp
 from routes.admin_archive import admin_archive_bp
 from routes.finance_queue import finance_queue_bp
 from routes.finance_quotations import finance_quotations_bp
+from routes.finance_payments import finance_payments_bp
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -105,6 +106,7 @@ app.register_blueprint(registrar_archive_bp)
 app.register_blueprint(admin_archive_bp)
 app.register_blueprint(finance_queue_bp)
 app.register_blueprint(finance_quotations_bp)
+app.register_blueprint(finance_payments_bp)
 
 if __name__ == '__main__':
     app.run(debug=True)

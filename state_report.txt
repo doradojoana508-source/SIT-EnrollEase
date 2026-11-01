@@ -1,0 +1,1116 @@
+﻿===== GIT =====
+022d95c Step 14C: finance quotation with manual student ID and auto total
+c1fe781 Step 14A: registrar marks original documents received
+e3f2975 Step 13D: applicant type (new or transferee), per-type requirements, continuing and returnee info
+8df741e Step 13B: archive terms and read-only archive of past applications
+8b5067c Step 13A: registrar dashboard with per-term counts, status and program graphs
+d638cd4 Step 12C: registrar admission windows, per-term applications, prepare-for-next-admission
+45e2f76 Step 12B: public admission window, applications tied to term, updated enrollment steps
+3387715 Step 12A: academic terms and admission window (admin)
+ M app.py
+ M menus.py
+ M schema.sql
+?? _dbreport.py
+?? models/coe.py
+?? routes/portal_coe.py
+?? routes/registrar_coe.py
+?? templates/registrar/coe.html
+?? templates/registrar/coe_upload.html
+?? templates/student/
+
+===== DATABASE =====
+
+--- DESCRIBE enrollments ---
+id int(11) NO PRI
+user_id int(11) NO MUL
+term_id int(11) NO MUL
+student_type enum('New','Transferee','Continuing','Returnee') NO 
+status enum('Pre-enrolled','Quoted','Enrolled') NO 
+enrolled_at datetime YES 
+coe_stored varchar(80) YES 
+coe_name varchar(150) YES 
+coe_mime varchar(60) YES 
+coe_uploaded_at datetime YES 
+created_at timestamp NO 
+
+--- DESCRIBE quotations ---
+id int(11) NO PRI
+application_id int(11) NO UNI
+student_id varchar(10) NO UNI
+account_no varchar(20) NO UNI
+units decimal(4,1) NO 
+tuition_fee decimal(10,2) NO 
+energy_fee decimal(10,2) NO 
+book_fee decimal(10,2) NO 
+printouts_fee decimal(10,2) NO 
+admission_fee decimal(10,2) NO 
+total decimal(10,2) NO 
+created_by int(11) YES MUL
+created_at timestamp NO 
+updated_at timestamp NO 
+
+--- DESCRIBE payments ---
+MISSING: 1146 (42S02): Table 'sit_enrollease.payments' doesn't exist
+
+--- DESCRIBE programs ---
+id int(11) NO PRI
+code varchar(10) NO UNI
+name varchar(120) NO 
+level enum('Certificate','Diploma','Bachelor','Master') NO 
+total_units smallint(6) NO 
+objective text YES 
+prerequisites text YES 
+is_active tinyint(1) NO 
+created_at timestamp NO 
+
+--- DESCRIBE subjects ---
+id int(11) NO PRI
+code varchar(15) NO UNI
+title varchar(120) NO 
+units tinyint(4) NO 
+prerequisite varchar(120) YES 
+
+--- DESCRIBE curriculum ---
+id int(11) NO PRI
+program_id int(11) NO MUL
+subject_id int(11) NO MUL
+year_level tinyint(4) YES 
+term_no tinyint(4) YES 
+
+--- COUNTS ---
+programs 8
+subjects 0
+curriculum 0
+
+--- PROGRAMS ---
+{'id': 1, 'code': 'CCF', 'name': 'Certificate in Christian Foundation', 'level': 'Certificate', 'total_units': 24, 'is_active': 1}
+{'id': 2, 'code': 'CCL', 'name': 'Certificate in Christian Leadership', 'level': 'Certificate', 'total_units': 24, 'is_active': 1}
+{'id': 3, 'code': 'DPS', 'name': 'Diploma in Pastoral Studies', 'level': 'Diploma', 'total_units': 54, 'is_active': 1}
+{'id': 4, 'code': 'BThPM', 'name': 'Bachelor of Theology Major in Pastoral Ministry', 'level': 'Bachelor', 'total_units': 144, 'is_active': 1}
+{'id': 5, 'code': 'BThCE', 'name': 'Bachelor of Theology Major in Christian Education', 'level': 'Bachelor', 'total_units': 144, 'is_active': 1}
+{'id': 6, 'code': 'MACE', 'name': 'Master of Arts in Christian Education', 'level': 'Master', 'total_units': 62, 'is_active': 1}
+{'id': 7, 'code': 'MACM', 'name': 'Master of Arts in Christian Ministry', 'level': 'Master', 'total_units': 62, 'is_active': 1}
+{'id': 8, 'code': 'MDiv', 'name': 'Master of Divinity in New Testament Exegetical Theology', 'level': 'Master', 'total_units': 58, 'is_active': 1}
+
+--- SAMPLE SUBJECTS ---
+
+--- ENROLLMENTS ---
+{'id': 1, 'user_id': 9, 'term_id': 1, 'student_type': 'Continuing', 'status': 'Enrolled', 'enrolled_at': datetime.datetime(2026, 10, 31, 22, 34, 36), 'coe_stored': None, 'coe_name': None, 'coe_mime': None, 'coe_uploaded_at': None, 'created_at': datetime.datetime(2026, 10, 31, 22, 34, 36)}
+{'id': 2, 'user_id': 10, 'term_id': 1, 'student_type': 'New', 'status': 'Quoted', 'enrolled_at': None, 'coe_stored': None, 'coe_name': None, 'coe_mime': None, 'coe_uploaded_at': None, 'created_at': datetime.datetime(2026, 11, 1, 15, 52, 30)}
+
+--- ACADEMIC TERMS ---
+{'id': 1, 'term_no': 1, 'academic_year': '2026-2027', 'admission_status': 'Open', 'is_current': 1}
+
+===== FILE: menus.py =====
+ROLE_LABELS = {
+    'applicant': 'Applicant', 'student': 'Student', 'admin': 'Administrator',
+    'registrar': 'Registrar', 'finance': 'Finance', 'faculty': 'Faculty',
+}
+
+# (label, bootstrap icon, endpoint). Dadagdagan natin ito sa bawat susunod na hakbang.
+MENUS = {
+    'applicant': [
+        ('Dashboard', 'bi-speedometer2', 'applicant.dashboard'),
+        ('My Application', 'bi-journal-text', 'applicant.application'),
+        ('Documents', 'bi-folder2-open', 'applicant.documents'),],
+    'student': [
+        ('Dashboard', 'bi-speedometer2', 'portal.dashboard'),
+        ('My COE', 'bi-file-earmark-text', 'portal_coe.index'),],
+    'admin': [
+        ('Dashboard', 'bi-speedometer2', 'admin.dashboard'),
+        ('Users', 'bi-people', 'admin_users.index'),
+        ('Terms & Admission', 'bi-calendar-range', 'admin_terms.index'),
+        ('Archive', 'bi-archive', 'admin_archive.index'),
+        ('Audit Logs', 'bi-clipboard-data', 'admin_audit.index'),],
+    'registrar': [
+        ('Dashboard', 'bi-speedometer2', 'registrar.dashboard'),
+        ('Applications', 'bi-inboxes', 'registrar_applications.index'),
+        ('COE', 'bi-file-earmark-check', 'registrar_coe.index'),
+        ('Admission', 'bi-calendar-range', 'registrar_admission.index'),
+        ('Archive', 'bi-archive', 'registrar_archive.index'),],
+    'finance': [
+        ('Dashboard', 'bi-speedometer2', 'finance.dashboard'),
+        ('Quotation Queue', 'bi-receipt', 'finance_queue.index'),],
+    'faculty':   [('Dashboard', 'bi-speedometer2', 'faculty.dashboard')],
+}
+
+ACCOUNT_MENU = [('Change Password', 'bi-key', 'account.change_password')]
+
+
+def menu_for(role):
+    return MENUS.get(role, [])
+===== FILE: app.py =====
+import time
+from datetime import timedelta
+from flask import Flask, g, request, session, flash
+from flask_wtf.csrf import CSRFProtect
+from config import SECRET_KEY, MAIL_USERNAME, MAIL_PASSWORD
+from mailer import mail
+from models.user import User
+from routes.public import public_bp
+from routes.auth import auth_bp
+from routes.account import account_bp
+from routes.dashboard import dashboard_bp
+from routes.applicant import applicant_bp
+from routes.portals import PORTALS, create_portal
+from menus import menu_for, ROLE_LABELS, ACCOUNT_MENU
+from routes.admin_users import admin_users_bp
+from routes.admin_audit import admin_audit_bp
+from routes.registrar_applications import registrar_applications_bp
+from routes.admin_terms import admin_terms_bp
+from models.term import Term
+from routes.registrar_admission import registrar_admission_bp
+from routes.registrar_archive import registrar_archive_bp
+from routes.admin_archive import admin_archive_bp
+from routes.finance_queue import finance_queue_bp
+from routes.finance_quotations import finance_quotations_bp
+from routes.registrar_coe import registrar_coe_bp
+from routes.portal_coe import portal_coe_bp
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = SECRET_KEY
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)   # maximum ng "Remember me"
+IDLE_SECONDS = 30 * 60               # session timeout kapag walang ginagawa
+REMEMBER_SECONDS = 7 * 24 * 3600     # timeout kapag naka-check ang Remember me
+app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
+
+app.config.update(
+    MAIL_SERVER='smtp.gmail.com',
+    MAIL_PORT=587,
+    MAIL_USE_TLS=True,
+    MAIL_USERNAME=MAIL_USERNAME,
+    MAIL_PASSWORD=MAIL_PASSWORD,
+    MAIL_DEFAULT_SENDER=('SIT-EnrollEase HelpDesk', MAIL_USERNAME),
+)
+
+csrf = CSRFProtect(app)
+mail.init_app(app)
+
+
+@app.before_request
+def load_current_user():
+    """Sa bawat request: alamin kung sino ang naka-login at kung valid pa ang session niya."""
+    g.user = None
+    if request.endpoint == 'static':
+        return
+    user_id = session.get('user_id')
+    if user_id is None:
+        return
+
+    now = int(time.time())
+    limit = REMEMBER_SECONDS if session.get('remember') else IDLE_SECONDS
+    if now - session.get('last_seen', now) > limit:      # idle timeout
+        session.clear()
+        flash('Your session expired. Please log in again.', 'warning')
+        return
+
+    user = User.find(user_id)
+    if user is None or not user.is_active or user.session_version != session.get('session_version'):
+        session.clear()
+        return
+    session['last_seen'] = now
+    g.user = user
+
+
+
+@app.context_processor
+def inject_user():
+    user = g.get('user')
+    context = {'current_user': user}
+    if user:
+        context.update(menu=menu_for(user.role), account_menu=ACCOUNT_MENU,
+                       role_label=ROLE_LABELS.get(user.role, user.role.title()))
+    return context
+
+@app.context_processor
+def inject_admission():
+    """Para sa mga template: admission_window() ay ang bukas na term, o None. Isang query lang kada request."""
+    def admission_window():
+        if 'admission' not in g:
+            g.admission = Term.open_term()
+        return g.admission
+    return {'admission_window': admission_window}
+
+app.register_blueprint(public_bp)
+app.register_blueprint(auth_bp)
+app.register_blueprint(account_bp)
+app.register_blueprint(dashboard_bp)
+app.register_blueprint(applicant_bp)
+for key, cfg in PORTALS.items():
+    app.register_blueprint(create_portal(key, cfg))
+app.register_blueprint(admin_users_bp)
+app.register_blueprint(admin_audit_bp)
+app.register_blueprint(registrar_applications_bp)
+app.register_blueprint(admin_terms_bp)
+app.register_blueprint(registrar_admission_bp)
+app.register_blueprint(registrar_archive_bp)
+app.register_blueprint(admin_archive_bp)
+app.register_blueprint(finance_queue_bp)
+app.register_blueprint(finance_quotations_bp)
+app.register_blueprint(registrar_coe_bp)
+app.register_blueprint(portal_coe_bp)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+===== FILE: seed.py =====
+from models.base import BaseModel
+from models.user import User
+from config import ADMIN_EMAIL, ADMIN_PASSWORD
+
+run = BaseModel.run
+
+CCF_CCL_OBJECTIVE = ("To help church leaders grow in their leadership calling, and practical ministry "
+                     "service as they work harmoniously with the pastors, fellow leaders, and workers "
+                     "in caring and feeding the church.")
+CERT_PREREQ = ("Must be a Christian and serving in any church leadership capacity "
+               "(elder, deacon, council member, or worker).")
+
+# (code, name, level, total_units, objective, prerequisites)
+PROGRAMS = [
+    ('CCF', 'Certificate in Christian Foundation', 'Certificate', 24, CCF_CCL_OBJECTIVE, CERT_PREREQ),
+    ('CCL', 'Certificate in Christian Leadership', 'Certificate', 24, CCF_CCL_OBJECTIVE, CERT_PREREQ),
+    ('DPS', 'Diploma in Pastoral Studies', 'Diploma', 54,
+     'To provide further training to those who have been called to ministry, equipping them to become '
+     'effective leaders and ministers of the gospel in their local churches.',
+     'Must complete the Certificate of Christian Foundation or Certificate in Christian Leadership '
+     'and has legitimate reason of not pursuing the Bachelor of Theology program.'),
+    ('BThPM', 'Bachelor of Theology Major in Pastoral Ministry', 'Bachelor', 144, None, None),
+    ('BThCE', 'Bachelor of Theology Major in Christian Education', 'Bachelor', 144, None, None),
+    ('MACE', 'Master of Arts in Christian Education', 'Master', 62, None, None),
+    ('MACM', 'Master of Arts in Christian Ministry', 'Master', 62, None, None),
+    ('MDiv', 'Master of Divinity in New Testament Exegetical Theology', 'Master', 58,
+     'A professional graduate degree program designed to train and prepare individuals to demonstrate '
+     'a high level of competence in New Testament exegetical theology and specialized educational '
+     'teaching ministry.', None),
+]
+
+# (name, description)  -- galing sa REQUIREMENTS FOR NEW STUDENTS
+DOCUMENT_TYPES = [
+    ('Admission Form', 'Signed admission form'),
+    ('Testimony of Conversion', 'Written testimony of your conversion'),
+    ("Pastor's Recommendation", 'Recommendation letter from your pastor'),
+    ('Latest Diploma/Certificate', 'Latest diploma or certificate of last educational attainment'),
+    ('2x2 Photo', '2x2 photo with a white background'),
+    ('PSA/Birth Certificate', 'Photocopy of PSA/Birth Certificate'),
+]
+
+SETTINGS = {
+    'application_open': '2026-10-01',
+    'application_close': '2026-12-15',
+    'school_name': 'Simons Institute of Theology',
+    'school_address': '7-108 T. Valdellon St., Paete, Laguna 4016',
+    'school_email': 'ntbcpaetefounded1957@yahoo.com',
+    'school_phone': '049-557-2464',
+}
+
+def seed_programs():
+    for p in PROGRAMS:
+        run("INSERT IGNORE INTO programs (code, name, level, total_units, objective, prerequisites) "
+            "VALUES (%s, %s, %s, %s, %s, %s)", p)
+
+
+def seed_documents():
+    for d in DOCUMENT_TYPES:
+        run("INSERT IGNORE INTO document_types (name, description) VALUES (%s, %s)", d)
+    # lahat ng program ay nangangailangan ng lahat ng dokumento para sa New students
+    run("INSERT IGNORE INTO program_documents (program_id, document_type_id, applicant_type) "
+        "SELECT p.id, d.id, 'New' FROM programs p CROSS JOIN document_types d")
+    run("INSERT IGNORE INTO program_documents (program_id, document_type_id, applicant_type) "
+        "SELECT p.id, d.id, 'Transferee' FROM programs p CROSS JOIN document_types d")
+
+
+def seed_term_and_settings():
+    run("INSERT IGNORE INTO academic_terms (term_no, academic_year, is_current) VALUES (1, '2026-2027', 1)")
+    for key, value in SETTINGS.items():
+        run("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES (%s, %s)", (key, value))
+
+
+def seed_admin():
+    """Admin lang ang nasa backend. Ang registrar, finance at faculty ay gagawin ng Admin sa system."""
+    if User.find_by_email(ADMIN_EMAIL) is None:
+        user = User('System', 'Administrator', ADMIN_EMAIL, 'admin')
+        user.set_password(ADMIN_PASSWORD)
+        user.save()
+        user.is_verified = 1
+        user.save()
+
+
+if __name__ == '__main__':
+    seed_programs()
+    seed_documents()
+    seed_term_and_settings()
+    seed_admin()
+    print('Seed complete.')
+    print('Programs:', run('SELECT COUNT(*) AS n FROM programs', fetch='one')['n'])
+    print('Document types:', run('SELECT COUNT(*) AS n FROM document_types', fetch='one')['n'])
+    print('Program-document links:', run('SELECT COUNT(*) AS n FROM program_documents', fetch='one')['n'])
+    print('Users:', run('SELECT COUNT(*) AS n FROM users', fetch='one')['n'])
+===== FILE: models\stats.py =====
+from db import query
+from models.term import Term
+
+STUDENT_TYPES = ('New', 'Transferee', 'Continuing', 'Returnee')
+
+
+class Stats:
+    """Mga bilang para sa mga dashboard."""
+
+    @staticmethod
+    def enrolled_by_type(term_id):
+        """Ilang student ang Enrolled na sa term na ito, ayon sa uri nila."""
+        rows = query("SELECT student_type, COUNT(*) AS n FROM enrollments "
+                     "WHERE term_id = %s AND status = 'Enrolled' GROUP BY student_type", (term_id,))
+        counts = {r['student_type']: r['n'] for r in rows}
+        return {t: counts.get(t, 0) for t in STUDENT_TYPES}
+
+    @classmethod
+    def registrar(cls, term_id=None):
+        """Lahat ng kailangan ng dashboard ng Registrar. Ang bukas na term ang default."""
+        terms = Term.active()
+        term = next((t for t in terms if t.id == term_id), terms[0] if terms else None)
+        current = Term.current()
+        by_type = cls.enrolled_by_type(current.id) if current else {t: 0 for t in STUDENT_TYPES}
+        data = dict(terms=terms, term=term, counts={}, drafts=0, total=0, programs=[], types={},
+                    current_term=current, by_type=by_type, enrolled_total=sum(by_type.values()))
+        if term:
+            rows = query("SELECT status, COUNT(*) AS n FROM applications WHERE term_id = %s GROUP BY status",
+                         (term.id,))
+            counts = {r['status']: r['n'] for r in rows}
+            data['drafts'] = counts.pop('Draft', 0)
+            data['counts'] = counts
+            data['total'] = sum(counts.values())
+            data['programs'] = query(
+                "SELECT p.code, p.name, COUNT(*) AS n FROM applications a JOIN programs p ON p.id = a.program_id "
+                "WHERE a.term_id = %s AND a.status <> 'Draft' GROUP BY p.id ORDER BY n DESC, p.code", (term.id,))
+            type_rows = query("SELECT applicant_type, COUNT(*) AS n FROM applications "
+                              "WHERE term_id = %s AND status <> 'Draft' GROUP BY applicant_type", (term.id,))
+            data['types'] = {r['applicant_type']: r['n'] for r in type_rows}
+        return data
+===== FILE: models\quotation.py =====
+import re
+from datetime import date
+from decimal import Decimal
+from db import query, execute
+from models.application import Application
+from models.notification import Notification
+from models.user import User
+
+
+class Quotation:
+    """Ang tuition quotation ng Finance, kasama ang manual na Student ID. Ang total ay kinukuwenta ng system."""
+
+    # (column, label). Sundan ang Accounting slip ng SIT.
+    FEES = (
+        ('tuition_fee', 'Tuition Fee'),
+        ('energy_fee', 'Energy Fee'),
+        ('book_fee', 'Book / Manual'),
+        ('printouts_fee', 'Printouts'),
+        ('admission_fee', 'Admission'),
+    )
+    STUDENT_ID_RE = re.compile(r'^\d{2}-[1-3]-\d{4}$')          # YY-T-NNNN, hal. 26-2-0110
+    ACCOUNT_RE = re.compile(r'^[A-Za-z0-9-]{3,20}$')
+    MONEY_RE = re.compile(r'^\d{1,7}(\.\d{1,2})?$')
+    UNITS_RE = re.compile(r'^\d{1,2}(\.\d)?$')
+
+    @staticmethod
+    def find(application_id):
+        return query("SELECT * FROM quotations WHERE application_id = %s", (application_id,), one=True)
+
+    @staticmethod
+    def application_for_finance(application_id):
+        """Ang application kung puwede pang i-quote: For Enrollment, may Originals received, hindi archived ang term."""
+        application = Application.find(application_id)
+        if application is None or application.status != 'For Enrollment' or not application.originals_received_at:
+            return None
+        if application.term_id:
+            term = query("SELECT admission_status FROM academic_terms WHERE id = %s", (application.term_id,), one=True)
+            if term and term['admission_status'] == 'Archived':
+                return None
+        return application
+
+    @staticmethod
+    def suggest_account_no():
+        n = query("SELECT COALESCE(MAX(id), 0) + 1 AS n FROM quotations", (), one=True)['n']
+        return f'AC-{date.today().year}-{n:04d}'
+
+    @staticmethod
+    def to_form(row):
+        """Ang naka-save na quotation bilang text, para sa form."""
+        form = {'student_id': row['student_id'], 'account_no': row['account_no'],
+                'units': format(row['units'].normalize(), 'f')}
+        for name, _label in Quotation.FEES:
+            form[name] = '{:.2f}'.format(row[name])
+        return form
+
+    @classmethod
+    def clean(cls, form, application_id):
+        """Sinusuri ang form. Ibinabalik ang (data, errors). Ang total ay kinukuwenta dito, hindi galing sa form."""
+        data, errors = {}, []
+
+        student_id = form.get('student_id', '').strip()
+        if not cls.STUDENT_ID_RE.match(student_id):
+            errors.append('Student ID must look like 26-2-0110 (year, trimester 1 to 3, number).')
+        elif query("SELECT id FROM users WHERE username = %s", (student_id,), one=True) or \
+                query("SELECT id FROM quotations WHERE student_id = %s AND application_id <> %s",
+                      (student_id, application_id), one=True):
+            errors.append(f'Student ID {student_id} is already taken.')
+        data['student_id'] = student_id
+
+        account_no = form.get('account_no', '').strip().upper()
+        if not cls.ACCOUNT_RE.match(account_no):
+            errors.append('Account No. may only contain letters, numbers and hyphens (3 to 20 characters).')
+        elif query("SELECT id FROM quotations WHERE account_no = %s AND application_id <> %s",
+                   (account_no, application_id), one=True):
+            errors.append(f'Account No. {account_no} is already used.')
+        data['account_no'] = account_no
+
+        raw = form.get('units', '').strip()
+        if cls.UNITS_RE.match(raw) and Decimal(raw) > 0:
+            data['units'] = Decimal(raw)
+        else:
+            errors.append('Enter the number of units (greater than 0).')
+            data['units'] = Decimal('0')
+
+        total = Decimal('0')
+        for name, label in cls.FEES:
+            raw = form.get(name, '').strip().replace(',', '')
+            if raw == '':
+                value = Decimal('0')
+            elif cls.MONEY_RE.match(raw):
+                value = Decimal(raw)
+            else:
+                errors.append(f'{label} must be an amount like 1500 or 1500.50.')
+                value = Decimal('0')
+            data[name] = value
+            total += value
+        if data['tuition_fee'] <= 0 and not any(label.startswith('Tuition') for label in
+                                                 [e for e in errors if e.startswith('Tuition')]):
+            errors.append('Enter the Tuition Fee.')
+        data['total'] = total
+        return data, errors
+
+    @classmethod
+    def save(cls, application, data, by_user):
+        """Ini-insert o ina-update ang quotation. Ibinabalik ang True kung bago."""
+        if not application.term_id:
+            raise ValueError('This application has no term yet.')
+        existing = cls.find(application.id)
+        fee_cols = [name for name, _label in cls.FEES]
+        values = [data['student_id'], data['account_no'], data['units']] + [data[c] for c in fee_cols] + [data['total']]
+
+        if existing:
+            sets = ', '.join(f'{c} = %s' for c in ['student_id', 'account_no', 'units'] + fee_cols + ['total'])
+            execute(f"UPDATE quotations SET {sets} WHERE application_id = %s", values + [application.id])
+        else:
+            cols = ', '.join(['application_id', 'student_id', 'account_no', 'units'] + fee_cols +
+                             ['total', 'created_by'])
+            marks = ', '.join(['%s'] * (len(fee_cols) + 6))
+            execute(f"INSERT INTO quotations ({cols}) VALUES ({marks})",
+                    [application.id] + values + [by_user.id])
+
+        # Ang enrollment record: Quoted na. (Hindi ibababa kung Enrolled na.)
+        execute("INSERT INTO enrollments (user_id, term_id, student_type, status) VALUES (%s, %s, %s, 'Quoted') "
+                "ON DUPLICATE KEY UPDATE student_type = VALUES(student_type), "
+                "status = IF(status = 'Enrolled', status, 'Quoted')",
+                (application.user_id, application.term_id, application.applicant_type))
+
+        owner = User.find(application.user_id)
+        details = [('Student ID', data['student_id']), ('Account No.', data['account_no']),
+                   ('Total', 'PHP {:,.2f}'.format(data['total']))]
+        if existing:
+            Notification.notify(owner, 'Your SIT quotation was updated', 'Quotation updated',
+                                'The Finance office updated your tuition quotation. Please see the new total below.',
+                                details)
+        else:
+            Notification.notify(owner, 'Your SIT tuition quotation', 'Tuition quotation ready',
+                                'Your tuition quotation is ready. Please see the Finance office. '
+                                'After this, the Registrar will give your Certificate of Enrolment.',
+                                details)
+        return existing is None
+===== FILE: models\finance.py =====
+from db import query
+
+
+class Finance:
+    """Mga datos para sa Finance: ang pila ng mga applicant na handa nang i-quote."""
+
+    # Hindi kasama ang mga applicant ng term na naka-archive na
+    SCOPE = "a.status = 'For Enrollment' AND (t.admission_status IS NULL OR t.admission_status <> 'Archived')"
+    FROM = ("FROM applications a JOIN users u ON u.id = a.user_id "
+            "LEFT JOIN programs p ON p.id = a.program_id "
+            "LEFT JOIN academic_terms t ON t.id = a.term_id "
+            "LEFT JOIN quotations qt ON qt.application_id = a.id")
+
+    @classmethod
+    def _filters(cls, q='', state=None):
+        """state: None = lahat, 'ready' = wala pang quotation, 'quoted' = may quotation na."""
+        where = [cls.SCOPE, 'a.originals_received_at IS NOT NULL']
+        params = []
+        if state == 'ready':
+            where.append('qt.id IS NULL')
+        elif state == 'quoted':
+            where.append('qt.id IS NOT NULL')
+        if q:
+            like = f'%{q}%'
+            where.append('(u.first_name LIKE %s OR u.last_name LIKE %s OR u.email LIKE %s OR qt.student_id LIKE %s)')
+            params += [like, like, like, like]
+        return ' AND '.join(where), params
+
+    @classmethod
+    def queue_count(cls, q='', state=None):
+        where, params = cls._filters(q, state)
+        return query(f'SELECT COUNT(*) AS n {cls.FROM} WHERE {where}', params, one=True)['n']
+
+    @classmethod
+    def queue(cls, q='', limit=10, offset=0, state=None):
+        """Una ang wala pang quotation; sa loob nito, ang pinakamatagal nang naghihintay."""
+        where, params = cls._filters(q, state)
+        return query(
+            'SELECT a.id, a.applicant_type, a.originals_received_at, u.first_name, u.last_name, u.email, '
+            'p.code AS program_code, p.name AS program_name, t.term_no, t.academic_year, '
+            'qt.id AS quotation_id, qt.student_id, qt.total '
+            f'{cls.FROM} WHERE {where} '
+            'ORDER BY (qt.id IS NOT NULL) ASC, a.originals_received_at ASC, a.id ASC LIMIT %s OFFSET %s',
+            params + [limit, offset])
+
+    @classmethod
+    def counts(cls):
+        waiting = query(f'SELECT COUNT(*) AS n {cls.FROM} WHERE {cls.SCOPE} AND a.originals_received_at IS NULL',
+                        (), one=True)['n']
+        return {'ready': cls.queue_count(state='ready'), 'quoted': cls.queue_count(state='quoted'),
+                'waiting': waiting}
+===== MISSING: models\payment.py =====
+===== FILE: models\coe.py =====
+import os
+import secrets
+from flask import abort, current_app, send_file, url_for
+from werkzeug.utils import secure_filename
+from db import query, execute
+from models.notification import Notification
+from models.quotation import Quotation
+from models.user import User
+
+
+class Coe:
+    """Certificate of Enrolment: in-upload ng Registrar, kinukuha ng student. Dito rin nagiging Enrolled ang applicant."""
+
+    MAX_BYTES = 5 * 1024 * 1024
+    TYPES = {
+        '.pdf': ('application/pdf', (b'%PDF',)),
+        '.jpg': ('image/jpeg', (b'\xff\xd8\xff',)),
+        '.jpeg': ('image/jpeg', (b'\xff\xd8\xff',)),
+        '.png': ('image/png', (b'\x89PNG\r\n\x1a\n',)),
+    }
+    NOT_ARCHIVED = "(t.admission_status IS NULL OR t.admission_status <> 'Archived')"
+
+    @staticmethod
+    def folder():
+        return os.path.join(current_app.root_path, 'uploads', 'coe')
+
+    # ---------- mga listahan ----------
+    @classmethod
+    def ready(cls):
+        """Mga na-quote na ng Finance, naghihintay ng COE."""
+        return query(
+            "SELECT a.id, a.applicant_type, u.first_name, u.last_name, u.email, p.code AS program_code, "
+            "t.term_no, t.academic_year, qt.student_id, qt.total "
+            "FROM applications a JOIN quotations qt ON qt.application_id = a.id "
+            "JOIN users u ON u.id = a.user_id "
+            "LEFT JOIN programs p ON p.id = a.program_id "
+            "LEFT JOIN academic_terms t ON t.id = a.term_id "
+            f"WHERE a.status = 'For Enrollment' AND {cls.NOT_ARCHIVED} "
+            "ORDER BY qt.updated_at ASC, a.id ASC")
+
+    @classmethod
+    def released(cls, limit=20):
+        """Mga kamakailang na-release na COE."""
+        return query(
+            "SELECT e.id AS enrollment_id, e.enrolled_at, e.student_type, u.first_name, u.last_name, "
+            "u.username AS student_id, t.term_no, t.academic_year "
+            "FROM enrollments e JOIN users u ON u.id = e.user_id "
+            "JOIN academic_terms t ON t.id = e.term_id "
+            f"WHERE e.status = 'Enrolled' AND e.coe_stored IS NOT NULL AND {cls.NOT_ARCHIVED} "
+            "ORDER BY e.enrolled_at DESC LIMIT %s", (limit,))
+
+    @classmethod
+    def for_student(cls, user_id):
+        return query(
+            "SELECT e.*, t.term_no, t.academic_year FROM enrollments e "
+            "JOIN academic_terms t ON t.id = e.term_id WHERE e.user_id = %s ORDER BY e.term_id DESC", (user_id,))
+
+    # ---------- pagsusuri ----------
+    @classmethod
+    def application_for_release(cls, application_id):
+        """Ang application kung puwede nang bigyan ng COE: For Enrollment, may quotation, hindi archived ang term."""
+        from models.application import Application
+        application = Application.find(application_id)
+        if application is None or application.status != 'For Enrollment' or Quotation.find(application.id) is None:
+            return None
+        if application.term_id:
+            term = query("SELECT admission_status FROM academic_terms WHERE id = %s", (application.term_id,), one=True)
+            if term and term['admission_status'] == 'Archived':
+                return None
+        return application
+
+    @classmethod
+    def _read_file(cls, file):
+        if file is None or not file.filename:
+            raise ValueError('Choose the COE file to upload.')
+        original = secure_filename(file.filename) or 'coe'
+        ext = os.path.splitext(original)[1].lower()
+        if ext not in cls.TYPES:
+            raise ValueError('The COE must be a PDF, JPG or PNG file.')
+        data = file.read(cls.MAX_BYTES + 1)
+        if len(data) > cls.MAX_BYTES:
+            raise ValueError('The file is too large (5 MB maximum).')
+        mime, magics = cls.TYPES[ext]
+        if not data.startswith(magics):
+            raise ValueError('The file content does not match its type. Upload the real PDF, JPG or PNG.')
+        return secrets.token_hex(16) + ext, original[-150:], mime, data
+
+    # ---------- ang mismong pag-release ----------
+    @classmethod
+    def release(cls, application, file):
+        """Itatabi ang COE, gagawing Enrolled ang application at Student ang account."""
+        if application.status != 'For Enrollment':
+            raise ValueError('This application is not waiting for a COE.')
+        quotation = Quotation.find(application.id)
+        if quotation is None:
+            raise ValueError('The Finance quotation is not ready yet.')
+        if not application.birthdate:
+            raise ValueError('The applicant has no birthdate on file (needed for the initial password).')
+        enrollment = query("SELECT * FROM enrollments WHERE user_id = %s AND term_id = %s",
+                           (application.user_id, application.term_id), one=True)
+        if enrollment is None:
+            raise ValueError('No enrollment record found. Ask Finance to save the quotation again.')
+
+        stored, original, mime, data = cls._read_file(file)
+        os.makedirs(cls.folder(), exist_ok=True)
+        path = os.path.join(cls.folder(), stored)
+        with open(path, 'wb') as handle:
+            handle.write(data)
+
+        try:
+            execute("UPDATE enrollments SET coe_stored = %s, coe_name = %s, coe_mime = %s, "
+                    "coe_uploaded_at = NOW(), status = 'Enrolled', enrolled_at = NOW() WHERE id = %s",
+                    (stored, original, mime, enrollment['id']))
+            execute("UPDATE applications SET status = 'Enrolled' WHERE id = %s", (application.id,))
+            user = User.find(application.user_id)
+            if user.role == 'applicant':
+                user.promote_to_student(quotation['student_id'], application.birthdate.strftime('%y/%m/%d'))
+                user.activate()                          # Student ID at birthday ang gagamitin niya, walang activation link
+        except Exception:
+            os.remove(path)
+            raise
+
+        Notification.notify(
+            user, 'You are now enrolled at SIT', 'Certificate of Enrolment ready',
+            'Your Certificate of Enrolment is ready and you are now enrolled. Log in to the Student Portal '
+            'with your Student ID to see it. Please change your password after your first login.',
+            [('Student ID', quotation['student_id']),
+             ('Initial password', 'Your birthday written as YY/MM/DD'),
+             ('Student Portal', url_for('portal.login', _external=True))])
+
+    # ---------- pagkuha ng file ----------
+    @staticmethod
+    def file_row(enrollment_id, user_id=None):
+        sql, params = "SELECT * FROM enrollments WHERE id = %s AND coe_stored IS NOT NULL", [enrollment_id]
+        if user_id is not None:
+            sql += " AND user_id = %s"
+            params.append(user_id)
+        return query(sql, params, one=True)
+
+    @classmethod
+    def send(cls, row):
+        if row is None:
+            abort(404)
+        path = os.path.join(cls.folder(), row['coe_stored'])
+        if not os.path.isfile(path):
+            abort(404)
+        response = send_file(path, mimetype=row['coe_mime'], download_name=row['coe_name'])
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response
+===== FILE: routes\finance_queue.py =====
+from flask import Blueprint, render_template, request
+from models.finance import Finance
+from utils import roles_required, Pager
+
+finance_queue_bp = Blueprint('finance_queue', __name__, url_prefix='/finance/queue')
+
+
+@finance_queue_bp.route('/')
+@roles_required('finance')
+def index():
+    q = request.args.get('q', '').strip()[:80]
+    pager = Pager(Finance.queue_count(q), request.args.get('page', 1, type=int))
+    rows = Finance.queue(q, pager.per_page, (pager.page - 1) * pager.per_page)
+    return render_template('finance/queue.html', rows=rows, q=q, pager=pager)
+===== FILE: routes\finance_quotations.py =====
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, g
+from models.application import Application
+from models.audit_log import AuditLog
+from models.quotation import Quotation
+from models.user import User
+from utils import roles_required
+
+finance_quotations_bp = Blueprint('finance_quotations', __name__, url_prefix='/finance/quotations')
+
+
+@finance_quotations_bp.route('/<int:application_id>', methods=['GET', 'POST'])
+@roles_required('finance')
+def form(application_id):
+    application = Quotation.application_for_finance(application_id)
+    if application is None:
+        abort(404)
+    existing = Quotation.find(application.id)
+    errors = []
+
+    if request.method == 'POST':
+        data, errors = Quotation.clean(request.form, application.id)
+        if not errors:
+            try:
+                created = Quotation.save(application, data, g.user)
+                AuditLog.record('Quotation saved' if created else 'Quotation updated',
+                                f'Application #{application.id}, Student ID {data["student_id"]}')
+                flash('Quotation saved. The applicant was notified.' if created
+                      else 'Quotation updated. The applicant was notified.', 'success')
+                return redirect(url_for('finance_queue.index'))
+            except ValueError as exc:
+                errors.append(str(exc))
+        values = request.form
+    elif existing:
+        values = Quotation.to_form(existing)
+    else:
+        values = {'account_no': Quotation.suggest_account_no()}
+
+    return render_template('finance/quotation_form.html', application=application,
+                           applicant=User.find(application.user_id),
+                           program=dict(Application.program_options()).get(application.program_id, '-'),
+                           existing=existing, errors=errors, values=values, fees=Quotation.FEES)
+===== MISSING: routes\finance_payments.py =====
+===== FILE: routes\registrar_coe.py =====
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, g
+from models.audit_log import AuditLog
+from models.coe import Coe
+from models.quotation import Quotation
+from models.user import User
+from models.application import Application
+from utils import roles_required
+
+registrar_coe_bp = Blueprint('registrar_coe', __name__, url_prefix='/registrar/coe')
+
+
+@registrar_coe_bp.route('/')
+@roles_required('registrar')
+def index():
+    return render_template('registrar/coe.html', ready=Coe.ready(), released=Coe.released())
+
+
+@registrar_coe_bp.route('/<int:application_id>', methods=['GET', 'POST'])
+@roles_required('registrar')
+def upload(application_id):
+    application = Coe.application_for_release(application_id)
+    if application is None:
+        abort(404)
+
+    if request.method == 'POST':
+        try:
+            Coe.release(application, request.files.get('coe'))
+            AuditLog.record('COE released', f'Application #{application.id}, now enrolled')
+            flash('COE uploaded. The applicant is now an enrolled student and was notified.', 'success')
+            return redirect(url_for('registrar_coe.index'))
+        except ValueError as exc:
+            flash(str(exc), 'danger')
+
+    return render_template('registrar/coe_upload.html', application=application,
+                           applicant=User.find(application.user_id), quotation=Quotation.find(application.id),
+                           program=dict(Application.program_options()).get(application.program_id, '-'))
+
+
+@registrar_coe_bp.route('/file/<int:enrollment_id>')
+@roles_required('registrar')
+def file(enrollment_id):
+    return Coe.send(Coe.file_row(enrollment_id))
+===== FILE: routes\portal_coe.py =====
+from flask import Blueprint, render_template, g
+from models.coe import Coe
+from utils import roles_required
+
+portal_coe_bp = Blueprint('portal_coe', __name__, url_prefix='/portal/coe')
+
+
+@portal_coe_bp.route('/')
+@roles_required('student')
+def index():
+    return render_template('student/coe.html', rows=Coe.for_student(g.user.id))
+
+
+@portal_coe_bp.route('/file/<int:enrollment_id>')
+@roles_required('student')
+def file(enrollment_id):
+    # Sariling COE lang: kapag hindi kanya, 404
+    return Coe.send(Coe.file_row(enrollment_id, g.user.id))
+===== FILE: routes\admin_users.py =====
+import re
+import secrets
+from datetime import date, datetime
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
+from models.user import User
+from models.audit_log import AuditLog
+from mailer import send_email
+from routes.auth import EMAIL_RE, NAME_RE, clean_name
+from utils import roles_required, Pager
+
+admin_users_bp = Blueprint('admin_users', __name__, url_prefix='/admin/users')
+
+STAFF_ROLES = ('registrar', 'finance', 'faculty')
+FILTER_ROLES = ('applicant', 'student') + STAFF_ROLES
+STUDENT_ID_RE = re.compile(r'^\d{2}-[1-3]-\d{4}$')      # YY-trimester-NNNN, hal. 23-1-0096
+PER_PAGE = 10
+
+
+def person_errors(first, middle, last, email):
+    errors = []
+    if not (2 <= len(first) <= 50 and NAME_RE.match(first)):
+        errors.append('First name must be 2 to 50 letters.')
+    if middle and not (len(middle) <= 50 and NAME_RE.match(middle)):
+        errors.append('Middle name may only contain letters, up to 50 characters.')
+    if not (2 <= len(last) <= 50 and NAME_RE.match(last)):
+        errors.append('Last name must be 2 to 50 letters.')
+    if not EMAIL_RE.match(email) or len(email) > 120:
+        errors.append('Please enter a valid email address.')
+    return errors
+
+
+def send_activation(user):
+    link = url_for('auth.activate', token=user.get_token('activate'), _external=True)
+    return send_email('Activate your SIT-EnrollEase account', user.email, 'activate', user=user, link=link)
+
+
+def get_target(user_id):
+    """Ang account na gagalawin. Hindi pwedeng galawin ng UI ang admin account."""
+    user = User.find(user_id)
+    if user is None:
+        abort(404)
+    if user.role == 'admin':
+        abort(403)
+    return user
+
+
+@admin_users_bp.route('/')
+@roles_required('admin')
+def index():
+    q = request.args.get('q', '').strip()
+    role = request.args.get('role', '')
+    if role not in FILTER_ROLES:
+        role = ''
+    page = request.args.get('page', 1, type=int)
+    users, total = User.search(q, role, PER_PAGE, (max(page, 1) - 1) * PER_PAGE)
+    pager = Pager(total, page, PER_PAGE)
+    return render_template('admin/users.html', users=users, pager=pager, q=q, role=role, roles=FILTER_ROLES)
+
+
+@admin_users_bp.route('/new', methods=['GET', 'POST'])
+@roles_required('admin')
+def create():
+    today = date.today().isoformat()
+    if request.method == 'GET':
+        return render_template('admin/user_form.html', mode='create', form={}, today=today)
+
+    f = request.form
+    role = f.get('role', '')
+    first = clean_name(f.get('first_name', ''))
+    middle = clean_name(f.get('middle_name', ''))
+    last = clean_name(f.get('last_name', ''))
+    email = f.get('email', '').strip().lower()
+    student_id = f.get('student_id', '').strip()
+    birthdate = f.get('birthdate', '').strip()
+
+    errors = person_errors(first, middle, last, email)
+    if role not in STAFF_ROLES + ('student',):
+        errors.append('Choose a valid role.')
+
+    existing = User.find_by_email(email) if EMAIL_RE.match(email) else None
+    initial_password = None
+    if role == 'student':
+        if not STUDENT_ID_RE.match(student_id):
+            errors.append('Student ID must look like 23-1-0096 (year, trimester 1-3, number).')
+        elif User.find_by_username(student_id):
+            errors.append('That Student ID is already assigned to another account.')
+        try:
+            born = datetime.strptime(birthdate, '%Y-%m-%d').date()
+            if born >= date.today():
+                raise ValueError
+            initial_password = born.strftime('%y/%m/%d')       # YY/MM/DD
+        except ValueError:
+            errors.append('Enter a valid birth date.')
+        if existing and existing.role != 'applicant':
+            errors.append('That email already belongs to another account.')
+    elif existing:
+        errors.append('That email already belongs to another account.')
+
+    if errors:
+        for message in errors:
+            flash(message, 'danger')
+        return render_template('admin/user_form.html', mode='create', form=f, today=today)
+
+    if role == 'student' and existing:                          # applicant -> student
+        existing.update_details(first, middle or None, last, email)
+        existing.promote_to_student(student_id, initial_password)
+        user = User.find_by_email(email)
+        AuditLog.record('Applicant promoted to student', f'{email} -> {student_id}')
+    else:
+        user = User(first, last, email, role, middle or None)
+        if role == 'student':
+            user.username = student_id
+            user.set_password(initial_password)
+        else:
+            user.set_password(secrets.token_urlsafe(24))       # pansamantala; sila ang pipili sa activation
+        user.is_activated = 0
+        user.save()
+        user = User.find_by_email(email)
+        AuditLog.record('Account created', f'{role}: {student_id or email}')
+
+    if send_activation(user):
+        flash(f'Account created. An activation link was sent to {email}.', 'success')
+    else:
+        flash('Account created, but the email could not be sent. Use "Resend activation link" later.', 'warning')
+    return redirect(url_for('admin_users.index'))
+
+
+@admin_users_bp.route('/<int:user_id>/edit', methods=['GET', 'POST'])
+@roles_required('admin')
+def edit(user_id):
+    target = get_target(user_id)
+    if request.method == 'GET':
+        form = {'first_name': target.first_name, 'middle_name': target.middle_name or '',
+                'last_name': target.last_name, 'email': target.email}
+        return render_template('admin/user_form.html', mode='edit', target=target, form=form)
+
+    f = request.form
+    first = clean_name(f.get('first_name', ''))
+    middle = clean_name(f.get('middle_name', ''))
+    last = clean_name(f.get('last_name', ''))
+    email = f.get('email', '').strip().lower()
+
+    errors = person_errors(first, middle, last, email)
+    other = User.find_by_email(email) if EMAIL_RE.match(email) else None
+    if other and other.id != target.id:
+        errors.append('That email already belongs to another account.')
+    if errors:
+        for message in errors:
+            flash(message, 'danger')
+        return render_template('admin/user_form.html', mode='edit', target=target, form=f)
+
+    target.update_details(first, middle or None, last, email)
+    AuditLog.record('Account updated', email)
+    flash('Account updated.', 'success')
+    return redirect(url_for('admin_users.index'))
+
+
+@admin_users_bp.route('/<int:user_id>/toggle', methods=['POST'])
+@roles_required('admin')
+def toggle(user_id):
+    target = get_target(user_id)
+    new_state = not target.is_active
+    target.set_active(new_state)
+    AuditLog.record('Account activated' if new_state else 'Account deactivated', target.email)
+    flash(f'{target.full_name} is now {"active" if new_state else "deactivated"}.', 'success')
+    return redirect(url_for('admin_users.index'))
+
+
+@admin_users_bp.route('/<int:user_id>/force-logout', methods=['POST'])
+@roles_required('admin')
+def force_logout(user_id):
+    target = get_target(user_id)
+    target.force_logout()
+    AuditLog.record('Forced logout', target.email)
+    flash(f'{target.full_name} was logged out of all devices.', 'success')
+    return redirect(url_for('admin_users.index'))
+
+
+@admin_users_bp.route('/<int:user_id>/unlock', methods=['POST'])
+@roles_required('admin')
+def unlock(user_id):
+    target = get_target(user_id)
+    target.unlock()
+    AuditLog.record('Account unlocked', target.email)
+    flash(f'{target.full_name} can log in again.', 'success')
+    return redirect(url_for('admin_users.index'))
+
+
+@admin_users_bp.route('/<int:user_id>/resend', methods=['POST'])
+@roles_required('admin')
+def resend(user_id):
+    target = get_target(user_id)
+    if target.is_activated:
+        flash('That account is already activated.', 'info')
+    elif send_activation(target):
+        AuditLog.record('Activation link resent', target.email)
+        flash(f'Activation link sent to {target.email}.', 'success')
+    else:
+        flash('The email could not be sent. Please try again.', 'danger')
+    return redirect(url_for('admin_users.index'))
+
+
+@admin_users_bp.route('/<int:user_id>/reset', methods=['POST'])
+@roles_required('admin')
+def reset(user_id):
+    target = get_target(user_id)
+    link = url_for('auth.reset', token=target.get_reset_token(), _external=True)
+    if send_email('Reset your SIT-EnrollEase password', target.email, 'reset', user=target, link=link):
+        AuditLog.record('Password reset link sent', target.email)
+        flash(f'Reset link sent to {target.email}.', 'success')
+    else:
+        flash('The email could not be sent. Please try again.', 'danger')
+    return redirect(url_for('admin_users.index'))
+===== TEMPLATE FILES =====
+templates\app_home.html
+templates\account\change_password.html
+templates\admin\archive.html
+templates\admin\audit.html
+templates\admin\terms.html
+templates\admin\term_form.html
+templates\admin\users.html
+templates\admin\user_form.html
+templates\applicant\application_form.html
+templates\applicant\dashboard.html
+templates\applicant\documents.html
+templates\applicant\_submit_box.html
+templates\auth\reset.html
+templates\auth\set_password.html
+templates\email\activate.html
+templates\email\activate.txt
+templates\email\base_email.html
+templates\email\notice.html
+templates\email\notice.txt
+templates\email\reset.html
+templates\email\reset.txt
+templates\email\verify.html
+templates\email\verify.txt
+templates\finance\dashboard.html
+templates\finance\queue.html
+templates\finance\quotation_form.html
+templates\finance\_queue_table.html
+templates\layouts\app.html
+templates\layouts\base.html
+templates\partials\_auth_modal.html
+templates\partials\_flash.html
+templates\partials\_head.html
+templates\partials\_navbar.html
+templates\partials\_pagination.html
+templates\partials\_status_badge.html
+templates\portal\login.html
+templates\print\admission_form.html
+templates\public\index.html
+templates\registrar\admission_empty.html
+templates\registrar\applications.html
+templates\registrar\archive.html
+templates\registrar\archive_term.html
+templates\registrar\coe.html
+templates\registrar\coe_upload.html
+templates\registrar\dashboard.html
+templates\registrar\review.html
+templates\student\coe.html
