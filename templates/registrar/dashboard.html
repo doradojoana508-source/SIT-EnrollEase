@@ -74,6 +74,9 @@
           </div>
         {% endfor %}
         <p class="small text-muted mb-0">{{ total }} submitted{% if drafts %} &middot; {{ drafts }} still drafting{% endif %}</p>
+        <p class="small mb-1"><span class="text-muted">By type:</span>
+          New students <strong>{{ types.get('New', 0) }}</strong> &middot;
+          Transferees <strong>{{ types.get('Transferee', 0) }}</strong></p>
       {% else %}
         <p class="text-muted mb-0">No submitted applications yet.{% if drafts %} {{ drafts }} still drafting.{% endif %}</p>
       {% endif %}
@@ -100,12 +103,29 @@
 </div>
 {% endif %}
 
-<!-- Mga kasalukuyang student -->
-<div class="card"><div class="card-body p-4 d-flex align-items-center gap-3">
-  <i class="bi bi-people fs-1 text-sit"></i>
-  <div>
-    <div class="display-6 fw-bold">{{ students }}</div>
-    <div class="text-muted">Currently enrolled students</div>
+<!-- Mga kasalukuyang enrolled na student, ayon sa uri -->
+<div class="card"><div class="card-body p-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+    <div>
+      <h2 class="h5 mb-0">Currently enrolled students</h2>
+      {% if current_term %}<div class="small text-muted">{{ current_term.name }}</div>{% endif %}
+    </div>
+    <div class="text-end">
+      <div class="display-6 fw-bold lh-1">{{ enrolled_total }}</div>
+      <div class="small text-muted">enrolled</div>
+    </div>
   </div>
+  {% for key, label, color in [('New', 'New students', 'primary'), ('Transferee', 'Transferees', 'info'),
+                               ('Continuing', 'Continuing students', 'success'), ('Returnee', 'Returnees', 'warning')] %}
+    {% set n = by_type.get(key, 0) %}
+    <div class="mb-3">
+      <div class="d-flex justify-content-between small"><span>{{ label }}</span><strong>{{ n }}</strong></div>
+      <div class="progress" style="height: 10px" role="progressbar" aria-label="{{ label }}"
+           aria-valuenow="{{ n }}" aria-valuemin="0" aria-valuemax="{{ enrolled_total }}">
+        <div class="progress-bar bg-{{ color }}" style="width: {{ (n * 100 / enrolled_total)|round|int if enrolled_total else 0 }}%"></div>
+      </div>
+    </div>
+  {% endfor %}
+  {% if not enrolled_total %}<p class="small text-muted mb-0">No enrolled students yet for this term.</p>{% endif %}
 </div></div>
 {% endblock %}

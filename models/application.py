@@ -14,7 +14,7 @@ class Application:
 
     # --- mga field na puwedeng i-edit ng applicant ---
     FIELDS = (
-        'program_id', 'address', 'home_tel', 'phone',
+        'applicant_type','program_id', 'address', 'home_tel', 'phone',
         'father_name', 'father_mobile', 'mother_name', 'mother_mobile',
         'birthdate', 'birthplace', 'gender', 'civil_status', 'nationality',
         'school_name', 'school_place', 'year_graduated',
@@ -46,6 +46,7 @@ class Application:
     PHONE_FIELDS = {'phone': 'Phone number', 'father_mobile': "Father's contact number",
                     'mother_mobile': "Mother's contact number"}
     CHOICES = {
+        'applicant_type': ('New', 'Transferee'),
         'gender': ('Male', 'Female'),
         'civil_status': ('Single', 'Married', 'Widowed', 'Separated'),
     }
@@ -69,17 +70,17 @@ class Application:
             
         # ---------- mga kailangang dokumento ----------
     def required_documents(self):
-        """Mga dokumentong hinihingi para sa program na napili."""
+        """Mga dokumentong hinihingi para sa program at uri ng applicant (New o Transferee)."""
         if not self.program_id:
             return []
         rows = query("SELECT dt.* FROM document_types dt "
                      "JOIN program_documents pd ON pd.document_type_id = dt.id "
-                     "WHERE pd.program_id = %s ORDER BY dt.id", (self.program_id,))
+                     "WHERE pd.program_id = %s AND pd.applicant_type = %s ORDER BY dt.id",
+                     (self.program_id, self.applicant_type or 'New'))
         docs = []
         for r in rows:
             name = r.get('name') or r.get('title') or r.get('document_name') or f'Document {r["id"]}'
-            docs.append({'id': r['id'], 'name': name,
-                         'online': False})   # lahat ay ina-upload na, pati ang pirmadong Admission Form
+            docs.append({'id': r['id'], 'name': name, 'online': False})   # lahat ay ina-upload na
         return docs
 
     def document_rows(self):
@@ -267,7 +268,7 @@ class Application:
         base = 'FROM applications a JOIN users u ON u.id = a.user_id WHERE ' + ' AND '.join(where)
         total = query(f'SELECT COUNT(*) AS n {base}', params, one=True)['n']
         rows = query(
-            'SELECT a.id, a.status, a.program_id, a.submitted_at, u.first_name, u.last_name, u.email, '
+            'SELECT a.id, a.status, a.applicant_type, a.program_id, a.submitted_at, u.first_name, u.last_name, u.email, '
             '(SELECT COUNT(*) FROM application_documents d WHERE d.application_id = a.id) AS docs_uploaded, '
             "(SELECT COUNT(*) FROM application_documents d WHERE d.application_id = a.id AND d.status = 'Verified') AS docs_verified, "
             "(SELECT COUNT(*) FROM application_documents d WHERE d.application_id = a.id AND d.status = 'Rejected') AS docs_rejected "
@@ -386,6 +387,7 @@ class Application:
 
         for name, options in cls.CHOICES.items():
             value = form.get(name, '')
+            data['applicant_type'] = data.get('applicant_type') or 'New'
             if value and value not in options:
                 errors.append('Please choose a valid option.')
                 value = ''

@@ -155,3 +155,22 @@ class Term:
             "FROM academic_terms t WHERE t.admission_status = 'Archived' "
             "ORDER BY t.academic_year DESC, t.term_no DESC")
         return [cls(r) for r in rows]
+
+    @classmethod
+    def manage(cls):
+        """Mga term para sa pahina ng Admission/Terms. Hindi kasama ang naka-archive."""
+        return [t for t in cls.all() if t.admission_status != 'Archived']
+
+    @classmethod
+    def current(cls):
+        """Ang kasalukuyang academic term (is_current), o ang pinakabago kung wala."""
+        row = (query("SELECT * FROM academic_terms WHERE is_current = 1 ORDER BY id DESC LIMIT 1", one=True)
+               or query("SELECT * FROM academic_terms ORDER BY academic_year DESC, term_no DESC LIMIT 1", one=True))
+        return cls(row) if row else None
+
+    @classmethod
+    def restore(cls, term_id):
+        term = cls.find(term_id)
+        if term is None or term.admission_status != 'Archived':
+            raise ValueError('Only an archived term can be restored.')
+        execute("UPDATE academic_terms SET admission_status = 'Closed' WHERE id = %s", (term_id,))

@@ -17,7 +17,7 @@ def get_term(term_id):
 @registrar_admission_bp.route('/')
 @roles_required('registrar')
 def index():
-    return render_template('admin/terms.html', terms=Term.all(), ep=EP, can_add=False,
+        return render_template('admin/terms.html', terms=Term.manage(), ep=EP, can_add=False,
                            heading='Admission Windows')
 
 

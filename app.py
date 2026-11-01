@@ -19,6 +19,7 @@ from routes.admin_terms import admin_terms_bp
 from models.term import Term
 from routes.registrar_admission import registrar_admission_bp
 from routes.registrar_archive import registrar_archive_bp
+from routes.admin_archive import admin_archive_bp
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -99,6 +100,7 @@ app.register_blueprint(registrar_applications_bp)
 app.register_blueprint(admin_terms_bp)
 app.register_blueprint(registrar_admission_bp)
 app.register_blueprint(registrar_archive_bp)
+app.register_blueprint(admin_archive_bp)
 
 if __name__ == '__main__':
     app.run(debug=True)

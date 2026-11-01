@@ -60,6 +60,8 @@ def seed_documents():
     # lahat ng program ay nangangailangan ng lahat ng dokumento para sa New students
     run("INSERT IGNORE INTO program_documents (program_id, document_type_id, applicant_type) "
         "SELECT p.id, d.id, 'New' FROM programs p CROSS JOIN document_types d")
+    run("INSERT IGNORE INTO program_documents (program_id, document_type_id, applicant_type) "
+        "SELECT p.id, d.id, 'Transferee' FROM programs p CROSS JOIN document_types d")
 
 
 def seed_term_and_settings():

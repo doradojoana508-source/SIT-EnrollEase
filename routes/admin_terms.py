@@ -16,7 +16,7 @@ def get_term(term_id):
 @admin_terms_bp.route('/')
 @roles_required('admin')
 def index():
-    return render_template('admin/terms.html', terms=Term.all(), ep='admin_terms', can_add=True,
+    return render_template('admin/terms.html', terms=Term.manage(), ep='admin_terms', can_add=True,
                            heading='Terms & Admission')
 
 

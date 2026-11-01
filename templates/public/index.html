@@ -85,6 +85,7 @@
     <h2 class="section-title">Enrollment Process</h2>
     <div class="row g-4">
       <div class="col-lg-7">
+        <h3 class="h5 mb-3">New students and transferees</h3>
         <ol class="steps">
           <li><strong>Create an account</strong> and verify your email address while admission is open.</li>
           <li><strong>Fill out the Admission Form</strong>, choose your program, then print and sign it.</li>
@@ -96,12 +97,25 @@
         </ol>
       </div>
       <div class="col-lg-5">
-        <div class="card h-100">
+        <div class="card mb-3">
           <div class="card-body">
-            <h3 class="h5">Requirements for New Students</h3>
+            <h3 class="h5">Requirements for New Students and Transferees</h3>
             <ul class="mb-0">
               {% for d in documents %}<li>{{ d.name }}</li>{% endfor %}
             </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <h3 class="h5">Continuing students and returnees</h3>
+            <p class="small text-muted">Log in to the Student Portal with your Student ID.</p>
+            <ol class="small ps-3">
+              <li>Complete your clearance and give it to the Registrar.</li>
+              <li>Pre-enroll. The Executive Director or Academic Dean checks your subjects and ministry direction.</li>
+              <li>Get your tuition quotation from the Finance office and settle any balance.</li>
+              <li>Receive your Certificate of Enrolment from the Registrar.</li>
+            </ol>
+            <a href="{{ url_for('portal.login') }}" class="btn btn-outline-sit btn-sm">Student Portal</a>
           </div>
         </div>
       </div>

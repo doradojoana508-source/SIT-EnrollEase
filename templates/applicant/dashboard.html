@@ -76,6 +76,7 @@
         </div>
         <p class="mb-1"><strong>Program:</strong> {{ program or 'Not chosen yet' }}</p>
         {% if term %}<p class="mb-1"><strong>Admission:</strong> {{ term.name }}</p>{% endif %}
+        <p class="mb-1"><strong>Applying as:</strong> {{ 'Transferee' if application.applicant_type == 'Transferee' else 'New student' }}</p>
         {% if application.submitted_at %}
           <p class="mb-1"><strong>Submitted:</strong> {{ application.submitted_at.strftime('%b %d, %Y %I:%M %p') }}</p>
         {% endif %}

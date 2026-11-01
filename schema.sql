@@ -184,3 +184,16 @@ CREATE TABLE IF NOT EXISTS notifications (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS enrollments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  term_id INT NOT NULL,
+  student_type ENUM('New','Transferee','Continuing','Returnee') NOT NULL,
+  status ENUM('Pre-enrolled','Quoted','Enrolled') NOT NULL DEFAULT 'Pre-enrolled',
+  enrolled_at DATETIME NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_enrollment (user_id, term_id),
+  INDEX idx_enroll_term (term_id, status),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (term_id) REFERENCES academic_terms(id)
+) ENGINE=InnoDB;

@@ -50,6 +50,17 @@
     <div class="card mb-3"><div class="card-body p-4">
       <h2 class="h5 mb-3">Applicant</h2>
       <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label d-block">I am applying as</label>
+          <div class="btn-group" role="group" aria-label="Applicant type">
+            <input type="radio" class="btn-check" name="applicant_type" id="type-new" value="New"
+                   {{ 'checked' if form.get('applicant_type', 'New') != 'Transferee' }}>
+            <label class="btn btn-outline-secondary" for="type-new">New student</label>
+            <input type="radio" class="btn-check" name="applicant_type" id="type-transferee" value="Transferee"
+                   {{ 'checked' if form.get('applicant_type') == 'Transferee' }}>
+            <label class="btn btn-outline-secondary" for="type-transferee">Transferee</label>
+          </div>
+        </div>
         {{ nm('last_name', 'Surname', current_user.last_name) }}
         {{ nm('first_name', 'Given name', current_user.first_name) }}
         {{ nm('middle_name', 'Middle name (optional)', current_user.middle_name, False) }}
