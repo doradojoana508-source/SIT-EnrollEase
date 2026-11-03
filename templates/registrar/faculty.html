@@ -1,0 +1,32 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Faculty | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">Faculty</h1>
+<p class="text-muted mb-3">Professors and how their name appears on the COR. Accounts are created by the Administrator under <strong>Users</strong>.</p>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Professor</th><th>Name on the COR</th><th>Specialties</th><th class="text-end">Classes</th><th></th></tr></thead>
+      <tbody>
+        {% for f in faculty %}
+        <tr>
+          <td>
+            <div class="fw-semibold">{{ f.first_name }} {{ f.last_name }}</div>
+            <div class="small text-muted">{{ f.email }}</div>
+            {% if not f.is_active %}<span class="badge text-bg-secondary">Deactivated</span>{% elif not f.is_activated %}<span class="badge text-bg-warning">Not yet activated</span>{% endif %}
+          </td>
+          <td class="fw-semibold">{{ f.label }}</td>
+          <td class="small">{{ f.specialties or '-' }}</td>
+          <td class="text-end">{{ f.class_count }}</td>
+          <td class="text-end"><a href="{{ url_for('registrar_faculty.edit', user_id=f.id) }}" class="btn btn-sit btn-sm">Edit profile</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No faculty accounts yet. Ask the Administrator to add them under Users.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

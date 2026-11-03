@@ -24,6 +24,8 @@ from routes.finance_queue import finance_queue_bp
 from routes.finance_quotations import finance_quotations_bp
 from routes.finance_payments import finance_payments_bp
 from routes.registrar_curriculum import registrar_curriculum_bp
+from routes.registrar_classes import registrar_classes_bp
+from routes.registrar_faculty import registrar_faculty_bp
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -109,6 +111,8 @@ app.register_blueprint(finance_queue_bp)
 app.register_blueprint(finance_quotations_bp)
 app.register_blueprint(finance_payments_bp)
 app.register_blueprint(registrar_curriculum_bp)
+app.register_blueprint(registrar_classes_bp)
+app.register_blueprint(registrar_faculty_bp)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,0 +1,77 @@
+{% extends 'layouts/app.html' %}
+{% block title %}{{ 'Add class' if mode == 'create' else 'Edit class' }} | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('registrar_classes.index', term=term.id) }}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Back to classes</a>
+<h1 class="h2 mb-1 mt-2">{{ 'Add class' if mode == 'create' else 'Edit class' }}</h1>
+<p class="text-muted mb-3">{{ term.label }}</p>
+
+{% if errors %}
+<div class="alert alert-danger"><ul class="mb-0 small">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+<form method="post" class="card"><div class="card-body">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="term" value="{{ term.id }}">
+
+  <div class="mb-3">
+    {% if mode == 'create' %}
+      <label for="subject_pick" class="form-label">Subject</label>
+      <input type="text" class="form-control" id="subject_pick" name="subject_pick" list="subjects"
+             value="{{ values.get('subject_pick', '') }}" placeholder="Type the code or title, then pick from the list" autocomplete="off" required>
+      <datalist id="subjects">
+        {% for o in options %}<option value="{{ o.label }}"></option>{% endfor %}
+      </datalist>
+      <div class="form-text">Each choice shows the code, the title in that program, the units, and the programs that use it.</div>
+    {% else %}
+      <label class="form-label">Subject</label>
+      <div class="form-control bg-light"><strong>{{ existing.code }}</strong> &middot; {{ existing.title }} &middot; {{ existing.units }} units</div>
+      <div class="form-text">The subject cannot be changed. Delete the class and add it again if it is wrong.</div>
+    {% endif %}
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-md-2">
+      <label for="section" class="form-label">Section</label>
+      <input type="text" class="form-control" id="section" name="section" value="{{ values.get('section', 'A') }}" maxlength="10" required>
+    </div>
+    <div class="col-6 col-md-3">
+      <label for="day_code" class="form-label">Day</label>
+      <select class="form-select" id="day_code" name="day_code" required>
+        <option value="">Choose...</option>
+        {% for code, name in days %}<option value="{{ code }}" {{ 'selected' if values.get('day_code') == code }}>{{ name }} ({{ code }})</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-3">
+      <label for="start_time" class="form-label">Start</label>
+      <input type="time" class="form-control" id="start_time" name="start_time" value="{{ values.get('start_time', '') }}" required>
+    </div>
+    <div class="col-6 col-md-3">
+      <label for="end_time" class="form-label">End</label>
+      <input type="time" class="form-control" id="end_time" name="end_time" value="{{ values.get('end_time', '') }}" required>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-8">
+      <label for="faculty_id" class="form-label">Professor</label>
+      <select class="form-select" id="faculty_id" name="faculty_id">
+        <option value="">No professor yet</option>
+        {% for f in faculty %}
+        <option value="{{ f.id }}" {{ 'selected' if values.get('faculty_id')|string == f.id|string }}>{{ f.label }}{% if f.specialties %} ({{ f.specialties[:45] }}){% endif %}</option>
+        {% endfor %}
+      </select>
+      <div class="form-text">The professor is notified when assigned. One professor cannot have two classes at the same time.</div>
+    </div>
+    <div class="col-md-4">
+      <label for="status" class="form-label">Status</label>
+      <select class="form-select" id="status" name="status">
+        {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if values.get('status', 'Tentative') == s }}>{{ s }}</option>{% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-sit">{{ 'Add class' if mode == 'create' else 'Save changes' }}</button>
+  <a href="{{ url_for('registrar_classes.index', term=term.id) }}" class="btn btn-outline-secondary">Cancel</a>
+</div></form>
+{% endblock %}

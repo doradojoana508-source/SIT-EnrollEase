@@ -1,0 +1,37 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Faculty profile | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('registrar_faculty.index') }}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Back to faculty</a>
+<h1 class="h2 mb-1 mt-2">{{ person.first_name }} {{ person.last_name }}</h1>
+<p class="text-muted mb-3">{{ person.email }}</p>
+
+{% if errors %}
+<div class="alert alert-danger"><ul class="mb-0 small">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+<form method="post" class="card"><div class="card-body">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="row g-3 mb-3">
+    <div class="col-md-3">
+      <label for="title" class="form-label">Title</label>
+      <select class="form-select" id="title" name="title">
+        {% for t in titles %}<option value="{{ t }}" {{ 'selected' if values.get('title', '') == t }}>{{ t or '(none)' }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-9">
+      <label for="display_name" class="form-label">Name on the COR <span class="text-muted">(optional)</span></label>
+      <input type="text" class="form-control" id="display_name" name="display_name" value="{{ values.get('display_name', '') }}"
+             maxlength="40" placeholder="Leave blank to use Title + first name, e.g. Dr. {{ person.first_name }}">
+    </div>
+  </div>
+  <div class="mb-3">
+    <label for="specialties" class="form-label">Specialties</label>
+    <input type="text" class="form-control" id="specialties" name="specialties" value="{{ values.get('specialties', '') }}"
+           maxlength="255" placeholder="e.g. Homiletics, Research, Missions, Christian Education">
+    <div class="form-text">Shown beside the name when you assign a professor to a class.</div>
+  </div>
+  <button type="submit" class="btn btn-sit">Save profile</button>
+  <a href="{{ url_for('registrar_faculty.index') }}" class="btn btn-outline-secondary">Cancel</a>
+</div></form>
+{% endblock %}

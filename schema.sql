@@ -241,3 +241,35 @@ CREATE TABLE IF NOT EXISTS payments (
   FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL,
   FOREIGN KEY (voided_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS faculty_profiles (
+  user_id INT PRIMARY KEY,
+  title VARCHAR(10) NOT NULL DEFAULT '',
+  display_name VARCHAR(40) NULL,
+  specialties VARCHAR(255) NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS classes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  term_id INT NOT NULL,
+  subject_id INT NOT NULL,
+  title VARCHAR(120) NOT NULL,
+  units TINYINT NOT NULL,
+  section VARCHAR(10) NOT NULL DEFAULT 'A',
+  day_code ENUM('M','T','W','TH','F','S') NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  faculty_id INT NULL,
+  status ENUM('Tentative','Final') NOT NULL DEFAULT 'Tentative',
+  created_by INT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_class (term_id, subject_id, title, section),
+  INDEX idx_class_faculty (faculty_id, term_id),
+  FOREIGN KEY (term_id) REFERENCES academic_terms(id),
+  FOREIGN KEY (subject_id) REFERENCES subjects(id),
+  FOREIGN KEY (faculty_id) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -1,0 +1,63 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Classes | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="h2 mb-1">Classes</h1>
+    <p class="text-muted mb-0">The subjects offered this term, with schedule and professor. A class stays <strong>Tentative</strong> until you mark it <strong>Final</strong>.</p>
+  </div>
+  {% if term %}<a href="{{ url_for('registrar_classes.create', term=term.id) }}" class="btn btn-sit"><i class="bi bi-plus-lg"></i> Add class</a>{% endif %}
+</div>
+
+{% if not term %}
+<div class="card"><div class="card-body p-5 text-center text-muted">There is no term yet. Create one under the Admin's Terms &amp; Admission.</div></div>
+{% else %}
+<form method="get" class="row g-2 mb-3">
+  <div class="col-12 col-md-3">
+    <select name="term" class="form-select" aria-label="Term" onchange="this.form.submit()">
+      {% for t in terms %}<option value="{{ t.id }}" {{ 'selected' if t.id == term.id }}>{{ t.label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-8 col-md">
+    <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Search code, subject or professor" maxlength="80">
+  </div>
+  <div class="col-4 col-md-auto"><button type="submit" class="btn btn-outline-secondary w-100">Search</button></div>
+</form>
+
+{% set unassigned = rows|selectattr('faculty_id', 'none')|list|length %}
+{% if unassigned %}
+<div class="alert alert-warning small py-2"><i class="bi bi-exclamation-triangle"></i> {{ unassigned }} class{{ 'es' if unassigned != 1 }} still without a professor.</div>
+{% endif %}
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Code</th><th>Subject</th><th>Section</th><th>Schedule</th><th>Professor</th><th>Status</th><th class="text-end"></th></tr></thead>
+      <tbody>
+        {% for c in rows %}
+        <tr>
+          <td class="fw-semibold">{{ c.code }}</td>
+          <td>{{ c.title }} <span class="small text-muted">{{ c.units }}u</span></td>
+          <td>{{ c.section }}</td>
+          <td class="text-nowrap">{{ c.schedule }}</td>
+          <td>{% if c.professor %}{{ c.professor }}{% else %}<span class="badge text-bg-warning">No professor</span>{% endif %}</td>
+          <td><span class="badge text-bg-{{ 'success' if c.status == 'Final' else 'secondary' }}">{{ c.status }}</span></td>
+          <td class="text-end text-nowrap">
+            <a href="{{ url_for('registrar_classes.edit', class_id=c.id) }}" class="btn btn-outline-secondary btn-sm">Edit</a>
+            <form method="post" action="{{ url_for('registrar_classes.delete', class_id=c.id) }}" class="d-inline"
+                  onsubmit="return confirm('Delete this class?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-4">No classes yet for this term. Click <strong>Add class</strong>.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
