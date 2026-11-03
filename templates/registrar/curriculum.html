@@ -1,0 +1,36 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Curriculum | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">Curriculum</h1>
+<p class="text-muted mb-3">The Programs of Study. The subjects here are used to build each student's COR.</p>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th>Program</th><th>Level</th><th class="text-end">Subjects</th><th class="text-end">Required units listed</th>
+            <th class="text-end">Official units</th><th>Check</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for p in programs %}
+        <tr>
+          <td><div class="fw-semibold">{{ p.code }}</div><div class="small text-muted">{{ p.name }}</div></td>
+          <td class="small">{{ p.level }}</td>
+          <td class="text-end">{{ p.subjects }}</td>
+          <td class="text-end">{{ p.expected }}{% if p.expected != p.core_units %} <span class="small text-muted">({{ p.core_units }} + electives/thesis)</span>{% endif %}</td>
+          <td class="text-end">{{ p.total_units }}</td>
+          <td>
+            {% if p.matches %}<span class="badge text-bg-success">Matches</span>
+            {% elif not p.subjects %}<span class="badge text-bg-secondary">No subjects</span>
+            {% else %}<span class="badge text-bg-warning">Does not match</span>{% endif %}
+          </td>
+          <td class="text-end"><a href="{{ url_for('registrar_curriculum.detail', program_id=p.id) }}" class="btn btn-sit btn-sm">View</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<p class="small text-muted mt-3 mb-0">"Does not match" means the subjects in the Programs of Study do not add up to the official total. Please confirm with the Director.</p>
+{% endblock %}

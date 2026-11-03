@@ -1,0 +1,34 @@
+{% extends 'layouts/app.html' %}
+{% block title %}{{ program.code }} | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('registrar_curriculum.index') }}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Back to curriculum</a>
+<h1 class="h2 mb-1 mt-2">{{ program.name }}</h1>
+<p class="text-muted mb-3">
+  {{ program.code }} &middot; Official {{ program.total_units }} units &middot;
+  Required listed {{ core }}{% if extra %} + {{ extra }} from electives and thesis{% endif %}
+  {% if core + extra == program.total_units %}<span class="badge text-bg-success ms-1">Matches</span>
+  {% else %}<span class="badge text-bg-warning ms-1">Does not match</span>{% endif %}
+</p>
+
+{% for g in groups %}
+<div class="card mb-3">
+  <div class="card-body pb-2">
+    <h2 class="h5 mb-0">{{ g.label }} <span class="badge text-bg-light border">{{ g.units }} units</span></h2>
+    {% if g.note %}<div class="small text-muted">{{ g.note }}</div>{% endif %}
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead><tr><th style="width:5rem">#</th><th style="width:9rem">Code</th><th>Subject</th><th class="text-end" style="width:6rem">Units</th></tr></thead>
+      <tbody>
+        {% for r in g.subjects %}
+        <tr><td class="text-muted small">{{ r.seq }}</td><td class="fw-semibold">{{ r.code }}</td><td>{{ r.title }}</td><td class="text-end">{{ r.units }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-secondary">No subjects yet. Run <code>python seed_curriculum.py</code>.</div>
+{% endfor %}
+{% endblock %}

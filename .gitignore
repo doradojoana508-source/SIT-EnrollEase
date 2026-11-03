@@ -7,3 +7,5 @@ static/uploads/
 reference/
 .vscode/
 uploads/
+state_report.txt
+finance_context*.txt
