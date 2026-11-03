@@ -22,7 +22,7 @@ MENUS = {
         ('Applications', 'bi-inboxes', 'registrar_applications.index'),
         ('Admission', 'bi-calendar-range', 'registrar_admission.index'),
         ('Enrollment', 'bi-card-checklist', 'registrar_cor.index'),
-        ('Classes', 'bi-calendar3', 'registrar_classes.index'),
+        ('Class Schedule', 'bi-calendar3', 'registrar_classes.index'),
         ('Faculty', 'bi-person-badge', 'registrar_faculty.index'),
         ('Curriculum', 'bi-journal-bookmark', 'registrar_curriculum.index'),
         ('Archive', 'bi-archive', 'registrar_archive.index'),],

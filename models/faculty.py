@@ -40,6 +40,41 @@ class Faculty:
         """Mga puwedeng i-assign sa klase: active na faculty."""
         return [r for r in cls.all() if r['is_active']]
 
+    # ---------- awtomatikong pagpili ng professor ----------
+    @staticmethod
+    def _words(text):
+        """Maliliit na titik, walang bantas, at iisahin ang maramihan (Missions = Mission)."""
+        words = re.findall(r'[a-z0-9]+', (text or '').lower())
+        return [w[:-1] if len(w) > 3 and w.endswith('s') else w for w in words]
+
+    @classmethod
+    def matches(cls, specialties, title):
+        """Tugma kapag ang lahat ng salita ng isang specialty ay nasa pamagat ng subject."""
+        title_words = set(cls._words(title))
+        for phrase in (specialties or '').split(','):
+            words = cls._words(phrase)
+            if words and all(w in title_words for w in words):
+                return True
+        return False
+
+    @classmethod
+    def pick(cls, title, term_id, day, start, end):
+        """Ang id ng pinakaangkop na professor: tugma ang specialty, walang klase sa oras na iyon, at
+        pinakakaunti ang klase sa term. Ibinabalik ang None kung wala."""
+        best, best_load = None, None
+        for f in cls.options():
+            if not cls.matches(f['specialties'], title):
+                continue
+            busy = query("SELECT 1 FROM classes WHERE term_id = %s AND faculty_id = %s AND day_code = %s "
+                         "AND start_time < %s AND end_time > %s LIMIT 1", (term_id, f['id'], day, end, start), one=True)
+            if busy:
+                continue
+            load = query("SELECT COUNT(*) AS n FROM classes WHERE term_id = %s AND faculty_id = %s",
+                         (term_id, f['id']), one=True)['n']
+            if best is None or load < best_load:
+                best, best_load = f['id'], load
+        return best
+
     @classmethod
     def clean(cls, form):
         data, errors = {}, []

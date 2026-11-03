@@ -3,6 +3,7 @@ from datetime import date
 from decimal import Decimal
 from db import query, execute
 from models.class_offering import ClassOffering
+from models.scheduler import Scheduler
 from models.notification import Notification
 from models.user import User
 
@@ -117,28 +118,26 @@ class Cor:
     # ---------- awtomatikong pagpuno ----------
     @classmethod
     def suggest(cls, student, term_id):
-        """Sundan ang curriculum ng program (ayon sa seq). Mga bukas na klase lang, hanggang sa units na naka-quote,
-        at lalaktawan ang magkakapatong na oras at ang mga subject na nakuha na sa ibang term."""
+        """Sundan ang curriculum ng program (ayon sa seq), hanggang sa units na naka-quote at hanggang sa mga slot
+        ng Huwebes. Gagamit ng klaseng bukas na, o gagawa ang system ng bago (Huwebes, may professor ayon sa
+        specialty). Lalaktawan ang mga subject na nakuha na sa ibang term."""
         cap = Decimal(student['quoted_units'])
         done = {r['subject_id'] for r in query(
             "SELECT cl.subject_id FROM cor_subjects cs JOIN cors c ON c.id = cs.cor_id "
             "JOIN classes cl ON cl.id = cs.class_id WHERE c.user_id = %s AND c.term_id <> %s",
             (student['user_id'], term_id))}
-        curriculum = query("SELECT subject_id, title FROM curriculum WHERE program_id = %s ORDER BY seq",
+        curriculum = query("SELECT subject_id, title, units FROM curriculum WHERE program_id = %s ORDER BY seq",
                            (student['program_id'],))
-        offered = {}
-        for r in query("SELECT * FROM classes WHERE term_id = %s ORDER BY section, id", (term_id,)):
-            offered.setdefault((r['subject_id'], r['title']), []).append(r)
         picked, units = [], Decimal('0')
         for item in curriculum:
-            if item['subject_id'] in done:
-                continue
-            for cl in offered.get((item['subject_id'], item['title']), []):
-                if units + cl['units'] > cap or any(cls._overlap(cl, p) for p in picked):
-                    continue
-                picked.append(cl)
-                units += cl['units']
+            if len(picked) >= len(Scheduler.SLOTS):
                 break
+            if item['subject_id'] in done or units + item['units'] > cap:
+                continue
+            row = Scheduler.place(term_id, item, picked)
+            if row is not None:
+                picked.append(row)
+                units += item['units']
         return picked
 
     @classmethod
