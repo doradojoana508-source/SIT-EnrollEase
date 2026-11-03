@@ -273,3 +273,31 @@ CREATE TABLE IF NOT EXISTS classes (
   FOREIGN KEY (faculty_id) REFERENCES users(id) ON DELETE SET NULL,
   FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cors (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  term_id INT NOT NULL,
+  program_id INT NOT NULL,
+  year_level VARCHAR(4) NOT NULL DEFAULT '1st',
+  scholarship VARCHAR(80) NULL,
+  date_enrolled DATE NULL,
+  status ENUM('Tentative','Final') NOT NULL DEFAULT 'Tentative',
+  created_by INT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_cor (user_id, term_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (term_id) REFERENCES academic_terms(id),
+  FOREIGN KEY (program_id) REFERENCES programs(id),
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cor_subjects (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  cor_id INT NOT NULL,
+  class_id INT NOT NULL,
+  UNIQUE KEY uq_cor_class (cor_id, class_id),
+  FOREIGN KEY (cor_id) REFERENCES cors(id) ON DELETE CASCADE,
+  FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

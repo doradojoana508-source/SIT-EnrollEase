@@ -80,7 +80,8 @@ class ClassOffering:
         return rows
 
     # ---------- paghahanap ----------
-    _SELECT = ("SELECT c.*, s.code, u.first_name, fp.title AS f_title, fp.display_name "
+    _SELECT = ("SELECT c.*, s.code, u.first_name, fp.title AS f_title, fp.display_name, "
+               "(SELECT COUNT(*) FROM cor_subjects cs WHERE cs.class_id = c.id) AS student_count "
                "FROM classes c JOIN subjects s ON s.id = c.subject_id "
                "LEFT JOIN users u ON u.id = c.faculty_id "
                "LEFT JOIN faculty_profiles fp ON fp.user_id = u.id")

@@ -1,0 +1,45 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Pending Students | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="h2 mb-1">Pending student accounts</h1>
+    <p class="text-muted mb-0">These students are enrolled (the Registrar prepared their COR) but have no student account yet. One click creates the account and emails the activation link.</p>
+  </div>
+  {% if rows|length > 1 %}
+  <form method="post" action="{{ url_for('admin_pending.create_all') }}" onsubmit="return confirm('Create accounts for all {{ rows|length }} students?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-sit"><i class="bi bi-people"></i> Create all ({{ rows|length }})</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Student ID</th><th>Name</th><th>Email</th><th>Program</th><th>Term</th><th>Birth date</th><th class="text-end"></th></tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td class="fw-semibold">{{ r.student_id }}</td>
+          <td>{{ r.first_name }} {{ r.last_name }}</td>
+          <td class="small">{{ r.email }}</td>
+          <td>{{ r.program_code }}</td>
+          <td class="small">T{{ r.term_no }} {{ r.academic_year }}</td>
+          <td>{% if r.birthdate %}{{ r.birthdate.strftime('%b %d, %Y') }}{% else %}<span class="badge text-bg-warning">Missing</span>{% endif %}</td>
+          <td class="text-end">
+            <form method="post" action="{{ url_for('admin_pending.create', user_id=r.user_id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sit btn-sm" {{ 'disabled' if not r.birthdate }}>Create account</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-4">No pending students. New ones appear here after the Registrar generates their COR.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

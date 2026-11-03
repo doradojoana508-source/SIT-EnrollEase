@@ -33,7 +33,7 @@
 <div class="card">
   <div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
-      <thead><tr><th>Code</th><th>Subject</th><th>Section</th><th>Schedule</th><th>Professor</th><th>Status</th><th class="text-end"></th></tr></thead>
+      <thead><tr><th>Code</th><th>Subject</th><th>Section</th><th>Schedule</th><th>Professor</th><th>Status</th><th>Students</th><th class="text-end"></th></tr></thead>
       <tbody>
         {% for c in rows %}
         <tr>
@@ -43,6 +43,7 @@
           <td class="text-nowrap">{{ c.schedule }}</td>
           <td>{% if c.professor %}{{ c.professor }}{% else %}<span class="badge text-bg-warning">No professor</span>{% endif %}</td>
           <td><span class="badge text-bg-{{ 'success' if c.status == 'Final' else 'secondary' }}">{{ c.status }}</span></td>
+          <td>{{ c.student_count }}</td>
           <td class="text-end text-nowrap">
             <a href="{{ url_for('registrar_classes.edit', class_id=c.id) }}" class="btn btn-outline-secondary btn-sm">Edit</a>
             <form method="post" action="{{ url_for('registrar_classes.delete', class_id=c.id) }}" class="d-inline"
@@ -53,7 +54,7 @@
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="7" class="text-center text-muted py-4">No classes yet for this term. Click <strong>Add class</strong>.</td></tr>
+        <tr><td colspan="8" class="text-center text-muted py-4">No classes yet for this term. Click <strong>Add class</strong>.</td></tr>
         {% endfor %}
       </tbody>
     </table>

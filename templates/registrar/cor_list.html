@@ -1,0 +1,63 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Enrollment | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">Enrollment</h1>
+<p class="text-muted mb-3">Students whose payment is complete. The system fills in a <strong>tentative Certificate of Registration (COR)</strong> that you can edit.</p>
+
+{% if not term %}
+<div class="card"><div class="card-body p-5 text-center text-muted">There is no term yet.</div></div>
+{% else %}
+<form method="get" class="row g-2 mb-3">
+  <div class="col-12 col-md-3">
+    <select name="term" class="form-select" aria-label="Term" onchange="this.form.submit()">
+      {% for t in terms %}<option value="{{ t.id }}" {{ 'selected' if t.id == term.id }}>{{ t.label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-8 col-md">
+    <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Search name or Student ID" maxlength="80">
+  </div>
+  <div class="col-4 col-md-auto"><button type="submit" class="btn btn-outline-secondary w-100">Search</button></div>
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Student No.</th><th>Name</th><th>Program</th><th class="text-end">Units quoted</th><th>COR</th><th class="text-end"></th></tr></thead>
+      <tbody>
+        {% for s in rows %}
+        <tr>
+          <td class="fw-semibold">{{ s.student_id }}</td>
+          <td>{{ s.name }}</td>
+          <td title="{{ s.program_name }}">{{ s.program_code }}</td>
+          <td class="text-end">{{ s.units_label }}</td>
+          <td>
+            {% if s.cor_id %}<span class="badge text-bg-{{ 'success' if s.cor_status == 'Final' else 'secondary' }}">{{ s.cor_status }}</span>
+            {% else %}<span class="badge text-bg-warning">No COR yet</span>{% endif %}
+          </td>
+          <td class="text-end text-nowrap">
+            {% if s.cor_id %}
+              <a href="{{ url_for('registrar_cor.edit', user_id=s.user_id, term=term.id) }}" class="btn btn-outline-secondary btn-sm">Open COR</a>
+            {% else %}
+              <form method="post" action="{{ url_for('registrar_cor.generate', user_id=s.user_id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="term" value="{{ term.id }}">
+                <button type="submit" class="btn btn-sit btn-sm">Generate COR</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">No fully paid students yet for this term.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+  <small class="text-muted">Showing {{ pager.start }}&ndash;{{ pager.end }} of {{ pager.total }}</small>
+  {% include 'partials/_pagination.html' %}
+</div>
+{% endif %}
+{% endblock %}

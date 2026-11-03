@@ -13,6 +13,7 @@ MENUS = {
     'admin': [
         ('Dashboard', 'bi-speedometer2', 'admin.dashboard'),
         ('Users', 'bi-people', 'admin_users.index'),
+        ('Pending Students', 'bi-person-check', 'admin_pending.index'),
         ('Terms & Admission', 'bi-calendar-range', 'admin_terms.index'),
         ('Archive', 'bi-archive', 'admin_archive.index'),
         ('Audit Logs', 'bi-clipboard-data', 'admin_audit.index'),],
@@ -20,6 +21,7 @@ MENUS = {
         ('Dashboard', 'bi-speedometer2', 'registrar.dashboard'),
         ('Applications', 'bi-inboxes', 'registrar_applications.index'),
         ('Admission', 'bi-calendar-range', 'registrar_admission.index'),
+        ('Enrollment', 'bi-card-checklist', 'registrar_cor.index'),
         ('Classes', 'bi-calendar3', 'registrar_classes.index'),
         ('Faculty', 'bi-person-badge', 'registrar_faculty.index'),
         ('Curriculum', 'bi-journal-bookmark', 'registrar_curriculum.index'),

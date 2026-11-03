@@ -76,6 +76,9 @@ def delete(class_id):
     existing = ClassOffering.find(class_id)
     if existing is None:
         abort(404)
+    if existing['student_count']:
+        flash(f"This class has {existing['student_count']} enrolled student(s). Remove it from their COR first.", 'danger')
+        return redirect(url_for('registrar_classes.index', term=existing['term_id']))
     ClassOffering.delete(class_id)
     AuditLog.record('Class deleted', f'Class #{class_id}: {existing["title"]} section {existing["section"]}')
     flash('Class deleted.', 'success')
