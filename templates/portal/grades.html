@@ -1,0 +1,29 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Grades | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">Grades</h1>
+<p class="text-muted mb-3">Your final grades as posted by your professors and the Registrar.</p>
+
+<div class="card"><div class="card-body">
+  {% for grp in groups %}
+  <div class="d-flex justify-content-between align-items-center {{ 'mt-4' if not loop.first }} mb-1">
+    <h2 class="h6 mb-0">{{ grp.label }} <span class="text-muted small">&middot; {{ grp.units }} units</span></h2>
+    <a href="{{ url_for('portal_grades.print_report', ay=grp.ay, tn=grp.tn) }}" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer"></i> Print</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle">
+      <thead><tr><th>Code</th><th>Descriptive title</th><th class="text-end">Units</th><th>Grade</th><th>Removal</th><th>Remark</th></tr></thead>
+      <tbody>
+        {% for r in grp.rows %}
+        <tr><td class="fw-semibold">{{ r.code }}</td><td>{{ r.title }}</td><td class="text-end">{{ r.units }}</td><td>{{ r.grade }}</td><td>{{ r.removal_rating or '' }}</td>
+            <td><span class="badge text-bg-{{ 'success' if r.remark == 'PASSED' else 'secondary' }}">{{ r.remark }}</span></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mb-0">No grades have been posted yet.</p>
+  {% endfor %}
+</div></div>
+{% endblock %}

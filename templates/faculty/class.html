@@ -1,0 +1,108 @@
+{% extends 'layouts/app.html' %}
+{% block title %}{{ c.code }} | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('faculty_classes.index', term=c.term_id) }}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Back to My Classes</a>
+<h1 class="h2 mb-1 mt-2">{{ c.code }} &middot; {{ c.title }}</h1>
+<p class="text-muted mb-3">{{ c.schedule }} &middot; {{ c.units }} units &middot; {{ term.label }} &middot; {{ roster|length }} student{{ 's' if roster|length != 1 }}</p>
+
+<div class="card mb-3" id="grades"><div class="card-body">
+  <h2 class="h5 mb-1">Grades</h2>
+  <p class="text-muted small mb-3">Choose the final grade for each student and click Save. Students are notified when a grade is posted or changed. Leave a row blank to skip it.</p>
+  <form method="post" action="{{ url_for('faculty_classes.save_grades', class_id=c.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th>Student No.</th><th>Name</th><th style="width:150px">Final grade</th><th style="width:150px">Removal rating</th><th>Remark</th></tr></thead>
+        <tbody>
+          {% for s in roster %}
+          <tr>
+            <td class="fw-semibold">{{ s.student_id or '-' }}</td><td>{{ s.name }}</td>
+            <td><select class="form-select form-select-sm" name="grade_{{ s.user_id }}" aria-label="Grade of {{ s.name }}">
+              <option value="">-</option>
+              {% for gr in grades %}<option value="{{ gr }}" {{ 'selected' if s.grade == gr }}>{{ gr }}</option>{% endfor %}
+            </select></td>
+            <td><select class="form-select form-select-sm" name="removal_{{ s.user_id }}" aria-label="Removal rating of {{ s.name }}">
+              <option value="">-</option>
+              {% for gr in grades %}<option value="{{ gr }}" {{ 'selected' if s.removal_rating == gr }}>{{ gr }}</option>{% endfor %}
+            </select></td>
+            <td>{% if s.remark %}<span class="badge text-bg-{{ 'success' if s.remark == 'PASSED' else 'secondary' }}">{{ s.remark }}</span>{% endif %}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="text-center text-muted py-4">No students enrolled in this class yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if roster %}<button type="submit" class="btn btn-sit">Save grades</button>{% endif %}
+  </form>
+</div></div>
+
+<div class="card mb-3" id="attendance"><div class="card-body">
+  <h2 class="h5 mb-1">Attendance</h2>
+  <p class="text-muted small mb-3">Pick the class date, mark each student, and Save. You can come back to any date and change it.</p>
+
+  <form method="get" class="row g-2 mb-3 align-items-end">
+    <div class="col-8 col-md-3">
+      <label class="form-label small mb-1" for="date_pick">Class date</label>
+      <input type="date" class="form-control" id="date_pick" name="date" value="{{ meeting_date.isoformat() }}" max="{{ today.isoformat() }}">
+    </div>
+    <div class="col-4 col-md-auto"><button type="submit" class="btn btn-outline-secondary w-100">Load</button></div>
+    {% if dates %}
+    <div class="col-12 col-md small text-muted">Recorded dates: {% for d in dates[:6] %}<a href="{{ url_for('faculty_classes.view', class_id=c.id, date=d.isoformat()) }}#attendance">{{ d.strftime('%b %d') }}</a>{{ ', ' if not loop.last }}{% endfor %}</div>
+    {% endif %}
+  </form>
+
+  <form method="post" action="{{ url_for('faculty_classes.save_attendance', class_id=c.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="date" value="{{ meeting_date.isoformat() }}">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th>Student No.</th><th>Name</th><th>{{ meeting_date.strftime('%b %d, %Y') }}</th></tr></thead>
+        <tbody>
+          {% for s in roster %}
+          <tr>
+            <td class="fw-semibold">{{ s.student_id or '-' }}</td><td>{{ s.name }}</td>
+            <td>
+              <div class="btn-group btn-group-sm" role="group" aria-label="Attendance of {{ s.name }}">
+                {% for code, label in statuses %}
+                <input type="radio" class="btn-check" name="att_{{ s.user_id }}" id="att_{{ s.user_id }}_{{ code }}" value="{{ code }}" {{ 'checked' if marked.get(s.user_id) == code }}>
+                <label class="btn btn-outline-secondary" for="att_{{ s.user_id }}_{{ code }}">{{ label }}</label>
+                {% endfor %}
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3" class="text-center text-muted py-4">No students enrolled in this class yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if roster %}
+    <button type="submit" class="btn btn-sit">Save attendance</button>
+    <button type="button" class="btn btn-outline-secondary" onclick="document.querySelectorAll('input[type=radio][value=P]').forEach(function(r){r.checked=true;});">Mark all present</button>
+    {% endif %}
+  </form>
+
+  {% if dates %}
+  <hr>
+  <h3 class="h6 mb-2">Summary ({{ dates|length }} meeting{{ 's' if dates|length != 1 }})</h3>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead><tr><th>Student</th><th class="text-end">Present</th><th class="text-end">Late</th><th class="text-end">Excused</th><th class="text-end">Absent</th><th class="text-end">Attendance</th></tr></thead>
+      <tbody>
+        {% for s in roster %}
+        {% set a = summary.get(s.user_id) %}
+        <tr>
+          <td>{{ s.name }}</td>
+          <td class="text-end">{{ a.p if a else 0 }}</td><td class="text-end">{{ a.l if a else 0 }}</td>
+          <td class="text-end">{{ a.e if a else 0 }}</td><td class="text-end">{{ a.a if a else 0 }}</td>
+          <td class="text-end">{{ (a.rate ~ '%') if a and a.rate is not none else '-' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div></div>
+{% endblock %}

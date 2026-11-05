@@ -12,6 +12,7 @@ MENUS = {
     'student': [
         ('Dashboard', 'bi-speedometer2', 'portal.dashboard'),
         ('COR & Schedule', 'bi-card-checklist', 'portal_student.cor'),
+        ('Grades', 'bi-award', 'portal_grades.index'),
         ('Tuition & Balance', 'bi-cash-coin', 'portal_student.tuition'),],
     'admin': [
         ('Dashboard', 'bi-speedometer2', 'admin.dashboard'),
@@ -34,7 +35,9 @@ MENUS = {
         ('Dashboard', 'bi-speedometer2', 'finance.dashboard'),
         ('Quotation Queue', 'bi-receipt', 'finance_queue.index'),
         ('Student Records', 'bi-folder2-open', 'finance_records.index'),],
-    'faculty':   [('Dashboard', 'bi-speedometer2', 'faculty.dashboard')],
+    'faculty': [
+        ('Dashboard', 'bi-speedometer2', 'faculty.dashboard'),
+        ('My Classes', 'bi-easel', 'faculty_classes.index'),],
 }
 
 ACCOUNT_MENU = [('Change Password', 'bi-key', 'account.change_password')]

@@ -1,0 +1,41 @@
+{% extends 'layouts/app.html' %}
+{% block title %}My Classes | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">My Classes</h1>
+<p class="text-muted mb-3">The classes the Registrar assigned to you. Open a class to see its students, encode grades and record attendance.</p>
+
+{% if not term %}
+<div class="card"><div class="card-body p-5 text-center text-muted">There is no term yet.</div></div>
+{% else %}
+<form method="get" class="row g-2 mb-3">
+  <div class="col-12 col-md-4">
+    <select name="term" class="form-select" aria-label="Term" onchange="this.form.submit()">
+      {% for t in terms %}<option value="{{ t.id }}" {{ 'selected' if t.id == term.id }}>{{ t.label }}</option>{% endfor %}
+    </select>
+  </div>
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Code</th><th>Subject</th><th>Schedule</th><th>Status</th><th class="text-end">Students</th><th></th></tr></thead>
+      <tbody>
+        {% for c in rows %}
+        <tr>
+          <td class="fw-semibold">{{ c.code }}</td>
+          <td>{{ c.title }} <span class="small text-muted">{{ c.units }}u</span></td>
+          <td class="text-nowrap">{{ c.schedule }}</td>
+          <td><span class="badge text-bg-{{ 'success' if c.status == 'Final' else 'secondary' }}">{{ c.status }}</span></td>
+          <td class="text-end">{{ c.student_count }}</td>
+          <td class="text-end"><a href="{{ url_for('faculty_classes.view', class_id=c.id) }}" class="btn btn-sit btn-sm">Open</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">No classes assigned to you this term yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
