@@ -1,0 +1,43 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Tuition and Balance | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">Tuition and balance</h1>
+<p class="text-muted mb-3">Your assessment and payments. An unpaid balance must be settled with the Finance office before the next enrollment.</p>
+
+{% if not t %}
+<div class="card"><div class="card-body p-5 text-center text-muted">The Finance office has not prepared your tuition quotation yet.</div></div>
+{% else %}
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Assessment</h2>
+      <div class="small text-muted mb-2">Account No. {{ t.q.account_no }} &middot; {{ t.q.units|string }} units</div>
+      {% for label, amount in t.fees %}
+        <div class="d-flex justify-content-between border-bottom py-1"><span>{{ label }}</span><span>PHP {{ '{:,.2f}'.format(amount) }}</span></div>
+      {% endfor %}
+      <div class="d-flex justify-content-between pt-2 fw-bold"><span>Total</span><span>PHP {{ '{:,.2f}'.format(t.summary.total) }}</span></div>
+      <div class="d-flex justify-content-between"><span>Paid</span><span>PHP {{ '{:,.2f}'.format(t.summary.paid) }}</span></div>
+      <div class="d-flex justify-content-between fw-bold">
+        <span>Balance</span>
+        <span class="{{ 'text-danger' if t.summary.balance > 0 else 'text-success' }}">PHP {{ '{:,.2f}'.format(t.summary.balance) }}</span>
+      </div>
+      {% if t.summary.balance == 0 %}<span class="badge text-bg-success mt-2">Fully paid</span>{% endif %}
+    </div></div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Payments</h2>
+      {% for p in t.payments %}
+        <div class="d-flex justify-content-between border-bottom py-2">
+          <div><div class="fw-semibold">OR {{ p.receipt_no }}</div><div class="small text-muted">{{ p.paid_on.strftime('%b %d, %Y') }}{% if p.note %} &middot; {{ p.note }}{% endif %}</div></div>
+          <div class="fw-semibold">PHP {{ '{:,.2f}'.format(p.amount) }}</div>
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">No payments recorded yet.</p>
+      {% endfor %}
+    </div></div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

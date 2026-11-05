@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Certificate of Registration | SIT-EnrollEase</title>
+  {% include 'partials/_head.html' %}
+  <style>
+    body { background: #e9eeed; }
+    .toolbar { max-width: 210mm; margin: 1rem auto 0; padding: 0 .5rem; }
+    .sheet { background: #fff; color: #000; max-width: 210mm; margin: 1rem auto; padding: 14mm;
+             box-shadow: 0 6px 24px rgba(0, 0, 0, .15); font-family: "Times New Roman", Times, serif;
+             font-size: 11pt; line-height: 1.4; }
+    .head { display: flex; align-items: center; gap: 10pt; }
+    .head img { height: 58px; }
+    .head .addr { flex: 1; text-align: center; font-size: 9.5pt; }
+    .title { text-align: center; margin: 10pt 0 14pt; }
+    .title .big { font-size: 15pt; font-weight: 700; letter-spacing: .5pt; }
+    .info { display: grid; grid-template-columns: 30mm 1fr; row-gap: 2pt; margin-bottom: 12pt; }
+    .info .k { font-weight: 700; }
+    table.cor { width: 100%; border-collapse: collapse; }
+    table.cor th, table.cor td { border: 1px solid #000; padding: 3pt 6pt; }
+    table.cor th { text-align: center; }
+    table.cor td.c { text-align: center; }
+    .tentative { text-align: center; font-size: 9pt; margin-top: 10pt; font-style: italic; }
+    @media print {
+      @page { size: A4; margin: 12mm; }
+      body { background: #fff; }
+      .no-print { display: none !important; }
+      .sheet { box-shadow: none; margin: 0; padding: 0; max-width: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="toolbar no-print d-flex flex-wrap justify-content-between align-items-center gap-2">
+  <a href="{{ back }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+  <button type="button" class="btn btn-sit btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print or save as PDF</button>
+</div>
+
+<div class="sheet">
+  <div class="head">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="SIT">
+    <div class="addr">Office of the Registrar<br>NEW TESTAMENT BAPTIST CHURCH<br>7-108 T. Valdellon St., Paete, Laguna 4016</div>
+  </div>
+  <div class="title">
+    <div class="big">OFFICE OF THE INSTITUTE REGISTRAR</div>
+    <div class="big">CERTIFICATE OF REGISTRATION</div>
+    <div>{{ v.heading }}</div>
+  </div>
+  <div class="info">
+    <div class="k">Student No.:</div><div>{{ v.student_id }}</div>
+    <div class="k">Name:</div><div>{{ v.name }}</div>
+    <div class="k">Program:</div><div>{{ v.program }}</div>
+    <div class="k">Year:</div><div>{{ v.cor.year_level }}</div>
+    <div class="k">Date Enrolled:</div><div>{{ v.date_enrolled }}</div>
+    <div class="k">Trimester:</div><div>{{ v.trimester }}</div>
+    <div class="k">Scholarship:</div><div>{{ v.cor.scholarship or '' }}</div>
+  </div>
+  <table class="cor">
+    <thead><tr><th>Course Code</th><th>Descriptive Title</th><th>Units</th><th>Day/Time</th><th>Professor</th></tr></thead>
+    <tbody>
+      {% for s in v.cor.subjects %}
+      <tr><td>{{ s.code }}</td><td>{{ s.title }}</td><td class="c">{{ s.units }}</td><td class="c">{{ s.schedule }}</td><td class="c">{{ s.professor or 'TBA' }}</td></tr>
+      {% endfor %}
+      <tr><td></td><td style="text-align:right"><strong>Total units</strong></td><td class="c"><strong>{{ v.cor.total_units }}</strong></td><td colspan="2"></td></tr>
+    </tbody>
+  </table>
+  {% if v.cor.status != 'Final' %}<div class="tentative">Tentative. The schedule and professors may still change. Check the Student Portal for the latest.</div>{% endif %}
+</div>
+</body>
+</html>

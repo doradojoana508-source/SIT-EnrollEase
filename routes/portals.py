@@ -92,6 +92,14 @@ def create_portal(key, cfg):
             return render_template('registrar/dashboard.html', **Stats.registrar(request.args.get('term', type=int)))
         if key == 'finance':
             return render_template('finance/dashboard.html', counts=Finance.counts(), rows=Finance.queue(limit=5))
+        if key == 'portal':
+            from flask import session
+            from models.student_record import StudentRecord
+            data = StudentRecord.dashboard(g.user)
+            # Pop-up pagka-login lang: nabubura ang session flag sa bawat bagong login
+            data['show_notice'] = bool(data['notices'] or data['balance'] > 0) and not session.get('notice_seen')
+            session['notice_seen'] = True
+            return render_template('portal/dashboard.html', **data)
         return render_template('app_home.html', heading=cfg['title'])
 
     return bp

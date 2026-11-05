@@ -1,0 +1,100 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Dashboard | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">Welcome, {{ current_user.first_name }}!</h1>
+<p class="text-muted">Student ID <strong>{{ student_id }}</strong>{% if latest_row %} &middot; {{ latest_row.program_name }}{% endif %}</p>
+
+{% if balance > 0 %}
+<div class="alert alert-warning d-flex align-items-start gap-2">
+  <i class="bi bi-exclamation-triangle fs-5"></i>
+  <div>You have an unpaid balance of <strong>PHP {{ '{:,.2f}'.format(balance) }}</strong>.
+    <a href="{{ url_for('portal_student.tuition') }}" class="alert-link">See Tuition &amp; Balance</a>. Please settle it with the Finance office.</div>
+</div>
+{% endif %}
+
+<div class="row g-3 mb-3">
+  <div class="col-md-6">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Certificate of Registration</h2>
+      {% if latest %}
+        <div class="mb-1">{{ latest_row.term_label }}
+          <span class="badge text-bg-{{ 'success' if latest.status == 'Final' else 'secondary' }} ms-1">{{ latest.status }}</span></div>
+        <div class="text-muted small mb-3">{{ latest.subjects|length }} subject(s), {{ latest.total_units }} units. {% if latest.status != 'Final' %}Tentative: the schedule or professors may still change. This page always shows the latest.{% endif %}</div>
+        <a href="{{ url_for('portal_student.cor') }}" class="btn btn-sit btn-sm">View COR and schedule</a>
+      {% else %}
+        <p class="text-muted mb-0">Your Certificate of Registration is not available yet. The Registrar will prepare it.</p>
+      {% endif %}
+    </div></div>
+  </div>
+  <div class="col-md-6">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Tuition and balance</h2>
+      {% if tuition %}
+        <div class="d-flex justify-content-between"><span>Total</span><strong>PHP {{ '{:,.2f}'.format(tuition.summary.total) }}</strong></div>
+        <div class="d-flex justify-content-between"><span>Paid</span><strong>PHP {{ '{:,.2f}'.format(tuition.summary.paid) }}</strong></div>
+        <div class="d-flex justify-content-between mb-3"><span>Balance</span>
+          <strong class="{{ 'text-danger' if balance > 0 else 'text-success' }}">PHP {{ '{:,.2f}'.format(balance) }}</strong></div>
+        <a href="{{ url_for('portal_student.tuition') }}" class="btn btn-outline-secondary btn-sm">View details</a>
+      {% else %}
+        <p class="text-muted mb-0">No tuition record yet.</p>
+      {% endif %}
+    </div></div>
+  </div>
+</div>
+
+{% if latest and latest.subjects %}
+<div class="card mb-3"><div class="card-body">
+  <h2 class="h5 mb-3">My classes this trimester</h2>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Code</th><th>Subject</th><th>Day/Time</th><th>Professor</th></tr></thead>
+      <tbody>
+        {% for s in latest.subjects %}
+        <tr><td class="fw-semibold">{{ s.code }}</td><td>{{ s.title }}</td><td class="text-nowrap">{{ s.schedule }}</td><td>{{ s.professor or 'To be announced' }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div></div>
+{% endif %}
+
+<div class="card"><div class="card-body">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="h5 mb-0">Notices</h2>
+    {% if notices %}
+    <form method="post" action="{{ url_for('portal_student.read_notices') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-link btn-sm text-decoration-none p-0">Mark all as read</button>
+    </form>
+    {% endif %}
+  </div>
+  {% for n in notices %}
+    <div class="border-top py-2"><div class="fw-semibold">{{ n.title }}</div>
+      <div class="small text-muted">{{ n.message }}</div>
+      <div class="small text-muted">{{ n.created_at.strftime('%b %d, %Y %I:%M %p') }}</div></div>
+  {% else %}
+    <p class="text-muted mb-0">No new notices.</p>
+  {% endfor %}
+</div></div>
+
+{% if show_notice %}
+<div class="modal fade" id="loginNotice" tabindex="-1" aria-labelledby="loginNoticeTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+    <div class="modal-header"><h2 class="modal-title h5" id="loginNoticeTitle">Notice</h2>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <div class="modal-body">
+      {% if balance > 0 %}<p class="mb-2">You have an unpaid balance of <strong>PHP {{ '{:,.2f}'.format(balance) }}</strong>. Please settle it with the Finance office.</p>{% endif %}
+      {% if notices %}<p class="mb-0">You have <strong>{{ notices|length }}</strong> new notice(s) below.</p>{% endif %}
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-sit" data-bs-dismiss="modal">OK</button></div>
+  </div></div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var el = document.getElementById('loginNotice');
+    if (el && window.bootstrap) { new bootstrap.Modal(el).show(); }
+  });
+</script>
+{% endif %}
+{% endblock %}

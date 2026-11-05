@@ -1,0 +1,58 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Certificate of Registration | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="h2 mb-1">COR and schedule</h1>
+    <p class="text-muted mb-0">Your Certificate of Registration. It updates by itself when a schedule or professor changes.</p>
+  </div>
+  {% if v %}<a href="{{ url_for('portal_student.cor_print', term=v.term_id) }}" class="btn btn-sit"><i class="bi bi-printer"></i> Print</a>{% endif %}
+</div>
+
+{% if not v %}
+<div class="card"><div class="card-body p-5 text-center text-muted">Your Certificate of Registration is not available yet. The Registrar will prepare it after your payment.</div></div>
+{% else %}
+  {% if rows|length > 1 %}
+  <form method="get" class="mb-3">
+    <select name="term" class="form-select w-auto" aria-label="Trimester" onchange="this.form.submit()">
+      {% for r in rows %}<option value="{{ r.term_id }}" {{ 'selected' if r.term_id == v.term_id }}>{{ r.term_label }}</option>{% endfor %}
+    </select>
+  </form>
+  {% endif %}
+  {% if v.cor.status != 'Final' %}
+  <div class="alert alert-info small"><i class="bi bi-info-circle"></i> This COR is <strong>tentative</strong>. The Registrar may still change the schedule or professors, and this page will show the latest.</div>
+  {% endif %}
+  <div class="card"><div class="card-body p-4">
+    <div class="text-center mb-4">
+      <div class="small text-muted">Office of the Registrar &middot; New Testament Baptist Church<br>7-108 T. Valdellon St., Paete, Laguna 4016</div>
+      <div class="fw-bold mt-2">OFFICE OF THE INSTITUTE REGISTRAR</div>
+      <h2 class="h3 mb-0">CERTIFICATE OF REGISTRATION</h2>
+      <div>{{ v.heading }}</div>
+    </div>
+    <div class="row g-3 mb-4">
+      <div class="col-md-6"><div class="small text-muted">Student No.</div><div class="fw-semibold">{{ v.student_id }}</div></div>
+      <div class="col-md-6"><div class="small text-muted">Name</div><div class="fw-semibold">{{ v.name }}</div></div>
+      <div class="col-12"><div class="small text-muted">Program</div><div class="fw-semibold">{{ v.program }}</div></div>
+      <div class="col-6 col-md-3"><div class="small text-muted">Year</div><div class="fw-semibold">{{ v.cor.year_level }}</div></div>
+      <div class="col-6 col-md-3"><div class="small text-muted">Date Enrolled</div><div class="fw-semibold">{{ v.date_enrolled }}</div></div>
+      <div class="col-6 col-md-3"><div class="small text-muted">Trimester</div><div class="fw-semibold">{{ v.trimester }}</div></div>
+      <div class="col-6 col-md-3"><div class="small text-muted">Scholarship</div><div class="fw-semibold">{{ v.cor.scholarship or '-' }}</div></div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead class="table-light"><tr><th>Course Code</th><th>Descriptive Title</th><th class="text-end">Units</th><th>Day/Time</th><th>Professor</th></tr></thead>
+        <tbody>
+          {% for s in v.cor.subjects %}
+          <tr><td class="fw-semibold">{{ s.code }}</td><td>{{ s.title }}</td><td class="text-end">{{ s.units }}</td>
+              <td class="text-nowrap">{{ s.schedule }}</td><td>{{ s.professor or 'To be announced' }}</td></tr>
+          {% else %}
+          <tr><td colspan="5" class="text-center text-muted py-4">No subjects yet.</td></tr>
+          {% endfor %}
+        </tbody>
+        <tfoot><tr><td></td><td class="text-end fw-semibold">Total units</td><td class="text-end fw-bold">{{ v.cor.total_units }}</td><td colspan="2"></td></tr></tfoot>
+      </table>
+    </div>
+  </div></div>
+{% endif %}
+{% endblock %}

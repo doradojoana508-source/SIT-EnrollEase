@@ -9,7 +9,10 @@ MENUS = {
         ('Dashboard', 'bi-speedometer2', 'applicant.dashboard'),
         ('My Application', 'bi-journal-text', 'applicant.application'),
         ('Documents', 'bi-folder2-open', 'applicant.documents'),],
-    'student':   [('Dashboard', 'bi-speedometer2', 'portal.dashboard')],
+    'student': [
+        ('Dashboard', 'bi-speedometer2', 'portal.dashboard'),
+        ('COR & Schedule', 'bi-card-checklist', 'portal_student.cor'),
+        ('Tuition & Balance', 'bi-cash-coin', 'portal_student.tuition'),],
     'admin': [
         ('Dashboard', 'bi-speedometer2', 'admin.dashboard'),
         ('Users', 'bi-people', 'admin_users.index'),
