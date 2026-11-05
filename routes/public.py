@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request
+from models.announcement import Announcement
 from models.program import Program
 from models.document_type import DocumentType
 from models.setting import Setting
@@ -10,7 +11,8 @@ def home_context():
     """Mga data ng landing page. Ginagamit din ng auth kapag may error sa form."""
     return dict(programs=Program.active(),
                 documents=DocumentType.active(),
-                school=Setting.as_dict())
+                school=Setting.as_dict(),
+                announcements=Announcement.public(4))
 
 
 @public_bp.route('/')

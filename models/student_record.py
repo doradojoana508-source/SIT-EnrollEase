@@ -1,6 +1,7 @@
 from decimal import Decimal
 from db import query
 from models.cor import Cor
+from models.announcement import Announcement
 from models.notification import Notification
 from models.payment import Payment
 from models.preenrollment import PreEnrollment
@@ -64,4 +65,5 @@ class StudentRecord:
                 'tuition': tuition,
                 'balance': tuition['outstanding'] if tuition else Decimal('0'),
                 'pre': PreEnrollment.summary(user.id),
+                'announcements': Announcement.for_role('student', 3),
                 'notices': Notification.unread_for(user.id)}

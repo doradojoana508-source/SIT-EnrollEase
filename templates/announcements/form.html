@@ -1,0 +1,53 @@
+{% extends 'layouts/app.html' %}
+{% block title %}{{ 'New announcement' if mode == 'create' else 'Edit announcement' }} | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<a href="{{ url_for(bp ~ '.index') }}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Back to announcements</a>
+<h1 class="h2 mb-3 mt-2">{{ 'New announcement' if mode == 'create' else 'Edit announcement' }}</h1>
+
+{% if errors %}<div class="alert alert-danger"><ul class="mb-0 small">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+
+<form method="post" class="card"><div class="card-body">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="mb-3">
+    <label for="title" class="form-label">Title</label>
+    <input type="text" class="form-control" id="title" name="title" value="{{ values.get('title', '') }}" maxlength="150" required>
+  </div>
+  <div class="mb-3">
+    <label for="body" class="form-label">Message</label>
+    <textarea class="form-control" id="body" name="body" rows="6" maxlength="3000" required>{{ values.get('body', '') }}</textarea>
+  </div>
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <label for="audience" class="form-label">Who is it for?</label>
+      <select class="form-select" id="audience" name="audience" required>
+        {% for key, label in audiences %}<option value="{{ key }}" {{ 'selected' if values.get('audience') == key }}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label for="publish_at" class="form-label">Publish on <span class="text-muted small">(blank = now)</span></label>
+      <input type="datetime-local" class="form-control" id="publish_at" name="publish_at" value="{{ values.get('publish_at', '') }}">
+    </div>
+    <div class="col-md-3">
+      <label for="expires_at" class="form-label">Expires on <span class="text-muted small">(optional)</span></label>
+      <input type="datetime-local" class="form-control" id="expires_at" name="expires_at" value="{{ values.get('expires_at', '') }}">
+    </div>
+  </div>
+  <div class="form-check mb-2">
+    <input class="form-check-input" type="checkbox" id="is_pinned" name="is_pinned" value="1" {{ 'checked' if values.get('is_pinned') == '1' }}>
+    <label class="form-check-label" for="is_pinned">Pin to the top</label>
+  </div>
+  {% if mode == 'create' %}
+  <div class="form-check mb-2">
+    <input class="form-check-input" type="checkbox" id="notify" name="notify" value="1" {{ 'checked' if values.get('notify') == '1' }}>
+    <label class="form-check-label" for="notify">Notify them on their dashboard <span class="text-muted small">(only when published now)</span></label>
+  </div>
+  <div class="form-check mb-3">
+    <input class="form-check-input" type="checkbox" id="email" name="email" value="1" {{ 'checked' if values.get('email') == '1' }}>
+    <label class="form-check-label" for="email">Also send an email <span class="text-muted small">(up to 100 recipients)</span></label>
+  </div>
+  {% endif %}
+  <button type="submit" class="btn btn-sit">{{ 'Post announcement' if mode == 'create' else 'Save changes' }}</button>
+  <a href="{{ url_for(bp ~ '.index') }}" class="btn btn-outline-secondary">Cancel</a>
+</div></form>
+{% endblock %}

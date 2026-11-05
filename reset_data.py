@@ -8,7 +8,7 @@ import os
 from db import get_connection
 
 WIPE = ['application_documents', 'applications', 'interviews', 'notifications', 'enrollments', 'quotations',
-        'payments', 'faculty_profiles', 'cor_subjects', 'cors', 'classes', 'grades', 'attendance', 'tor_info', 'audit_logs']
+        'payments', 'faculty_profiles', 'cor_subjects', 'cors', 'classes', 'grades', 'attendance', 'tor_info', 'announcements', 'audit_logs']
 
 
 def main():

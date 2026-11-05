@@ -1,0 +1,58 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Announcements | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="h2 mb-1">Announcements</h1>
+    <p class="text-muted mb-0">Post news for everyone or for one role. The landing page shows the ones for everyone.</p>
+  </div>
+  <a href="{{ url_for(bp ~ '.new') }}" class="btn btn-sit"><i class="bi bi-plus-lg"></i> New announcement</a>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col-12 col-md-3">
+    <select name="state" class="form-select" aria-label="Status" onchange="this.form.submit()">
+      <option value="">All</option>
+      {% for s in ['Live', 'Scheduled', 'Expired'] %}<option value="{{ s }}" {{ 'selected' if s == state }}>{{ s }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-8 col-md"><input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Search title or message" maxlength="80"></div>
+  <div class="col-4 col-md-auto"><button type="submit" class="btn btn-outline-secondary w-100">Search</button></div>
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Title</th><th>For</th><th>Status</th><th>Published</th><th>Posted by</th><th></th></tr></thead>
+      <tbody>
+        {% for a in rows %}
+        <tr>
+          <td class="fw-semibold">{% if a.is_pinned %}<i class="bi bi-pin-angle-fill text-success" title="Pinned"></i> {% endif %}{{ a.title }}</td>
+          <td class="small">{{ audiences.get(a.audience, a.audience).split(' (')[0] }}</td>
+          <td><span class="badge text-bg-{{ {'Live': 'success', 'Scheduled': 'info', 'Expired': 'secondary'}[a.state] }}">{{ a.state }}</span></td>
+          <td class="small text-nowrap">{{ a.publish_at.strftime('%b %d, %Y %I:%M %p') }}</td>
+          <td class="small">{{ a.first_name or '-' }} {{ a.last_name or '' }}</td>
+          <td class="text-end text-nowrap">
+            {% if a.can_edit %}
+            <a href="{{ url_for(bp ~ '.edit', announcement_id=a.id) }}" class="btn btn-outline-secondary btn-sm">Edit</a>
+            <form method="post" action="{{ url_for(bp ~ '.delete', announcement_id=a.id) }}" class="d-inline" onsubmit="return confirm('Delete this announcement?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">No announcements yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+  <small class="text-muted">Showing {{ pager.start }}&ndash;{{ pager.end }} of {{ pager.total }}</small>
+  {% include 'partials/_pagination.html' %}
+</div>
+{% endblock %}

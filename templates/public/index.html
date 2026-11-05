@@ -58,26 +58,25 @@
   </div>
 </section>
 
-<!-- PROGRAMS -->
-<section class="container py-5" id="programs">
-  <h2 class="section-title">Programs Offered</h2>
-  <div class="row g-4">
-    {% for p in programs %}
-    <div class="col-md-6 col-lg-4">
-      <div class="card program-card h-100">
-        <div class="card-body">
-          <span class="badge badge-level">{{ p.level }}</span>
-          <h3 class="h5 mt-2">{{ p.name }}</h3>
-          <p class="text-muted small mb-2">{{ p.code }} &middot; {{ p.total_units }} units</p>
-          {% if p.prerequisites %}
-          <p class="small mb-0"><strong>Prerequisite:</strong> {{ p.prerequisites }}</p>
-          {% endif %}
-        </div>
-      </div>
+{% if announcements %}
+<!-- ANNOUNCEMENTS -->
+<section class="container py-5" id="announcements">
+  <h2 class="section-title">Announcements</h2>
+  <div class="row g-3">
+    {% for a in announcements %}
+    <div class="col-md-6">
+      <div class="card h-100"><div class="card-body">
+        <div class="small text-muted">{{ a.publish_at.strftime('%B %d, %Y') }}</div>
+        <h3 class="h5">{% if a.is_pinned %}<i class="bi bi-pin-angle-fill text-success"></i> {% endif %}{{ a.title }}</h3>
+        <p class="mb-0" style="white-space: pre-line">{{ a.body }}</p>
+      </div></div>
     </div>
     {% endfor %}
   </div>
 </section>
+{% endif %}
+
+<!-- PROGRAMS -->
 
 <!-- ENROLLMENT PROCESS -->
 <section class="process-section py-5" id="process">
@@ -166,7 +165,7 @@
     <p class="mb-1"><i class="bi bi-envelope"></i> {{ school.school_email }}</p>
     <p class="mb-0"><i class="bi bi-telephone"></i> {{ school.school_phone }}</p>
     <h4>SIT-EnrollEase HelpDesk </h4>
-    <p class="mb-1"><i class="bi bi-envelope"></i> sit.ntbc@gmail.com </p>
+<p class="mb-1"><i class="bi bi-envelope"></i> sit.ntbc@gmail.com </p>
   </div>
 </section>
 
