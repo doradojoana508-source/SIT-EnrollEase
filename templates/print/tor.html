@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Official Transcript of Record | SIT-EnrollEase</title>
+  {% include 'partials/_head.html' %}
+  <style>
+    body { background: #e9eeed; }
+    .toolbar { max-width: 210mm; margin: 1rem auto 0; padding: 0 .5rem; }
+    .sheet { background: #fff; color: #000; max-width: 210mm; min-height: 290mm; margin: 1rem auto; padding: 14mm; box-shadow: 0 6px 24px rgba(0,0,0,.15);
+             font-family: "Times New Roman", Times, serif; font-size: 10.5pt; line-height: 1.35; page-break-after: always; }
+    .sheet:last-of-type { page-break-after: auto; }
+    .head { display: flex; align-items: center; gap: 10pt; margin-bottom: 6pt; }
+    .head img { height: 62px; }
+    .head .t { flex: 1; text-align: center; font-size: 15pt; font-weight: 700; letter-spacing: .5pt; }
+    .reg { font-weight: 700; margin: 6pt 0 2pt; }
+    .f { display: flex; gap: 4pt; margin-bottom: 2pt; }
+    .f .k { white-space: nowrap; }
+    .f .v { flex: 1; border-bottom: 1px solid #000; min-height: 1.2em; padding-left: 3pt; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14pt; }
+    table.tor { width: 100%; border-collapse: collapse; margin-top: 8pt; }
+    table.tor th, table.tor td { border: 1px solid #000; padding: 2pt 5pt; vertical-align: top; }
+    table.tor th { text-align: center; font-size: 9.5pt; }
+    table.tor td.c { text-align: center; }
+    table.tor tr.mid td { border-top: 0; border-bottom: 0; }
+    table.tor tr.first td { border-bottom: 0; }
+    .grading { font-size: 8.5pt; margin-top: 8pt; }
+    .note { font-size: 8.5pt; margin-top: 6pt; }
+    .sig { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10pt; margin-top: 16pt; font-size: 9.5pt; text-align: center; }
+    .sig .line { margin-top: 26pt; font-weight: 700; border-top: 1px solid #000; padding-top: 2pt; }
+    @media print { @page { size: A4; margin: 10mm; } body { background: #fff; } .no-print { display: none !important; }
+                   .sheet { box-shadow: none; margin: 0; padding: 0; max-width: none; min-height: 0; } }
+  </style>
+</head>
+<body>
+<div class="toolbar no-print d-flex flex-wrap justify-content-between align-items-center gap-2">
+  <a href="{{ back }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+  <button type="button" class="btn btn-sit btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print or save as PDF</button>
+</div>
+
+{% for page in v.pages %}
+{% set h = v.head %}
+<div class="sheet">
+  <div class="head">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="SIT">
+    <div class="t">OFFICIAL TRANSCRIPT OF RECORD</div>
+  </div>
+  <div class="f"><span class="k">Name</span><span class="v">{{ h.name }}</span></div>
+  <div class="reg">OFFICE OF THE REGISTRAR</div>
+  <div class="f"><span class="k">Address</span><span class="v">{{ h.address }}</span></div>
+  <div class="reg">ENTRANCE DATA</div>
+  <div class="f"><span class="k">Date of Birth</span><span class="v">{{ h.birthdate }}</span></div>
+  <div class="f"><span class="k">Place of Birth</span><span class="v">{{ h.birthplace }}</span></div>
+  <div class="two">
+    <div class="f"><span class="k">Date graduated/last attended</span><span class="v">{{ h.last_attended }}</span></div>
+    <div class="f"><span class="k">Degree/Title/Course</span><span class="v">{{ h.degree }}</span></div>
+    <div class="f"><span class="k">Category</span><span class="v">{{ h.category }}</span></div>
+    <div class="f"><span class="k">&nbsp;</span><span class="v"></span></div>
+    <div class="f"><span class="k">High School/College</span><span class="v">{{ h.school }}</span></div>
+    <div class="f"><span class="k">Major/Specification</span><span class="v">{{ h.major }}</span></div>
+    <div class="f"><span class="k">Date/Semester admitted</span><span class="v">{{ h.admitted }}</span></div>
+    <div class="f"><span class="k">Date Conferred</span><span class="v">{{ h.conferred }}</span></div>
+  </div>
+
+  <table class="tor">
+    <thead><tr><th style="width:27%">TERM</th><th style="width:13%">COURSE CODE</th><th>DESCRIPTIVE TITLE</th><th style="width:11%">FINAL GRADES</th><th style="width:10%">REMOVAL RATING</th><th style="width:7%">UNITS</th></tr></thead>
+    <tbody>
+      {% for row in page %}
+      <tr class="{{ 'first' if row.term else 'mid' }}">
+        <td>{{ row.term }}</td><td>{{ row.code }}</td><td>{{ row.title }}</td>
+        <td class="c">{{ row.grade }}</td><td class="c">{{ row.removal }}</td><td class="c">{{ row.units }}</td>
+      </tr>
+      {% endfor %}
+      <tr><td></td><td></td><td class="c fw-bold">{% if loop.last %}*** End of Transcript ***{% else %}&nbsp;{% endif %}</td><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td class="c fw-bold">*** Page {{ loop.index }} of {{ v.pages|length }} ***</td><td></td><td></td><td></td></tr>
+    </tbody>
+  </table>
+
+  <div class="grading"><strong>Grading System:</strong>
+    {% for gr, pct in v.scale %}{{ gr }} = {{ pct }}; {% endfor %}{% for gr, name in v.other %}{{ gr }} - {{ name }}{{ '; ' if not loop.last }}{% endfor %}</div>
+  <div class="note"><strong>NOTE:</strong> This grading system took effect during academic year 2018-2019. This copy is an exact reproduction of {{ h.name }}'s Original Transcript of Record on file with the Office of the Registrar of SIT; and is considered as an original copy when it bears the dry seal and original signature in ink of the Chairman, Dean of Academics and Office Manager.<br>Any erasure or alteration made on this copy renders the whole transcript invalid.</div>
+  <div class="sig">
+    {% for label, person in v.signatories %}<div>{{ label }}<div class="line">{{ person }}</div></div>{% endfor %}
+  </div>
+  <div class="mt-3 small">Date Issued: {{ v.date_issued }}</div>
+</div>
+{% endfor %}
+</body>
+</html>

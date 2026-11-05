@@ -1,0 +1,47 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Student Records | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">Student Records</h1>
+<p class="text-muted mb-3">Enrolled students and student accounts. Open a record to see the profile, enrollment history, grades and TOR.</p>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col-12 col-md-3">
+    <select name="program" class="form-select" aria-label="Program" onchange="this.form.submit()">
+      <option value="">All programs</option>
+      {% for p in programs %}<option value="{{ p.id }}" {{ 'selected' if p.id == program_id }}>{{ p.code }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-8 col-md">
+    <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Search name or Student ID" maxlength="80">
+  </div>
+  <div class="col-4 col-md-auto"><button type="submit" class="btn btn-outline-secondary w-100">Search</button></div>
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Student No.</th><th>Name</th><th>Program</th><th>Account</th><th class="text-end">Grades</th><th></th></tr></thead>
+      <tbody>
+        {% for s in rows %}
+        <tr>
+          <td class="fw-semibold">{{ s.student_id or '-' }}</td>
+          <td>{{ s.name }}</td>
+          <td title="{{ s.program_name }}">{{ s.program_code or '-' }}</td>
+          <td>{% if s.role == 'student' %}<span class="badge text-bg-success">Student</span>{% else %}<span class="badge text-bg-secondary">Pending account</span>{% endif %}</td>
+          <td class="text-end">{{ s.grade_count }}</td>
+          <td class="text-end"><a href="{{ url_for('registrar_records.view', user_id=s.user_id) }}" class="btn btn-outline-secondary btn-sm">Open</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">No student records found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+  <small class="text-muted">Showing {{ pager.start }}&ndash;{{ pager.end }} of {{ pager.total }}</small>
+  {% include 'partials/_pagination.html' %}
+</div>
+{% endblock %}

@@ -88,7 +88,8 @@ class FinanceRecord:
     @staticmethod
     def receipt(application_id, payment_id):
         row = query(
-            "SELECT pm.*, q.student_id, q.account_no, q.total, u.first_name, u.middle_name, u.last_name, "
+            "SELECT pm.*, q.student_id, q.account_no, q.total, q.units, q.tuition_fee, q.energy_fee, q.book_fee, "
+            "q.printouts_fee, q.admission_fee, u.first_name, u.middle_name, u.last_name, "
             "p.name AS program_name, t.term_no, t.academic_year, rb.first_name AS rb_first, rb.last_name AS rb_last "
             "FROM payments pm JOIN quotations q ON q.id = pm.quotation_id "
             "JOIN applications a ON a.id = q.application_id JOIN users u ON u.id = a.user_id "

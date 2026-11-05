@@ -11,3 +11,6 @@ state_report.txt
 finance_context*.txt
 context_15d.txt
 full_context.txt
+
+*context*.txt
+*CONTEXT*.txt

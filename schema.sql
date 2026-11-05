@@ -302,3 +302,37 @@ CREATE TABLE IF NOT EXISTS cor_subjects (
   FOREIGN KEY (cor_id) REFERENCES cors(id) ON DELETE CASCADE,
   FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS grades (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  class_id INT NULL,
+  term_no TINYINT NOT NULL,
+  academic_year VARCHAR(9) NOT NULL,
+  code VARCHAR(20) NOT NULL,
+  title VARCHAR(120) NOT NULL,
+  units TINYINT NOT NULL,
+  grade VARCHAR(4) NOT NULL,
+  removal_rating VARCHAR(4) NULL,
+  updated_by INT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_grade_class (user_id, class_id),
+  UNIQUE KEY uq_grade_subject (user_id, academic_year, term_no, code),
+  KEY idx_grade_user (user_id, academic_year, term_no),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE SET NULL,
+  FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS tor_info (
+  user_id INT PRIMARY KEY,
+  last_attended VARCHAR(120) NULL,
+  category VARCHAR(120) NULL,
+  school VARCHAR(120) NULL,
+  degree VARCHAR(120) NULL,
+  major VARCHAR(120) NULL,
+  admitted VARCHAR(120) NULL,
+  conferred VARCHAR(120) NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

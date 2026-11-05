@@ -1,0 +1,120 @@
+{% extends 'layouts/app.html' %}
+{% block title %}{{ r.student_id }} | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('registrar_records.index') }}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Back to Student Records</a>
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3 mt-2">
+  <div>
+    <h1 class="h2 mb-1">{{ r.name }}</h1>
+    <p class="text-muted mb-0">Student No. <strong>{{ r.student_id or '-' }}</strong> &middot; {{ r.program_name or 'No program' }}
+      {% if r.role == 'student' %}<span class="badge text-bg-success ms-1">Student</span>{% else %}<span class="badge text-bg-secondary ms-1">Pending account</span>{% endif %}</p>
+  </div>
+  <a href="{{ url_for('registrar_records.tor', user_id=r.user_id) }}" class="btn btn-sit" target="_blank"><i class="bi bi-printer"></i> Print TOR</a>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Profile</h2>
+      <dl class="row small mb-0">
+        <dt class="col-4">Email</dt><dd class="col-8">{{ r.email }}</dd>
+        <dt class="col-4">Birth date</dt><dd class="col-8">{{ r.birthdate.strftime('%B %d, %Y') if r.birthdate else '-' }}</dd>
+        <dt class="col-4">Birthplace</dt><dd class="col-8">{{ r.birthplace or '-' }}</dd>
+        <dt class="col-4">Gender</dt><dd class="col-8">{{ r.gender or '-' }}</dd>
+        <dt class="col-4">Civil status</dt><dd class="col-8">{{ r.civil_status or '-' }}</dd>
+        <dt class="col-4">Phone</dt><dd class="col-8">{{ r.phone or '-' }}</dd>
+        <dt class="col-4">Address</dt><dd class="col-8">{{ r.address or '-' }}</dd>
+      </dl>
+      <div class="form-text mt-2">From the admission form.</div>
+    </div></div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Enrollment history</h2>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead><tr><th>Term</th><th>Year</th><th class="text-end">Units</th><th>COR</th><th></th></tr></thead>
+          <tbody>
+            {% for c in cors %}
+            <tr>
+              <td>T{{ c.term_no }} {{ c.academic_year }}</td><td>{{ c.year_level }}</td><td class="text-end">{{ c.units }}</td>
+              <td><span class="badge text-bg-{{ 'success' if c.status == 'Final' else 'secondary' }}">{{ c.status }}</span></td>
+              <td class="text-end"><a href="{{ url_for('registrar_cor.edit', user_id=r.user_id, term=c.term_id) }}" class="btn btn-outline-secondary btn-sm">Open COR</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-muted text-center py-3">No COR yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<div class="card mb-3" id="grades"><div class="card-body">
+  <h2 class="h5 mb-3">Grades</h2>
+  {% if errors %}<div class="alert alert-danger"><ul class="mb-0 small">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+
+  {% for grp in groups %}
+  <div class="d-flex justify-content-between align-items-center mt-3 mb-1">
+    <h3 class="h6 mb-0">{{ grp.label }} <span class="text-muted small">&middot; {{ grp.units }} units</span></h3>
+    <a href="{{ url_for('registrar_records.grade_report', user_id=r.user_id, ay=grp.ay, tn=grp.tn) }}" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer"></i> Grade report</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle">
+      <thead><tr><th>Code</th><th>Descriptive title</th><th class="text-end">Units</th><th>Grade</th><th>Removal</th><th>Remark</th><th></th></tr></thead>
+      <tbody>
+        {% for g in grp.rows %}
+        <tr>
+          <td class="fw-semibold">{{ g.code }}</td><td>{{ g.title }}</td><td class="text-end">{{ g.units }}</td>
+          <td>{{ g.grade }}</td><td>{{ g.removal_rating or '' }}</td>
+          <td><span class="badge text-bg-{{ 'success' if g.remark == 'PASSED' else 'secondary' }}">{{ g.remark }}</span></td>
+          <td class="text-end text-nowrap">
+            <a href="{{ url_for('registrar_records.grade_edit', user_id=r.user_id, grade_id=g.id) }}" class="btn btn-outline-secondary btn-sm">Edit</a>
+            <form method="post" action="{{ url_for('registrar_records.grade_delete', user_id=r.user_id, grade_id=g.id) }}" class="d-inline" onsubmit="return confirm('Delete this grade?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted">No grades yet. Professors encode grades for their classes; you can also add older records below.</p>
+  {% endfor %}
+
+  <hr>
+  <h3 class="h6 mb-3">Add a grade</h3>
+  <form method="post" action="{{ url_for('registrar_records.grade_add', user_id=r.user_id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% include 'registrar/_grade_fields.html' %}
+    <button type="submit" class="btn btn-sit">Save grade</button>
+  </form>
+</div></div>
+
+<div class="card mb-3" id="attendance"><div class="card-body">
+  <h2 class="h5 mb-2">Attendance</h2>
+  <p class="text-muted small mb-0">Professors record attendance per class meeting. The summary per subject will appear here.</p>
+</div></div>
+
+<div class="card mb-3" id="tor"><div class="card-body">
+  <h2 class="h5 mb-1">TOR details</h2>
+  <p class="text-muted small mb-3">These fill the "Entrance Data" part of the Official Transcript of Record. Name, address, birth date and birthplace come from the admission form.</p>
+  <form method="post" action="{{ url_for('registrar_records.tor_info', user_id=r.user_id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3 mb-3">
+      <div class="col-md-6"><label class="form-label" for="last_attended">Date graduated / last attended</label><input class="form-control" id="last_attended" name="last_attended" value="{{ tor.last_attended }}" maxlength="120"></div>
+      <div class="col-md-6"><label class="form-label" for="degree">Degree / Title / Course</label><input class="form-control" id="degree" name="degree" value="{{ tor.degree }}" maxlength="120" placeholder="{{ r.program_name }}"></div>
+      <div class="col-md-6"><label class="form-label" for="category">Category</label><input class="form-control" id="category" name="category" value="{{ tor.category }}" maxlength="120"></div>
+      <div class="col-md-6"><label class="form-label" for="major">Major / Specification</label><input class="form-control" id="major" name="major" value="{{ tor.major }}" maxlength="120"></div>
+      <div class="col-md-6"><label class="form-label" for="school">High School / College</label><input class="form-control" id="school" name="school" value="{{ tor.school }}" maxlength="120"></div>
+      <div class="col-md-6"><label class="form-label" for="admitted">Date / Semester admitted</label><input class="form-control" id="admitted" name="admitted" value="{{ tor.admitted }}" maxlength="120" placeholder="Filled from the first COR if blank"></div>
+      <div class="col-md-6"><label class="form-label" for="conferred">Date conferred</label><input class="form-control" id="conferred" name="conferred" value="{{ tor.conferred }}" maxlength="120"></div>
+    </div>
+    <button type="submit" class="btn btn-sit">Save TOR details</button>
+  </form>
+</div></div>
+{% endblock %}

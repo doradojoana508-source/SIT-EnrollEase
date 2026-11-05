@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grade Report | SIT-EnrollEase</title>
+  {% include 'partials/_head.html' %}
+  <style>
+    body { background: #e9eeed; }
+    .toolbar { max-width: 210mm; margin: 1rem auto 0; padding: 0 .5rem; }
+    .sheet { background: #fff; color: #000; max-width: 210mm; margin: 1rem auto; padding: 16mm; box-shadow: 0 6px 24px rgba(0,0,0,.15);
+             font-family: "Times New Roman", Times, serif; font-size: 12pt; line-height: 1.45; }
+    .head { display: flex; align-items: center; gap: 10pt; border-bottom: 1px solid #000; padding-bottom: 6pt; margin-bottom: 12pt; }
+    .head img { height: 56px; }
+    .head .addr { flex: 1; text-align: center; font-size: 10pt; }
+    .info { display: grid; grid-template-columns: 34mm 1fr; row-gap: 2pt; margin-bottom: 10pt; }
+    .info .k { font-weight: 700; }
+    table.g { width: 100%; border-collapse: collapse; margin-top: 4pt; }
+    table.g td { padding: 4pt 6pt; }
+    table.g td.c { text-align: center; }
+    .nothing { text-align: center; margin: 8pt 0 14pt; letter-spacing: 1px; overflow: hidden; white-space: nowrap; }
+    .legend { display: grid; grid-template-columns: 1fr 1fr; font-size: 10.5pt; max-width: 120mm; }
+    @media print { @page { size: A4; margin: 12mm; } body { background: #fff; } .no-print { display: none !important; }
+                   .sheet { box-shadow: none; margin: 0; padding: 0; max-width: none; } }
+  </style>
+</head>
+<body>
+<div class="toolbar no-print d-flex flex-wrap justify-content-between align-items-center gap-2">
+  <a href="{{ back }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+  <button type="button" class="btn btn-sit btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print or save as PDF</button>
+</div>
+<div class="sheet">
+  <div class="head">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="SIT">
+    <div class="addr"><strong>SIMONS INSTITUTE OF THEOLOGY</strong><br>Office of the Registrar<br>7-108 T. Valdellon St., Paete, Laguna 4016</div>
+  </div>
+  <div class="info">
+    <div class="k">Student No.:</div><div>{{ v.rec.student_id }}</div>
+    <div class="k">Name:</div><div>{{ v.rec.name }}</div>
+    <div class="k">Program:</div><div>{{ v.rec.program_name or '' }}</div>
+    <div class="k">Year:</div><div>{{ v.year }}</div>
+  </div>
+  <div class="mb-1">Date: {{ v.date }}</div>
+  <div class="mb-2">{{ v.heading }}</div>
+  <table class="g">
+    {% for g in v.rows %}
+    <tr><td>{{ g.code }}</td><td>{{ g.title }}</td><td class="c">{{ g.units }}</td><td class="c">{{ g.grade }}</td><td class="c">{{ g.remark }}</td></tr>
+    {% else %}
+    <tr><td colspan="5" class="text-center">No grades recorded for this term.</td></tr>
+    {% endfor %}
+  </table>
+  <div class="nothing">************************************ nothing follows ************************************</div>
+  <p class="fw-bold mb-1">Grading System:</p>
+  <div class="legend">
+    {% for gr, pct in v.scale %}<div>{{ gr }} = {{ pct }}</div>{% endfor %}
+    {% for gr, name in v.other %}<div>{{ gr }} - {{ name }}</div>{% endfor %}
+  </div>
+</div>
+</body>
+</html>

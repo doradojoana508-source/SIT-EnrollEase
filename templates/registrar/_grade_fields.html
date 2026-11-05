@@ -1,0 +1,51 @@
+<div class="row g-3 mb-3">
+  <div class="col-6 col-md-3">
+    <label class="form-label" for="term_no">Trimester</label>
+    <select class="form-select" id="term_no" name="term_no" required>
+      <option value="">Choose...</option>
+      {% for k, name in terms.items() %}<option value="{{ k }}" {{ 'selected' if values.get('term_no')|string == k|string }}>{{ name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-6 col-md-3">
+    <label class="form-label" for="academic_year">Academic year</label>
+    <input type="text" class="form-control" id="academic_year" name="academic_year" value="{{ values.get('academic_year', '') }}" placeholder="2026-2027" maxlength="9" required>
+  </div>
+  {% if not existing %}
+  <div class="col-12 col-md-6">
+    <label class="form-label" for="subject_pick">Subject from the curriculum <span class="text-muted small">(optional)</span></label>
+    <input type="text" class="form-control" id="subject_pick" name="subject_pick" list="subjects" value="{{ values.get('subject_pick', '') }}" placeholder="Type the code or title, then pick" autocomplete="off">
+    <datalist id="subjects">{% for o in options %}<option value="{{ o.label }}"></option>{% endfor %}</datalist>
+  </div>
+  {% endif %}
+</div>
+<div class="row g-3 mb-3">
+  <div class="col-md-3">
+    <label class="form-label" for="code">Course code</label>
+    <input type="text" class="form-control" id="code" name="code" value="{{ values.get('code', '') }}" maxlength="20" placeholder="PM 511">
+  </div>
+  <div class="col-md-6">
+    <label class="form-label" for="title">Descriptive title</label>
+    <input type="text" class="form-control" id="title" name="title" value="{{ values.get('title', '') }}" maxlength="120" placeholder="Homiletics 1">
+  </div>
+  <div class="col-md-3">
+    <label class="form-label" for="units">Units</label>
+    <input type="number" class="form-control" id="units" name="units" value="{{ values.get('units', '') }}" min="1" max="12">
+  </div>
+</div>
+<div class="form-text mb-3">Pick a subject above, or type the code, title and units yourself (for older records).</div>
+<div class="row g-3 mb-3">
+  <div class="col-6 col-md-3">
+    <label class="form-label" for="grade">Final grade</label>
+    <select class="form-select" id="grade" name="grade" required>
+      <option value="">Choose...</option>
+      {% for gr in grades %}<option value="{{ gr }}" {{ 'selected' if values.get('grade') == gr }}>{{ gr }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-6 col-md-3">
+    <label class="form-label" for="removal">Removal rating</label>
+    <select class="form-select" id="removal" name="removal">
+      <option value="">None</option>
+      {% for gr in grades %}<option value="{{ gr }}" {{ 'selected' if values.get('removal') == gr }}>{{ gr }}</option>{% endfor %}
+    </select>
+  </div>
+</div>
