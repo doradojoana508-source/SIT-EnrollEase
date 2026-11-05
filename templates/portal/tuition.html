@@ -5,6 +5,10 @@
 <h1 class="h2 mb-1">Tuition and balance</h1>
 <p class="text-muted mb-3">Your assessment and payments. An unpaid balance must be settled with the Finance office before the next enrollment.</p>
 
+{% if t and t.outstanding > t.summary.balance %}
+<div class="alert alert-warning small">Your total unpaid balance across all terms is <strong>PHP {{ '{:,.2f}'.format(t.outstanding) }}</strong>.</div>
+{% endif %}
+
 {% if not t %}
 <div class="card"><div class="card-body p-5 text-center text-muted">The Finance office has not prepared your tuition quotation yet.</div></div>
 {% else %}
@@ -12,7 +16,7 @@
   <div class="col-lg-6">
     <div class="card h-100"><div class="card-body">
       <h2 class="h5 mb-3">Assessment</h2>
-      <div class="small text-muted mb-2">Account No. {{ t.q.account_no }} &middot; {{ t.q.units|string }} units</div>
+      <div class="small text-muted mb-2">{{ t.term_label }} &middot; Account No. {{ t.q.account_no }} &middot; {{ t.q.units|string }} units</div>
       {% for label, amount in t.fees %}
         <div class="d-flex justify-content-between border-bottom py-1"><span>{{ label }}</span><span>PHP {{ '{:,.2f}'.format(amount) }}</span></div>
       {% endfor %}

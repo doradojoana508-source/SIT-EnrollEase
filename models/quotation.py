@@ -64,7 +64,8 @@ class Quotation:
         elif query("SELECT id FROM users WHERE username = %s "
                    "AND id <> (SELECT user_id FROM applications WHERE id = %s)",
                    (student_id, application_id), one=True) or \
-                query("SELECT id FROM quotations WHERE student_id = %s AND application_id <> %s",
+                query("SELECT qt.id FROM quotations qt JOIN applications ap ON ap.id = qt.application_id "
+                      "WHERE qt.student_id = %s AND ap.user_id <> (SELECT user_id FROM applications WHERE id = %s)",
                       (student_id, application_id), one=True):
             errors.append(f'Student ID {student_id} is already taken.')
         else:

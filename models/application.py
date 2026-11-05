@@ -256,7 +256,7 @@ class Application:
     # ---------- paghahanap ----------
     @classmethod
     def find_by_user(cls, user_id):
-        row = query("SELECT * FROM applications WHERE user_id = %s", (user_id,), one=True)
+        row = query("SELECT * FROM applications WHERE user_id = %s ORDER BY id DESC LIMIT 1", (user_id,), one=True)
         return cls(row) if row else None
 
     @classmethod
@@ -267,7 +267,7 @@ class Application:
     @classmethod
     def search(cls, q='', status='', limit=10, offset=0, term_id=None):
         """Para sa Registrar: mga na-submit na application (walang Draft). Ibinabalik ang (rows, total)."""
-        where, params = ["a.status <> 'Draft'"], []
+        where, params = ["a.status <> 'Draft'", "a.applicant_type IN ('New', 'Transferee')"], []
         if term_id:
             where.append('a.term_id = %s')
             params.append(term_id)

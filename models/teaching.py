@@ -36,10 +36,11 @@ class Teaching:
             "SELECT u.id AS user_id, u.first_name, u.middle_name, u.last_name, "
             "COALESCE(u.username, q.student_id) AS student_id, g.grade, g.removal_rating "
             "FROM cor_subjects cs JOIN cors c ON c.id = cs.cor_id JOIN users u ON u.id = c.user_id "
-            "LEFT JOIN applications a ON a.user_id = u.id LEFT JOIN quotations q ON q.application_id = a.id "
+            "LEFT JOIN applications a ON a.user_id = u.id AND a.term_id = %s "
+            "LEFT JOIN quotations q ON q.application_id = a.id "
             "LEFT JOIN grades g ON g.user_id = u.id AND g.academic_year = %s AND g.term_no = %s AND g.code = %s "
             "WHERE cs.class_id = %s ORDER BY u.last_name, u.first_name",
-            (term['academic_year'], term['term_no'], class_row['code'], class_row['id']))
+            (term['id'], term['academic_year'], term['term_no'], class_row['code'], class_row['id']))
         for r in rows:
             middle = f" {r['middle_name'][0].upper()}." if r['middle_name'] else ''
             r['name'] = f"{r['last_name'].upper()}, {r['first_name'].upper()}{middle}"

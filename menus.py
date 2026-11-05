@@ -12,6 +12,7 @@ MENUS = {
     'student': [
         ('Dashboard', 'bi-speedometer2', 'portal.dashboard'),
         ('COR & Schedule', 'bi-card-checklist', 'portal_student.cor'),
+        ('Pre-Enrollment', 'bi-pencil-square', 'portal_enroll.index'),
         ('Grades', 'bi-award', 'portal_grades.index'),
         ('Tuition & Balance', 'bi-cash-coin', 'portal_student.tuition'),],
     'admin': [

@@ -34,6 +34,9 @@ def form(application_id):
         values = Quotation.to_form(existing)
     else:
         values = {'account_no': Quotation.suggest_account_no()}
+        owner = User.find(application.user_id)
+        if owner.role == 'student':
+            values['student_id'] = owner.username
 
     return render_template('finance/quotation_form.html', application=application,
                            applicant=User.find(application.user_id),

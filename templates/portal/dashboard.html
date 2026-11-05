@@ -13,6 +13,18 @@
 </div>
 {% endif %}
 
+{% if pre.state == 'open' %}
+<div class="alert alert-info d-flex align-items-start gap-2">
+  <i class="bi bi-pencil-square fs-5"></i>
+  <div>Enrollment for <strong>{{ pre.term.label }}</strong> is open. <a href="{{ url_for('portal_enroll.index') }}" class="alert-link">Pre-enroll now</a>.</div>
+</div>
+{% elif pre.state == 'pending' %}
+<div class="alert alert-info d-flex align-items-start gap-2">
+  <i class="bi bi-hourglass-split fs-5"></i>
+  <div><strong>{{ pre.term.label }}:</strong> {{ pre.stage }} <a href="{{ url_for('portal_enroll.index') }}" class="alert-link">Details</a></div>
+</div>
+{% endif %}
+
 <div class="row g-3 mb-3">
   <div class="col-md-6">
     <div class="card h-100"><div class="card-body">

@@ -1,0 +1,61 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Pre-Enrollment | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">Pre-Enrollment</h1>
+<p class="text-muted mb-3">For continuing students and returnees. After you pre-enroll, the Finance office prepares your tuition quotation, and the Registrar prepares your COR once you have paid.</p>
+
+{% if info.state == 'closed' %}
+<div class="card"><div class="card-body p-5 text-center text-muted">Enrollment is not open right now. Please check the announcements or ask the Registrar.</div></div>
+
+{% elif info.state == 'blocked' %}
+<div class="alert alert-danger d-flex align-items-start gap-2">
+  <i class="bi bi-slash-circle fs-5"></i>
+  <div>You cannot pre-enroll for <strong>{{ info.term.label }}</strong> yet. You still have an unpaid balance of
+    <strong>PHP {{ '{:,.2f}'.format(info.outstanding) }}</strong>. Please settle it with the Finance office first.
+    <a href="{{ url_for('portal_student.tuition') }}" class="alert-link">See Tuition &amp; Balance</a>.</div>
+</div>
+
+{% elif info.state == 'open' %}
+<form method="post" action="{{ url_for('portal_enroll.submit') }}" class="card"><div class="card-body">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <h2 class="h5 mb-3">{{ info.term.label }}</h2>
+  <div class="mb-3">
+    <div class="form-label">I am a</div>
+    {% for t in types %}
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="student_type" id="type_{{ t }}" value="{{ t }}" {{ 'checked' if loop.first }} required>
+      <label class="form-check-label" for="type_{{ t }}">{{ t }} student
+        <span class="text-muted small">{{ '(I was enrolled last trimester)' if t == 'Continuing' else '(I stopped for one or more trimesters)' }}</span></label>
+    </div>
+    {% endfor %}
+  </div>
+  {% if info.needs_program %}
+  <div class="mb-3">
+    <label for="program_id" class="form-label">Degree program</label>
+    <select class="form-select" id="program_id" name="program_id" required>
+      <option value="">Choose...</option>
+      {% for p in programs %}<option value="{{ p.id }}">{{ p.name }} ({{ p.code }})</option>{% endfor %}
+    </select>
+  </div>
+  {% endif %}
+  <button type="submit" class="btn btn-sit">Pre-enroll</button>
+</div></form>
+
+{% else %}
+<div class="card"><div class="card-body">
+  <h2 class="h5 mb-2">{{ info.term.label }}
+    <span class="badge text-bg-{{ 'success' if info.state == 'enrolled' else 'secondary' }} ms-1">{{ 'Enrolled' if info.state == 'enrolled' else 'Pre-enrolled' }}</span></h2>
+  <p class="mb-2">{{ info.stage }}</p>
+  <div class="small text-muted mb-3">Type: {{ info.application.applicant_type }}</div>
+  {% if info.state == 'pending' and not info.quotation %}
+  <form method="post" action="{{ url_for('portal_enroll.cancel') }}" onsubmit="return confirm('Cancel your pre-enrollment?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-outline-danger btn-sm">Cancel pre-enrollment</button>
+  </form>
+  {% elif info.quotation %}
+  <a href="{{ url_for('portal_student.tuition') }}" class="btn btn-outline-secondary btn-sm">See Tuition &amp; Balance</a>
+  {% endif %}
+</div></div>
+{% endif %}
+{% endblock %}

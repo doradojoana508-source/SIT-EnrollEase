@@ -3,6 +3,7 @@ from db import query
 from models.cor import Cor
 from models.notification import Notification
 from models.payment import Payment
+from models.preenrollment import PreEnrollment
 from models.quotation import Quotation
 
 
@@ -40,12 +41,16 @@ class StudentRecord:
 
     @classmethod
     def tuition(cls, user_id):
-        """Ang quotation, mga bayad at balance. None kung wala pang quotation."""
-        q = query("SELECT q.* FROM quotations q JOIN applications a ON a.id = q.application_id "
-                  "WHERE a.user_id = %s", (user_id,), one=True)
+        """Ang pinakabagong quotation, mga bayad at balance. None kung wala pang quotation.
+        Ang `outstanding` ay ang kabuuang balance sa lahat ng term."""
+        q = query("SELECT q.*, t.term_no, t.academic_year FROM quotations q "
+                  "JOIN applications a ON a.id = q.application_id LEFT JOIN academic_terms t ON t.id = a.term_id "
+                  "WHERE a.user_id = %s ORDER BY a.id DESC LIMIT 1", (user_id,), one=True)
         if q is None:
             return None
         return {'q': q, 'summary': Payment.summary(q),
+                'term_label': f"Trimester {q['term_no']}, {q['academic_year']}" if q['term_no'] else '',
+                'outstanding': PreEnrollment.outstanding(user_id),
                 'fees': [(label, q[col]) for col, label in Quotation.FEES if q[col]],
                 'payments': [p for p in Payment.history(q['id']) if p['voided_at'] is None]}
 
@@ -57,5 +62,6 @@ class StudentRecord:
                 'latest_row': rows[0] if rows else None,
                 'latest': Cor.load(user.id, rows[0]['term_id']) if rows else None,
                 'tuition': tuition,
-                'balance': tuition['summary']['balance'] if tuition else Decimal('0'),
+                'balance': tuition['outstanding'] if tuition else Decimal('0'),
+                'pre': PreEnrollment.summary(user.id),
                 'notices': Notification.unread_for(user.id)}

@@ -148,8 +148,10 @@ class Cor:
         classes = cls.suggest(student, term['id'])
         cor_id = execute(
             "INSERT INTO cors (user_id, term_id, program_id, year_level, date_enrolled, status, created_by) "
-            "VALUES (%s, %s, %s, '1st', CURDATE(), 'Tentative', %s)",
-            (student['user_id'], term['id'], student['program_id'], by_user.id))
+            "VALUES (%s, %s, %s, %s, CURDATE(), 'Tentative', %s)",
+            (student['user_id'], term['id'], student['program_id'],
+             cls.YEARS[min(3, query("SELECT COUNT(*) AS n FROM cors WHERE user_id = %s AND term_id <> %s",
+                                    (student['user_id'], term['id']), one=True)['n'] // 3)], by_user.id))
         for c in classes:
             execute("INSERT INTO cor_subjects (cor_id, class_id) VALUES (%s, %s)", (cor_id, c['id']))
         execute("INSERT INTO enrollments (user_id, term_id, student_type, status, enrolled_at) "
@@ -159,17 +161,20 @@ class Cor:
         execute("UPDATE applications SET status = 'Enrolled' WHERE id = %s", (student['application_id'],))
 
         owner = User.find(student['user_id'])
+        is_new = owner.role != 'student'
         Notification.notify(
             owner, 'Your SIT Certificate of Registration', 'You are now enrolled',
             'Your Certificate of Registration was prepared by the Registrar. It is tentative and may still change. '
-            'The school will send your student account activation link.',
+            + ('The school will send your student account activation link.' if is_new
+               else 'You can see your schedule in the Student Portal.'),
             [('Student ID', student['student_id']), ('Program', student['program_name']),
              ('Term', f"Trimester {term['term_no']}, {term['academic_year']}")])
-        for admin in query("SELECT id FROM users WHERE role = 'admin' AND is_active = 1"):
-            Notification.notify(
-                User.find(admin['id']), 'A new student needs an account', 'Student account needed',
-                f"{student['name']} is now enrolled. Please create the student account under Pending Students.",
-                [('Student ID', student['student_id']), ('Program', student['program_code'])])
+        if is_new:                                     # ang may account na ay hindi na kailangan ng bagong account
+            for admin in query("SELECT id FROM users WHERE role = 'admin' AND is_active = 1"):
+                Notification.notify(
+                    User.find(admin['id']), 'A new student needs an account', 'Student account needed',
+                    f"{student['name']} is now enrolled. Please create the student account under Pending Students.",
+                    [('Student ID', student['student_id']), ('Program', student['program_code'])])
         cls._notify_professors(student['name'], [c['id'] for c in classes])
         return len(classes)
 

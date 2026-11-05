@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 
 CREATE TABLE IF NOT EXISTS applications (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL UNIQUE,
+  user_id INT NOT NULL,
   term_id INT NULL,
   program_id INT NULL,
   applicant_type VARCHAR(20) NOT NULL DEFAULT 'New',
@@ -143,6 +143,7 @@ CREATE TABLE IF NOT EXISTS applications (
   INDEX idx_app_status (status),
   INDEX idx_app_program (program_id),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  UNIQUE KEY uq_app_user_term (user_id, term_id),
 ) ENGINE=InnoDB;
 
 ALTER TABLE applications ADD CONSTRAINT fk_app_program FOREIGN KEY (program_id) REFERENCES programs(id);
@@ -206,7 +207,7 @@ CREATE TABLE IF NOT EXISTS enrollments (
 CREATE TABLE IF NOT EXISTS quotations (
   id INT AUTO_INCREMENT PRIMARY KEY,
   application_id INT NOT NULL UNIQUE,
-  student_id VARCHAR(10) NOT NULL UNIQUE,
+  student_id VARCHAR(10) NOT NULL,
   account_no VARCHAR(20) NOT NULL UNIQUE,
   units DECIMAL(4,1) NOT NULL,
   tuition_fee DECIMAL(10,2) NOT NULL DEFAULT 0,

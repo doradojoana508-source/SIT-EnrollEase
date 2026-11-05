@@ -56,7 +56,7 @@ class RegistrarRecord:
         row = query(
             f'SELECT u.id AS user_id, u.email, u.role, u.first_name, u.middle_name, u.last_name, {cls.SID} AS student_id, '
             'p.code AS program_code, p.name AS program_name, a.birthdate, a.birthplace, a.gender, a.civil_status, '
-            f'a.nationality, a.phone, a.address {cls.FROM} WHERE u.id = %s AND {cls.SCOPE} LIMIT 1',
+            f'a.nationality, a.phone, a.address {cls.FROM} WHERE u.id = %s AND {cls.SCOPE} ORDER BY a.id DESC LIMIT 1',
             (user_id,), one=True)
         if row:
             row['name'] = cls.formal_name(row)

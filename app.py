@@ -34,6 +34,7 @@ from routes.finance_records import finance_records_bp
 from routes.registrar_records import registrar_records_bp
 from routes.faculty_classes import faculty_classes_bp
 from routes.portal_grades import portal_grades_bp
+from routes.portal_enroll import portal_enroll_bp
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -129,6 +130,7 @@ app.register_blueprint(finance_records_bp)
 app.register_blueprint(registrar_records_bp)
 app.register_blueprint(faculty_classes_bp)
 app.register_blueprint(portal_grades_bp)
+app.register_blueprint(portal_enroll_bp)
 
 if __name__ == '__main__':
     app.run(debug=True)
