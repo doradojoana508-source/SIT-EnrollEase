@@ -30,6 +30,7 @@ from routes.registrar_cor import registrar_cor_bp
 from routes.admin_pending import admin_pending_bp
 from routes.registrar_schedule import registrar_schedule_bp
 from routes.portal_student import portal_student_bp
+from routes.finance_records import finance_records_bp
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -121,6 +122,7 @@ app.register_blueprint(registrar_cor_bp)
 app.register_blueprint(admin_pending_bp)
 app.register_blueprint(registrar_schedule_bp)
 app.register_blueprint(portal_student_bp)
+app.register_blueprint(finance_records_bp)
 
 if __name__ == '__main__':
     app.run(debug=True)

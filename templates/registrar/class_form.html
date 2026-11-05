@@ -31,22 +31,18 @@
   </div>
 
   <div class="row g-3 mb-3">
-    <div class="col-6 col-md-2">
-      <label for="section" class="form-label">Section</label>
-      <input type="text" class="form-control" id="section" name="section" value="{{ values.get('section', 'A') }}" maxlength="10" required>
-    </div>
-    <div class="col-6 col-md-3">
+    <div class="col-12 col-md-4">
       <label for="day_code" class="form-label">Day</label>
       <select class="form-select" id="day_code" name="day_code" required>
         <option value="">Choose...</option>
         {% for code, name in days %}<option value="{{ code }}" {{ 'selected' if values.get('day_code') == code }}>{{ name }} ({{ code }})</option>{% endfor %}
       </select>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md-4">
       <label for="start_time" class="form-label">Start</label>
       <input type="time" class="form-control" id="start_time" name="start_time" value="{{ values.get('start_time', '') }}" required>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md-4">
       <label for="end_time" class="form-label">End</label>
       <input type="time" class="form-control" id="end_time" name="end_time" value="{{ values.get('end_time', '') }}" required>
     </div>

@@ -31,7 +31,7 @@ class Quotation:
     def application_for_finance(application_id):
         """Ang application kung puwede pang i-quote: For Enrollment, may Originals received, hindi archived ang term."""
         application = Application.find(application_id)
-        if application is None or application.status != 'For Enrollment' or not application.originals_received_at:
+        if application is None or application.status not in ('For Enrollment', 'Enrolled') or not application.originals_received_at:
             return None
         if application.term_id:
             term = query("SELECT admission_status FROM academic_terms WHERE id = %s", (application.term_id,), one=True)
@@ -61,10 +61,17 @@ class Quotation:
         student_id = form.get('student_id', '').strip()
         if not cls.STUDENT_ID_RE.match(student_id):
             errors.append('Student ID must look like 26-2-0110 (year, trimester 1 to 3, number).')
-        elif query("SELECT id FROM users WHERE username = %s", (student_id,), one=True) or \
+        elif query("SELECT id FROM users WHERE username = %s "
+                   "AND id <> (SELECT user_id FROM applications WHERE id = %s)",
+                   (student_id, application_id), one=True) or \
                 query("SELECT id FROM quotations WHERE student_id = %s AND application_id <> %s",
                       (student_id, application_id), one=True):
             errors.append(f'Student ID {student_id} is already taken.')
+        else:
+            locked = query("SELECT u.username FROM users u JOIN applications a ON a.user_id = u.id "
+                           "WHERE a.id = %s AND u.role = 'student'", (application_id,), one=True)
+            if locked and locked['username'] != student_id:
+                errors.append('The Student ID cannot be changed after the student account was created.')
         data['student_id'] = student_id
 
         account_no = form.get('account_no', '').strip().upper()

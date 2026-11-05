@@ -1,0 +1,97 @@
+{% extends 'layouts/app.html' %}
+{% block title %}{{ r.student_id }} | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('finance_records.index') }}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Back to Student Records</a>
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3 mt-2">
+  <div>
+    <h1 class="h2 mb-1">{{ r.last_name }}, {{ r.first_name }}</h1>
+    <p class="text-muted mb-0">
+      Student ID <strong>{{ r.student_id }}</strong> &middot; Account No. {{ r.account_no }} &middot; {{ r.program_code or '-' }} &middot; {{ r.term_label }}
+      {% if r.app_status == 'Enrolled' %}<span class="badge text-bg-light border ms-1">Enrolled</span>{% endif %}
+      {% if r.archived_at %}<span class="badge text-bg-secondary ms-1">Archived</span>{% endif %}
+    </p>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{{ url_for('finance_quotations.form', application_id=r.application_id) }}" class="btn btn-outline-secondary"><i class="bi bi-pencil"></i> Edit quotation</a>
+    <a href="{{ url_for('finance_payments.index', application_id=r.application_id) }}" class="btn btn-sit"><i class="bi bi-cash-coin"></i> Record payment</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-5">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Quotation</h2>
+      <div class="small text-muted mb-2">{{ r.units|string }} units</div>
+      {% for label, amount in fees %}
+        <div class="d-flex justify-content-between border-bottom py-1"><span>{{ label }}</span><span>PHP {{ '{:,.2f}'.format(amount) }}</span></div>
+      {% endfor %}
+      <div class="d-flex justify-content-between pt-2 fw-bold"><span>Total</span><span>PHP {{ '{:,.2f}'.format(summary.total) }}</span></div>
+      <div class="d-flex justify-content-between"><span>Paid</span><span>PHP {{ '{:,.2f}'.format(summary.paid) }}</span></div>
+      <div class="d-flex justify-content-between fw-bold">
+        <span>Balance</span>
+        <span class="{{ 'text-danger' if summary.balance > 0 else 'text-success' }}">PHP {{ '{:,.2f}'.format(summary.balance) }}</span>
+      </div>
+      {% if r.paid_at %}<span class="badge text-bg-success mt-2">Fully paid</span>{% endif %}
+    </div></div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Payments</h2>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>OR No.</th><th>Date</th><th class="text-end">Amount</th><th>Recorded by</th><th></th></tr></thead>
+          <tbody>
+            {% for p in history %}
+            <tr class="{{ 'text-decoration-line-through text-muted' if p.voided_at }}">
+              <td class="fw-semibold">{{ p.receipt_no }}{% if p.voided_at %} <span class="badge text-bg-secondary">Voided</span>{% endif %}</td>
+              <td>{{ p.paid_on.strftime('%b %d, %Y') }}</td>
+              <td class="text-end">{{ '{:,.2f}'.format(p.amount) }}</td>
+              <td class="small">{{ p.first_name }} {{ p.last_name }}</td>
+              <td class="text-end text-nowrap">
+                {% if not p.voided_at %}
+                <a href="{{ url_for('finance_records.receipt', application_id=r.application_id, payment_id=p.id) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer"></i> Receipt</a>
+                {% if r.app_status != 'Enrolled' %}
+                <form method="post" action="{{ url_for('finance_payments.void', application_id=r.application_id, payment_id=p.id) }}" class="d-inline"
+                      onsubmit="return confirm('Void this payment?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-outline-danger btn-sm">Void</button>
+                </form>
+                {% endif %}
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center text-muted py-3">No payments recorded yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<div class="card"><div class="card-body d-flex flex-wrap gap-2 align-items-center">
+  {% if r.archived_at %}
+    <form method="post" action="{{ url_for('finance_records.restore', application_id=r.application_id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i> Restore from archive</button>
+    </form>
+  {% else %}
+    <form method="post" action="{{ url_for('finance_records.archive', application_id=r.application_id) }}"
+          onsubmit="return confirm('Archive this record?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-outline-secondary" {{ 'disabled' if not r.paid_at }}><i class="bi bi-archive"></i> Archive</button>
+    </form>
+  {% endif %}
+  {% if can_delete %}
+    <form method="post" action="{{ url_for('finance_records.delete', application_id=r.application_id) }}"
+          onsubmit="return confirm('Delete this quotation? The applicant goes back to the Quotation Queue.');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-outline-danger"><i class="bi bi-trash"></i> Delete quotation</button>
+    </form>
+  {% endif %}
+  <span class="small text-muted">Archive is for fully paid records. Delete is only for a quotation with no payments and a student who is not yet enrolled.</span>
+</div></div>
+{% endblock %}

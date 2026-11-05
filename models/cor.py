@@ -96,7 +96,7 @@ class Cor:
         for c in ClassOffering.for_term(term_id):
             if c['subject_id'] in have:
                 continue
-            c['label'] = (f"{c['code']} | {c['title']} | {c['units']}u | Sec {c['section']} | {c['schedule']} | "
+            c['label'] = (f"{c['code']} | {c['title']} | {c['units']}u | {c['schedule']} | "
                           f"{c['professor'] or 'no professor'}")
             (mine if (c['subject_id'], c['title']) in in_program else others).append(c)
         return mine, others
@@ -198,7 +198,7 @@ class Cor:
             Notification.notify(
                 teacher, 'A student enrolled in your class', 'New student in your class',
                 f'{student_label} was enrolled in your class.',
-                [(f"{r['code']} {r['title']}", f"Section {r['section']}, {r['schedule']}") for r in rows])
+                [(f"{r['code']} {r['title']}", r['schedule']) for r in rows])
 
     # ---------- pag-edit ng Registrar ----------
     @classmethod

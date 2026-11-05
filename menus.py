@@ -31,7 +31,8 @@ MENUS = {
         ('Archive', 'bi-archive', 'registrar_archive.index'),],
     'finance': [
         ('Dashboard', 'bi-speedometer2', 'finance.dashboard'),
-        ('Quotation Queue', 'bi-receipt', 'finance_queue.index'),],
+        ('Quotation Queue', 'bi-receipt', 'finance_queue.index'),
+        ('Student Records', 'bi-folder2-open', 'finance_records.index'),],
     'faculty':   [('Dashboard', 'bi-speedometer2', 'faculty.dashboard')],
 }
 

@@ -38,12 +38,12 @@ def create():
         data, errors = ClassOffering.clean(request.form, term['id'])
         if not errors:
             class_id = ClassOffering.create(term['id'], data, g.user)
-            AuditLog.record('Class added', f'Class #{class_id}: {data["title"]} section {data["section"]}')
+            AuditLog.record('Class added', f'Class #{class_id}: {data["title"]}')
             flash('Class added.', 'success')
             return redirect(url_for('registrar_classes.index', term=term['id']))
         values = request.form
     else:
-        values = {'section': 'A', 'status': 'Tentative'}
+        values = {'day_code': 'TH', 'status': 'Tentative'}
     return _form_page(term, 'create', values, errors)
 
 
@@ -61,7 +61,7 @@ def edit(class_id):
         data, errors = ClassOffering.clean(request.form, term['id'], existing)
         if not errors:
             ClassOffering.update(existing, data)
-            AuditLog.record('Class updated', f'Class #{class_id}: {existing["title"]} section {data["section"]}')
+            AuditLog.record('Class updated', f'Class #{class_id}: {existing["title"]}')
             flash('Class updated.', 'success')
             return redirect(url_for('registrar_classes.index', term=term['id']))
         values = request.form
@@ -80,6 +80,6 @@ def delete(class_id):
         flash(f"This class has {existing['student_count']} enrolled student(s). Remove it from their COR first.", 'danger')
         return redirect(url_for('registrar_classes.index', term=existing['term_id']))
     ClassOffering.delete(class_id)
-    AuditLog.record('Class deleted', f'Class #{class_id}: {existing["title"]} section {existing["section"]}')
+    AuditLog.record('Class deleted', f'Class #{class_id}: {existing["title"]}')
     flash('Class deleted.', 'success')
     return redirect(url_for('registrar_classes.index', term=existing['term_id']))

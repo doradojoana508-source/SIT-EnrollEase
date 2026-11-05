@@ -53,7 +53,7 @@
         {% for s in cor.subjects %}
         <tr>
           <td class="fw-semibold">{{ s.code }}</td>
-          <td>{{ s.title }}{% if s.section != 'A' %} <span class="small text-muted">(Sec {{ s.section }})</span>{% endif %}</td>
+          <td>{{ s.title }}</td>
           <td class="text-end">{{ s.units }}</td>
           <td class="text-nowrap">{{ s.schedule }}</td>
           <td>{% if s.professor %}{{ s.professor }}{% else %}<span class="badge text-bg-warning">No professor</span>{% endif %}</td>

@@ -1,4 +1,3 @@
-import string
 from datetime import time
 from db import query, execute
 from models.class_offering import ClassOffering
@@ -24,18 +23,16 @@ class Scheduler:
 
     @classmethod
     def place(cls, term_id, item, picked):
-        """Ang klase para sa subject na ito. Gagamitin ang bukas na klase kung hindi ito banggaan sa mga napili na
-        ng student; kung wala, gagawa ng bago sa libreng slot ng Huwebes. Ibinabalik ang None kung puno na ang mga slot."""
-        rows = query("SELECT * FROM classes WHERE term_id = %s AND subject_id = %s AND title = %s ORDER BY section, id",
+        """Ang klase para sa subject na ito. Isang klase lang bawat subject: gagamitin kung bukas na (at hindi
+        banggaan sa mga napili na ng student; kung banggaan, lalaktawan ang subject). Kung wala pa, gagawa ng bago sa
+        libreng slot ng Huwebes na may professor na tugma."""
+        rows = query("SELECT * FROM classes WHERE term_id = %s AND subject_id = %s AND title = %s ORDER BY id",
                      (term_id, item['subject_id'], item['title']))
-        for row in rows:
-            if not cls._clashes(row, picked):
-                return row
+        if rows:
+            return next((r for r in rows if not cls._clashes(r, picked)), None)
 
         free = [s for s in cls.SLOTS if not any(cls._overlap(cls.DAY, s[0], s[1], p) for p in picked)]
-        used = {r['section'] for r in rows}
-        section = next((c for c in string.ascii_uppercase if c not in used), None)
-        if not free or section is None:
+        if not free:
             return None
         slot, teacher = free[0], None
         for start, end in free:                   # unahin ang slot na may professor na tugma at libre
@@ -46,7 +43,7 @@ class Scheduler:
         class_id = execute(
             "INSERT INTO classes (term_id, subject_id, title, units, section, day_code, start_time, end_time, "
             "faculty_id, status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'Tentative')",
-            (term_id, item['subject_id'], item['title'], item['units'], section, cls.DAY,
+            (term_id, item['subject_id'], item['title'], item['units'], ClassOffering.SECTION, cls.DAY,
              slot[0], slot[1], teacher))
         if teacher:
             ClassOffering._notify_assigned(class_id)
