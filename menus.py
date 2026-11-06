@@ -26,7 +26,9 @@ MENUS = {
         ('Announcements', 'bi-megaphone', 'admin_announcements.index'),
         ('Landing Page', 'bi-window', 'admin_landing.index'),
         ('Archive', 'bi-archive', 'admin_archive.index'),
-        ('Audit Logs', 'bi-clipboard-data', 'admin_audit.index'),],
+        ('Audit Logs', 'bi-clipboard-data', 'admin_audit.index'),
+        ('Trash Bin', 'bi-trash', 'admin_trash.index'),
+        ('Email Log', 'bi-envelope-paper', 'admin_emails.index'),],
     'registrar': [
         ('Dashboard', 'bi-speedometer2', 'registrar.dashboard'),
         ('Applications', 'bi-inboxes', 'registrar_applications.index'),

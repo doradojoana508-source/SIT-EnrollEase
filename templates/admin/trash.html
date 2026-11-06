@@ -1,0 +1,67 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Trash Bin | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="h2 mb-1">Trash Bin</h1>
+    <p class="text-muted mb-0">Deleted announcements and class materials stay here for {{ days }} days. You can restore them, or delete them for good.</p>
+  </div>
+  {% if rows or counts.values()|sum %}
+  <form method="post" action="{{ url_for('admin_trash.empty') }}" onsubmit="return confirm('Delete everything in the Trash Bin for good? This cannot be undone.');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-outline-danger"><i class="bi bi-trash"></i> Empty Trash Bin</button>
+  </form>
+  {% endif %}
+</div>
+<div class="alert alert-light border small">Student records (applications, enrollment, COR, grades and payments) are never placed in the Trash Bin and are never purged.</div>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <a href="{{ url_for('admin_trash.index') }}" class="btn btn-sm {{ 'btn-sit' if not kind else 'btn-outline-secondary' }}">All</a>
+  {% for key, src in sources.items() %}
+  <a href="{{ url_for('admin_trash.index', kind=key) }}" class="btn btn-sm {{ 'btn-sit' if kind == key else 'btn-outline-secondary' }}">{{ src.label }}s <span class="badge text-bg-light">{{ counts.get(key, 0) }}</span></a>
+  {% endfor %}
+</div>
+
+<form method="get" class="row g-2 mb-3">
+  {% if kind %}<input type="hidden" name="kind" value="{{ kind }}">{% endif %}
+  <div class="col-8 col-md"><input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Search title, owner or class" maxlength="80"></div>
+  <div class="col-4 col-md-auto"><button type="submit" class="btn btn-outline-secondary w-100">Search</button></div>
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Item</th><th>Type</th><th>Posted by</th><th>Deleted</th><th>Time left</th><th></th></tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td><div class="fw-semibold">{{ r.title }}</div><div class="small text-muted">{{ r.detail }}</div></td>
+          <td class="small">{{ r.label }}</td>
+          <td class="small">{{ r.owner }}</td>
+          <td class="small text-nowrap">{{ r.deleted_at.strftime('%b %d, %Y %I:%M %p') }}</td>
+          <td><span class="badge text-bg-{{ 'danger' if r.days_left <= 3 else 'secondary' }}">{{ r.days_left }} day{{ 's' if r.days_left != 1 }}</span></td>
+          <td class="text-end text-nowrap">
+            <form method="post" action="{{ url_for('admin_trash.restore', kind=r.kind, item_id=r.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-counterclockwise"></i> Restore</button>
+            </form>
+            <form method="post" action="{{ url_for('admin_trash.delete', kind=r.kind, item_id=r.id) }}" class="d-inline" onsubmit="return confirm('Delete this for good? This cannot be undone.');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-outline-danger btn-sm">Delete forever</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">The Trash Bin is empty.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+  <small class="text-muted">Showing {{ pager.start }}&ndash;{{ pager.end }} of {{ pager.total }}</small>
+  {% include 'partials/_pagination.html' %}
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Email Log | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="h2 mb-1">Email Log</h1>
+    <p class="text-muted mb-0">Every email the system tried to send. Only the recipient, subject and result are kept, not the message. Entries older than {{ days }} days are removed.</p>
+  </div>
+  <form method="post" action="{{ url_for('admin_emails.test') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-sit"><i class="bi bi-send"></i> Send test email to me</button>
+  </form>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <a href="{{ url_for('admin_emails.index') }}" class="btn btn-sm {{ 'btn-sit' if not status else 'btn-outline-secondary' }}">All</a>
+  {% for s in statuses %}
+  <a href="{{ url_for('admin_emails.index', status=s) }}" class="btn btn-sm {{ 'btn-sit' if status == s else 'btn-outline-secondary' }}">{{ s }} <span class="badge text-bg-light">{{ counts.get(s, 0) }}</span></a>
+  {% endfor %}
+</div>
+
+<form method="get" class="row g-2 mb-3">
+  {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+  <div class="col-8 col-md"><input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Search email address or subject" maxlength="80"></div>
+  <div class="col-4 col-md-auto"><button type="submit" class="btn btn-outline-secondary w-100">Search</button></div>
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Date</th><th>To</th><th>Subject</th><th>Type</th><th>Status</th><th>Note</th></tr></thead>
+      <tbody>
+        {% for m in rows %}
+        <tr>
+          <td class="small text-nowrap">{{ m.created_at.strftime('%b %d, %Y %I:%M %p') }}</td>
+          <td class="small">{{ m.recipient }}</td>
+          <td>{{ m.subject }}</td>
+          <td class="small text-muted">{{ m.template }}</td>
+          <td><span class="badge text-bg-{{ {'Sent': 'success', 'Failed': 'danger', 'Skipped': 'warning'}[m.status] }}">{{ m.status }}</span></td>
+          <td class="small text-muted">{{ m.error or '' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">No emails yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+  <small class="text-muted">Showing {{ pager.start }}&ndash;{{ pager.end }} of {{ pager.total }}</small>
+  {% include 'partials/_pagination.html' %}
+</div>
+{% endblock %}

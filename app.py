@@ -38,6 +38,8 @@ from routes.portal_enroll import portal_enroll_bp
 from routes.announcements import manage_blueprints, view_blueprints
 from routes.landing import landing_blueprints
 from routes.portal_library import portal_library_bp
+from routes.admin_trash import admin_trash_bp
+from routes.admin_emails import admin_emails_bp
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -135,6 +137,8 @@ app.register_blueprint(faculty_classes_bp)
 app.register_blueprint(portal_grades_bp)
 app.register_blueprint(portal_enroll_bp)
 app.register_blueprint(portal_library_bp)
+app.register_blueprint(admin_trash_bp)
+app.register_blueprint(admin_emails_bp)
 for blueprint in (*manage_blueprints, *view_blueprints, *landing_blueprints):
     app.register_blueprint(blueprint)
 

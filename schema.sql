@@ -397,3 +397,15 @@ CREATE TABLE IF NOT EXISTS lms_materials (
   FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
   FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS email_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  recipient VARCHAR(150) NOT NULL,
+  subject VARCHAR(200) NOT NULL,
+  template VARCHAR(40) NOT NULL,
+  status ENUM('Sent','Failed','Skipped') NOT NULL,
+  error VARCHAR(255) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_email_created (created_at),
+  KEY idx_email_status (status, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
