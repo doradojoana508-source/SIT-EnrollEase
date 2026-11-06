@@ -1,0 +1,31 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Library | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">Library</h1>
+<p class="text-muted mb-3">E-books, handouts and links shared by your professors for the subjects on your COR.</p>
+
+{% for t in terms %}
+<h2 class="h5 mt-4 mb-2">{{ t.label }}</h2>
+{% for c in t.classes %}
+<div class="card mb-3"><div class="card-body">
+  <h3 class="h6 mb-2">{{ c.code }} <span class="fw-normal text-muted">&middot; {{ c.title }}</span></h3>
+  {% for m in c.materials %}
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-top py-2">
+    <div>
+      <div class="fw-semibold"><i class="bi {{ m.icon }}"></i> {{ m.title }}</div>
+      <div class="small text-muted">{% if m.kind == 'File' %}{{ m.size_text }} &middot; {% endif %}Added {{ m.created_at.strftime('%b %d, %Y') }}{% if m.description %} &middot; {{ m.description }}{% endif %}</div>
+    </div>
+    {% if m.kind == 'File' %}
+    <a href="{{ url_for('portal_library.file', material_id=m.id) }}" {% if m.inline %}target="_blank" rel="noopener"{% endif %} class="btn btn-outline-sit btn-sm">{{ 'Open' if m.inline else 'Download' }}</a>
+    {% else %}
+    <a href="{{ m.link_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-sit btn-sm">Open link</a>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div></div>
+{% endfor %}
+{% else %}
+<div class="card"><div class="card-body p-5 text-center text-muted">Nothing here yet. Your professors will post materials for your subjects.</div></div>
+{% endfor %}
+{% endblock %}

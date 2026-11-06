@@ -1,8 +1,10 @@
 from datetime import date
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, g
+from flask import (Blueprint, render_template, request, redirect, url_for, flash, abort, g,
+                   send_from_directory)
 from models.audit_log import AuditLog
 from models.class_offering import ClassOffering
 from models.grade import Grade
+from models.lms_material import LmsMaterial
 from models.teaching import Teaching
 from utils import roles_required
 
@@ -33,7 +35,8 @@ def _page(class_id, meeting_date=None):
     return render_template('faculty/class.html', c=c, term=term, roster=roster, grades=Grade.GRADES,
                            statuses=Teaching.STATUSES, meeting_date=meeting_date, today=date.today(),
                            marked=Teaching.day(class_id, meeting_date), summary=Teaching.summary(class_id),
-                           dates=Teaching.dates(class_id))
+                           dates=Teaching.dates(class_id), materials=LmsMaterial.for_class(class_id),
+                           allowed=LmsMaterial.ALLOWED_TEXT, max_mb=LmsMaterial.MAX_BYTES // (1024 * 1024))
 
 
 @faculty_classes_bp.route('/<int:class_id>')
@@ -71,3 +74,87 @@ def save_attendance(class_id):
     AuditLog.record('Attendance recorded', f"{c['code']} {meeting_date.isoformat()}: {saved} student(s)")
     flash(f'Attendance saved for {meeting_date:%B} {meeting_date.day}, {meeting_date:%Y}.', 'success')
     return redirect(url_for('faculty_classes.view', class_id=class_id, date=meeting_date.isoformat()) + '#attendance')
+
+
+# ---------------- Materials (e-books, handouts, links) ----------------
+def _material(class_id, material_id):
+    _mine(class_id)
+    row = LmsMaterial.find(material_id)
+    if row is None or row['class_id'] != class_id:
+        abort(404)
+    return row
+
+
+@faculty_classes_bp.route('/<int:class_id>/materials', methods=['POST'])
+@roles_required('faculty')
+def add_material(class_id):
+    c = _mine(class_id)
+    material_id, errors = LmsMaterial.add(class_id, request.form, request.files.get('file'), g.user)
+    if errors:
+        for e in errors:
+            flash(e, 'danger')
+        return redirect(url_for('faculty_classes.view', class_id=class_id) + '#materials')
+    title = ' '.join(request.form.get('title', '').split())
+    AuditLog.record('Material added', f"{c['code']}: {title}"[:200])
+    message = 'Material added.'
+    if request.form.get('is_visible') == '1' and request.form.get('notify') == '1':
+        total = LmsMaterial.notify_students(class_id, c['code'], title)
+        message = f'Material added. {total} student(s) were notified.'
+    elif request.form.get('is_visible') != '1':
+        message = 'Material saved as hidden. Students cannot see it until you show it.'
+    flash(message, 'success')
+    return redirect(url_for('faculty_classes.view', class_id=class_id) + '#materials')
+
+
+@faculty_classes_bp.route('/<int:class_id>/materials/<int:material_id>/edit', methods=['GET', 'POST'])
+@roles_required('faculty')
+def edit_material(class_id, material_id):
+    c = _mine(class_id)
+    row = _material(class_id, material_id)
+    if request.method == 'POST':
+        errors = LmsMaterial.update(row, request.form, request.files.get('file'))
+        if not errors:
+            AuditLog.record('Material updated', f"{c['code']}: {row['title']}"[:200])
+            flash('Material updated.', 'success')
+            return redirect(url_for('faculty_classes.view', class_id=class_id) + '#materials')
+        return render_template('faculty/material_edit.html', c=c, m=row, values=request.form, errors=errors,
+                               allowed=LmsMaterial.ALLOWED_TEXT, max_mb=LmsMaterial.MAX_BYTES // (1024 * 1024))
+    values = {'title': row['title'], 'description': row['description'] or '', 'link_url': row['link_url'] or '',
+              'is_visible': '1' if row['is_visible'] else ''}
+    return render_template('faculty/material_edit.html', c=c, m=row, values=values, errors=[],
+                           allowed=LmsMaterial.ALLOWED_TEXT, max_mb=LmsMaterial.MAX_BYTES // (1024 * 1024))
+
+
+@faculty_classes_bp.route('/<int:class_id>/materials/<int:material_id>/toggle', methods=['POST'])
+@roles_required('faculty')
+def toggle_material(class_id, material_id):
+    c = _mine(class_id)
+    row = _material(class_id, material_id)
+    LmsMaterial.set_visible(material_id, not row['is_visible'])
+    AuditLog.record('Material shown' if not row['is_visible'] else 'Material hidden', f"{c['code']}: {row['title']}"[:200])
+    flash('Material is now visible to students.' if not row['is_visible'] else 'Material is now hidden from students.',
+          'success')
+    return redirect(url_for('faculty_classes.view', class_id=class_id) + '#materials')
+
+
+@faculty_classes_bp.route('/<int:class_id>/materials/<int:material_id>/delete', methods=['POST'])
+@roles_required('faculty')
+def delete_material(class_id, material_id):
+    c = _mine(class_id)
+    row = _material(class_id, material_id)
+    LmsMaterial.delete(material_id)
+    AuditLog.record('Material deleted', f"{c['code']}: {row['title']}"[:200])
+    flash('Material deleted.', 'success')
+    return redirect(url_for('faculty_classes.view', class_id=class_id) + '#materials')
+
+
+@faculty_classes_bp.route('/<int:class_id>/materials/<int:material_id>/file')
+@roles_required('faculty')
+def material_file(class_id, material_id):
+    row = _material(class_id, material_id)
+    if row['kind'] != 'File':
+        abort(404)
+    response = send_from_directory(LmsMaterial.folder(class_id), row['stored_name'], mimetype=row['mime_type'],
+                                   download_name=row['original_name'], as_attachment=not row['inline'])
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    return response

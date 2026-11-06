@@ -15,6 +15,7 @@ MENUS = {
         ('COR & Schedule', 'bi-card-checklist', 'portal_student.cor'),
         ('Pre-Enrollment', 'bi-pencil-square', 'portal_enroll.index'),
         ('Grades', 'bi-award', 'portal_grades.index'),
+        ('Library', 'bi-book', 'portal_library.index'),
         ('Tuition & Balance', 'bi-cash-coin', 'portal_student.tuition'),
         ('Announcements', 'bi-megaphone', 'portal_news.index'),],
     'admin': [
