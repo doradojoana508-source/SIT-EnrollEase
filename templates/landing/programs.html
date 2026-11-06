@@ -1,0 +1,29 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Programs on the Landing Page | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<a href="{{ url_for(bp ~ '.index') }}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Back to landing page</a>
+<h1 class="h2 mb-1 mt-2">Programs</h1>
+<p class="text-muted mb-3">The program cards on the landing page. The code and the units come from the Curriculum and cannot be changed here.</p>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Program</th><th>Level</th><th class="text-end">Units</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for p in programs %}
+        <tr>
+          <td><div class="fw-semibold">{{ p.code }}</div><div class="small text-muted">{{ p.name }}</div></td>
+          <td class="small">{{ p.level }}</td>
+          <td class="text-end">{{ p.total_units }}</td>
+          <td>{% if p.is_active %}<span class="badge text-bg-success">Open</span>{% else %}<span class="badge text-bg-secondary">Hidden</span>{% endif %}</td>
+          <td class="text-end"><a href="{{ url_for(bp ~ '.program', program_id=p.id) }}" class="btn btn-outline-secondary btn-sm">Edit</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No programs.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

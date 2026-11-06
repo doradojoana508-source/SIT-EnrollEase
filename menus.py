@@ -23,6 +23,7 @@ MENUS = {
         ('Pending Students', 'bi-person-check', 'admin_pending.index'),
         ('Terms & Admission', 'bi-calendar-range', 'admin_terms.index'),
         ('Announcements', 'bi-megaphone', 'admin_announcements.index'),
+        ('Landing Page', 'bi-window', 'admin_landing.index'),
         ('Archive', 'bi-archive', 'admin_archive.index'),
         ('Audit Logs', 'bi-clipboard-data', 'admin_audit.index'),],
     'registrar': [
@@ -35,6 +36,7 @@ MENUS = {
         ('Faculty', 'bi-person-badge', 'registrar_faculty.index'),
         ('Curriculum', 'bi-journal-bookmark', 'registrar_curriculum.index'),
         ('Announcements', 'bi-megaphone', 'registrar_announcements.index'),
+        ('Landing Page', 'bi-window', 'registrar_landing.index'),
         ('Archive', 'bi-archive', 'registrar_archive.index'),],
     'finance': [
         ('Dashboard', 'bi-speedometer2', 'finance.dashboard'),

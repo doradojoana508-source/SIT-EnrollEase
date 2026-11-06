@@ -1,0 +1,139 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Landing Page | SIT-EnrollEase{% endblock %}
+
+{% macro restore(section) %}
+<form method="post" action="{{ url_for(bp ~ '.restore', section=section) }}" class="d-inline" onsubmit="return confirm('Restore the original text of this section?');">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit" class="btn btn-outline-secondary">Restore original</button>
+</form>
+{% endmacro %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="h2 mb-1">Landing Page</h1>
+    <p class="text-muted mb-0">Edit what visitors see on the home page. Changes go live as soon as you save.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for(bp ~ '.programs') }}" class="btn btn-outline-secondary"><i class="bi bi-journal-bookmark"></i> Programs</a>
+    <a href="{{ url_for('public.index') }}" target="_blank" rel="noopener" class="btn btn-sit"><i class="bi bi-box-arrow-up-right"></i> View landing page</a>
+  </div>
+</div>
+<p class="small text-muted">Announcements are posted from the <strong>Announcements</strong> page and appear on the landing page when they are for everyone.</p>
+
+{% if errors %}<div class="alert alert-danger"><ul class="mb-0 small">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+
+<!-- BANNER -->
+<div class="card mb-4" id="banner"><div class="card-body">
+  <h2 class="h5 mb-3">Banner</h2>
+  <div class="row g-3 mb-3">
+    <div class="col-md-5">
+      {% if v.hero_image %}
+      <img src="{{ url_for('static', filename='img/' ~ v.hero_image) }}" alt="Current banner" class="img-fluid rounded border">
+      {% else %}
+      <div class="rounded border bg-light text-muted small p-4 text-center">Default banner (green background)</div>
+      {% endif %}
+    </div>
+    <div class="col-md-7">
+      <form method="post" action="{{ url_for(bp ~ '.banner') }}" enctype="multipart/form-data" class="mb-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label for="banner_file" class="form-label">Banner image <span class="text-muted small">(JPG, PNG or WEBP, up to 3 MB; wide photos look best)</span></label>
+        <div class="input-group">
+          <input type="file" class="form-control" id="banner_file" name="banner" accept=".jpg,.jpeg,.png,.webp" required>
+          <button type="submit" class="btn btn-sit">Upload</button>
+        </div>
+      </form>
+      {% if v.hero_image %}
+      <form method="post" action="{{ url_for(bp ~ '.banner_reset') }}" onsubmit="return confirm('Remove the uploaded banner?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-outline-danger btn-sm">Remove uploaded banner</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  <form method="post" action="{{ url_for(bp ~ '.save', section='banner') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3 mb-3">
+      <div class="col-md-4"><label for="hero_eyebrow" class="form-label">Small text above the title</label>
+        <input type="text" class="form-control" id="hero_eyebrow" name="hero_eyebrow" value="{{ v.hero_eyebrow }}" maxlength="40" required></div>
+      <div class="col-md-8"><label for="hero_title" class="form-label">Title</label>
+        <input type="text" class="form-control" id="hero_title" name="hero_title" value="{{ v.hero_title }}" maxlength="60" required></div>
+    </div>
+    <div class="mb-3"><label for="hero_lead" class="form-label">Short description</label>
+      <textarea class="form-control" id="hero_lead" name="hero_lead" rows="2" maxlength="300" required>{{ v.hero_lead }}</textarea></div>
+    <button type="submit" class="btn btn-sit">Save banner text</button>
+    {{ restore('banner') }}
+  </form>
+</div></div>
+
+<!-- ABOUT -->
+<div class="card mb-4" id="about"><div class="card-body">
+  <h2 class="h5 mb-3">About, Vision and Mission</h2>
+  <form method="post" action="{{ url_for(bp ~ '.save', section='about') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="mb-3"><label for="about_quote" class="form-label">Motto</label>
+      <input type="text" class="form-control" id="about_quote" name="about_quote" value="{{ v.about_quote }}" maxlength="150" required></div>
+    <div class="mb-3"><label for="about_intro" class="form-label">About SIT</label>
+      <textarea class="form-control" id="about_intro" name="about_intro" rows="4" maxlength="900" required>{{ v.about_intro }}</textarea></div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6"><label for="vision" class="form-label">Vision</label>
+        <textarea class="form-control" id="vision" name="vision" rows="4" maxlength="600" required>{{ v.vision }}</textarea></div>
+      <div class="col-md-6"><label for="mission" class="form-label">Mission</label>
+        <textarea class="form-control" id="mission" name="mission" rows="4" maxlength="600" required>{{ v.mission }}</textarea></div>
+    </div>
+    <div class="mb-3"><label for="core_values" class="form-label">Core values</label>
+      <textarea class="form-control" id="core_values" name="core_values" rows="4" maxlength="1500" required>{{ v.core_values }}</textarea>
+      <div class="form-text">One per line, written as <code>Name: description</code>. Up to 8 lines.</div></div>
+    <button type="submit" class="btn btn-sit">Save</button>
+    {{ restore('about') }}
+  </form>
+</div></div>
+
+<!-- PROCESS -->
+<div class="card mb-4" id="process"><div class="card-body">
+  <h2 class="h5 mb-3">Enrollment Process</h2>
+  <form method="post" action="{{ url_for(bp ~ '.save', section='process') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="mb-3"><label for="process_new" class="form-label">Steps for new students and transferees</label>
+      <textarea class="form-control" id="process_new" name="process_new" rows="8" maxlength="3000" required>{{ v.process_new }}</textarea>
+      <div class="form-text">One step per line, numbered automatically. Put <code>**double asterisks**</code> around words to make them bold. Up to 12 steps.</div></div>
+    <div class="mb-3"><label for="continuing_note" class="form-label">Note above the steps for continuing students and returnees</label>
+      <input type="text" class="form-control" id="continuing_note" name="continuing_note" value="{{ v.continuing_note }}" maxlength="200" required></div>
+    <div class="mb-3"><label for="process_continuing" class="form-label">Steps for continuing students and returnees</label>
+      <textarea class="form-control" id="process_continuing" name="process_continuing" rows="5" maxlength="2000" required>{{ v.process_continuing }}</textarea>
+      <div class="form-text">One step per line. Up to 10 steps.</div></div>
+    <button type="submit" class="btn btn-sit">Save</button>
+    {{ restore('process') }}
+  </form>
+</div></div>
+
+<!-- REQUIREMENTS -->
+<div class="card mb-4" id="requirements"><div class="card-body">
+  <h2 class="h5 mb-3">Requirements for New Students and Transferees</h2>
+  <form method="post" action="{{ url_for(bp ~ '.save', section='requirements') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="mb-3"><label for="requirements_new" class="form-label">Requirements list</label>
+      <textarea class="form-control" id="requirements_new" name="requirements_new" rows="6" maxlength="2000">{{ v.requirements_new }}</textarea>
+      <div class="form-text">One requirement per line. <strong>Leave it blank</strong> to show the documents applicants are asked to upload. This list is only what visitors read; it does not change the upload checklist of applicants.</div></div>
+    <button type="submit" class="btn btn-sit">Save</button>
+    {{ restore('requirements') }}
+  </form>
+</div></div>
+
+<!-- CONTACT -->
+<div class="card mb-4" id="contact"><div class="card-body">
+  <h2 class="h5 mb-3">Contact Information</h2>
+  <form method="post" action="{{ url_for(bp ~ '.contact') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3 mb-3">
+      {% for key, label, limit in contact_fields %}
+      <div class="{{ 'col-12' if key == 'school_address' else 'col-md-4' }}">
+        <label for="{{ key }}" class="form-label">{{ label }}</label>
+        <input type="{{ 'email' if key.endswith('email') else 'text' }}" class="form-control" id="{{ key }}" name="{{ key }}" value="{{ v.get(key, '') }}" maxlength="{{ limit }}" required>
+      </div>
+      {% endfor %}
+    </div>
+    <button type="submit" class="btn btn-sit">Save contact information</button>
+  </form>
+</div></div>
+{% endblock %}

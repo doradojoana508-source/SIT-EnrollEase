@@ -4,15 +4,12 @@
 {% block content %}
 
 <!-- HERO -->
-<section class="hero">
+<section class="hero"{% if lc.hero_image %} style="background: linear-gradient(135deg, rgba(12, 74, 69, .92), rgba(27, 107, 99, .82)), url('{{ url_for('static', filename='img/' ~ lc.hero_image) }}') center / cover no-repeat;"{% endif %}>
   <div class="container">
     {% set window = admission_window() %}
-    <p class="eyebrow">WELCOME TO</p>
-    <h1>SIT-EnrollEase</h1>
-    <p class="lead col-lg-6 px-0">
-      Your journey in theological education starts here. Enroll online, track your
-      application and stay connected with the school.
-    </p>
+    <p class="eyebrow">{{ lc.hero_eyebrow }}</p>
+    <h1>{{ lc.hero_title }}</h1>
+    <p class="lead col-lg-6 px-0">{{ lc.hero_lead }}</p>
 
     {% if window %}
     <div class="d-inline-flex align-items-center gap-2 bg-white text-dark rounded-pill px-3 py-2 small">
@@ -77,6 +74,28 @@
 {% endif %}
 
 <!-- PROGRAMS -->
+<section class="container py-5" id="programs">
+  <h2 class="section-title">Programs Offered</h2>
+  <div class="row g-4">
+    {% for p in programs %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card program-card h-100">
+        <div class="card-body">
+          <span class="badge badge-level">{{ p.level }}</span>
+          <h3 class="h5 mt-2">{{ p.name }}</h3>
+          <p class="text-muted small mb-2">{{ p.code }} &middot; {{ p.total_units }} units</p>
+          {% if p.objective %}
+          <p class="small mb-2">{{ p.objective[:180] }}{{ '...' if p.objective|length > 180 }}</p>
+          {% endif %}
+          {% if p.prerequisites %}
+          <p class="small mb-0"><strong>Prerequisite:</strong> {{ p.prerequisites }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
 
 <!-- ENROLLMENT PROCESS -->
 <section class="process-section py-5" id="process">
@@ -86,13 +105,7 @@
       <div class="col-lg-7">
         <h3 class="h5 mb-3">New students and transferees</h3>
         <ol class="steps">
-          <li><strong>Create an account</strong> and verify your email address while admission is open.</li>
-          <li><strong>Fill out the Admission Form</strong>, choose your program, then print and sign it.</li>
-          <li><strong>Upload your requirements</strong> for review by the Registrar.</li>
-          <li><strong>Interview</strong> with the Executive Director or the Academic Dean about your ministry call and direction.</li>
-          <li><strong>Submit your original documents</strong> to the Registrar once you pass the interview.</li>
-          <li><strong>Get your tuition quotation</strong> from the Finance office.</li>
-          <li><strong>Receive your Certificate of Enrolment</strong> from the Registrar. You are now enrolled.</li>
+          {% for step in lc.steps_new %}<li>{{ step }}</li>{% endfor %}
         </ol>
       </div>
       <div class="col-lg-5">
@@ -100,19 +113,20 @@
           <div class="card-body">
             <h3 class="h5">Requirements for New Students and Transferees</h3>
             <ul class="mb-0">
+              {% if lc.requirements %}
+              {% for r in lc.requirements %}<li>{{ r }}</li>{% endfor %}
+              {% else %}
               {% for d in documents %}<li>{{ d.name }}</li>{% endfor %}
+              {% endif %}
             </ul>
           </div>
         </div>
         <div class="card">
           <div class="card-body">
             <h3 class="h5">Continuing students and returnees</h3>
-            <p class="small text-muted">Log in to the Student Portal with your Student ID.</p>
+            <p class="small text-muted">{{ lc.continuing_note }}</p>
             <ol class="small ps-3">
-              <li>Complete your clearance and give it to the Registrar.</li>
-              <li>Pre-enroll. The Executive Director or Academic Dean checks your subjects and ministry direction.</li>
-              <li>Get your tuition quotation from the Finance office and settle any balance.</li>
-              <li>Receive your Certificate of Enrolment from the Registrar.</li>
+              {% for step in lc.steps_continuing %}<li>{{ step }}</li>{% endfor %}
             </ol>
             <a href="{{ url_for('portal.login') }}" class="btn btn-outline-sit btn-sm">Student Portal</a>
           </div>
@@ -125,32 +139,26 @@
 <!-- ABOUT -->
 <section class="container py-5" id="about">
   <h2 class="section-title">About SIT</h2>
-  <p class="quote">&ldquo;Faithful in living, faithful in teaching&rdquo;</p>
-  <p class="text-center mx-auto col-lg-8">
-    SIMONS Institute of Theology is the theological training arm of New Testament Baptist Church.
-    It is tasked to train church leaders and workers for the work of ministry, and seeks to produce
-    pastors and missionaries for local and international ministries.
-  </p>
+  <p class="quote">&ldquo;{{ lc.about_quote }}&rdquo;</p>
+  <p class="text-center mx-auto col-lg-8">{{ lc.about_intro }}</p>
   <div class="row g-4 mt-2">
     <div class="col-md-6">
       <div class="card h-100"><div class="card-body">
         <h3 class="h5">Vision</h3>
-        <p class="mb-0">SIMONS Institute of Theology shall be a leading theological institute in modeling Christ's life and teaching.</p>
+        <p class="mb-0">{{ lc.vision }}</p>
       </div></div>
     </div>
     <div class="col-md-6">
       <div class="card h-100"><div class="card-body">
         <h3 class="h5">Mission</h3>
-        <p class="mb-0">SIMONS Institute of Theology shall achieve its vision through Christian life practical training, in-depth study of Christian doctrines, and constant Christian discipline.</p>
+        <p class="mb-0">{{ lc.mission }}</p>
       </div></div>
     </div>
     <div class="col-12">
       <div class="card"><div class="card-body">
         <h3 class="h5">Core Values</h3>
         <ul class="mb-0">
-          <li><strong>Deeds</strong>: Life that is steered by the Spirit of Christ (Gal. 5:22-26).</li>
-          <li><strong>Doctrine</strong>: Life that is sanctified by the truth of Christ (Jn. 17:17).</li>
-          <li><strong>Discipline</strong>: Life that is surrendered in obedience to Christ (Lk. 9:23).</li>
+          {% for c in lc.core %}<li>{% if c.name %}<strong>{{ c.name }}</strong>: {% endif %}{{ c.text }}</li>{% endfor %}
         </ul>
       </div></div>
     </div>
@@ -165,7 +173,7 @@
     <p class="mb-1"><i class="bi bi-envelope"></i> {{ school.school_email }}</p>
     <p class="mb-0"><i class="bi bi-telephone"></i> {{ school.school_phone }}</p>
     <h4>SIT-EnrollEase HelpDesk </h4>
-<p class="mb-1"><i class="bi bi-envelope"></i> sit.ntbc@gmail.com </p>
+    <p class="mb-1"><i class="bi bi-envelope"></i> {{ school.helpdesk_email or 'sit.ntbc@gmail.com' }} </p>
   </div>
 </section>
 

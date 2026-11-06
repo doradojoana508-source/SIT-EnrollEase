@@ -1,0 +1,26 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Edit {{ p.code }} | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<a href="{{ url_for(bp ~ '.programs') }}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Back to programs</a>
+<h1 class="h2 mb-1 mt-2">Edit {{ p.code }}</h1>
+<p class="text-muted mb-3">{{ p.level }} &middot; {{ p.total_units }} units (from the Curriculum)</p>
+
+{% if errors %}<div class="alert alert-danger"><ul class="mb-0 small">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+
+<form method="post" class="card"><div class="card-body">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="mb-3"><label for="name" class="form-label">Program name</label>
+    <input type="text" class="form-control" id="name" name="name" value="{{ values.get('name') or '' }}" maxlength="120" required></div>
+  <div class="mb-3"><label for="objective" class="form-label">Objective <span class="text-muted small">(shown on the landing page)</span></label>
+    <textarea class="form-control" id="objective" name="objective" rows="4" maxlength="1000">{{ values.get('objective') or '' }}</textarea></div>
+  <div class="mb-3"><label for="prerequisites" class="form-label">Prerequisite</label>
+    <textarea class="form-control" id="prerequisites" name="prerequisites" rows="3" maxlength="1000">{{ values.get('prerequisites') or '' }}</textarea></div>
+  <div class="form-check mb-3">
+    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1" {{ 'checked' if values.get('is_active') in (1, '1', True) }}>
+    <label class="form-check-label" for="is_active">Open for application <span class="text-muted small">(shown on the landing page and offered to applicants)</span></label>
+  </div>
+  <button type="submit" class="btn btn-sit">Save changes</button>
+  <a href="{{ url_for(bp ~ '.programs') }}" class="btn btn-outline-secondary">Cancel</a>
+</div></form>
+{% endblock %}

@@ -368,3 +368,11 @@ CREATE TABLE IF NOT EXISTS announcements (
   KEY idx_ann_audience (audience, deleted_at, publish_at),
   FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS landing_content (
+  content_key VARCHAR(40) NOT NULL PRIMARY KEY,
+  content_value TEXT NOT NULL,
+  updated_by INT NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

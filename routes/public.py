@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request
 from models.announcement import Announcement
+from models.landing import Landing
 from models.program import Program
 from models.document_type import DocumentType
 from models.setting import Setting
@@ -12,7 +13,8 @@ def home_context():
     return dict(programs=Program.active(),
                 documents=DocumentType.active(),
                 school=Setting.as_dict(),
-                announcements=Announcement.public(4))
+                announcements=Announcement.public(4),
+                lc=Landing.content())
 
 
 @public_bp.route('/')
