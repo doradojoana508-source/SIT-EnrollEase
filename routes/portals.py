@@ -4,6 +4,7 @@ from mailer import send_email
 from utils import roles_required, start_session
 from models.stats import Stats
 from models.finance import Finance
+from models.security import Security
 
 # Isang config bawat portal. Ang key ang pangalan ng blueprint.
 PORTALS = {
@@ -56,12 +57,20 @@ def create_portal(key, cfg):
         password = request.form.get('password', '')
         user = find_account(cfg, identifier)
 
+        if key != 'admin' and Security.ip_blocked():          # ang Admin login ay hindi hinaharang ng IP
+            Security.record('ip_blocked', key, identifier)
+            flash('Too many failed attempts from your network. Please try again in 15 minutes.', 'danger')
+            return page()
         if user and user.is_locked():
+            Security.record('locked_attempt', key, identifier, user)
             flash('Too many failed attempts. Please try again in 15 minutes.', 'danger')
             return page()
         if user is None or not user.check_password(password):
             if user:
                 user.register_failed_login()
+            Security.record('failed_login', key, identifier, user)
+            if user and user.is_locked():
+                Security.record('account_locked', key, identifier, user)
             flash('Incorrect login details.', 'danger')
             return page()
         if not user.is_active:

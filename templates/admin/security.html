@@ -1,0 +1,102 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Security | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">Security</h1>
+<p class="text-muted mb-3">Failed logins and the protections against guessing passwords. An account is locked for 15 minutes after 5 wrong passwords. An IP address is blocked for {{ minutes }} minutes after {{ limit }} failed logins. Passwords are never recorded.</p>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Failed logins (24 hours)</div><div class="h3 mb-0">{{ summary.failed_24h }}</div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Accounts locked (24 hours)</div><div class="h3 mb-0">{{ summary.locks_24h }}</div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Blocked attempts (24 hours)</div><div class="h3 mb-0">{{ summary.blocked_24h }}</div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Events (7 days)</div><div class="h3 mb-0">{{ summary.events_7d }}</div></div></div></div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Locked accounts</h2>
+      {% for u in locked %}
+      <div class="d-flex justify-content-between align-items-center gap-2 border-top py-2">
+        <div><div class="fw-semibold">{{ u.first_name }} {{ u.last_name }} <span class="badge text-bg-light border">{{ u.role|title }}</span></div>
+          <div class="small text-muted">{{ u.username or u.email }} &middot; until {{ u.locked_until.strftime('%I:%M %p') }}</div></div>
+        <form method="post" action="{{ url_for('admin_security.unlock', user_id=u.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-unlock"></i> Unlock</button>
+        </form>
+      </div>
+      {% else %}
+      <p class="text-muted mb-0">No locked accounts.</p>
+      {% endfor %}
+    </div></div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h5 mb-3">Blocked IP addresses</h2>
+      {% for b in blocked %}
+      <div class="d-flex justify-content-between align-items-center gap-2 border-top py-2">
+        <div><div class="fw-semibold">{{ b.ip_address }}</div>
+          <div class="small text-muted">{{ b.attempts }} failed logins &middot; last at {{ b.last_attempt.strftime('%I:%M %p') }}</div></div>
+        <form method="post" action="{{ url_for('admin_security.unblock') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="ip" value="{{ b.ip_address }}">
+          <button type="submit" class="btn btn-outline-secondary btn-sm">Unblock</button>
+        </form>
+      </div>
+      {% else %}
+      <p class="text-muted mb-0">No blocked IP addresses. Your own computer (127.0.0.1) is never blocked, and the Administrator login is never blocked by IP.</p>
+      {% endfor %}
+    </div></div>
+  </div>
+</div>
+
+{% if top_ips %}
+<div class="card mb-4"><div class="card-body">
+  <h2 class="h5 mb-3">Most failed logins (24 hours)</h2>
+  <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+    <thead><tr><th>IP address</th><th class="text-end">Failed logins</th><th class="text-end">Different accounts tried</th><th>Last attempt</th></tr></thead>
+    <tbody>{% for t in top_ips %}
+      <tr><td class="fw-semibold">{{ t.ip_address }}</td><td class="text-end">{{ t.attempts }}</td><td class="text-end">{{ t.accounts }}</td><td class="small">{{ t.last_attempt.strftime('%b %d, %I:%M %p') }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+</div></div>
+{% endif %}
+
+<h2 class="h5 mb-2">Recent events</h2>
+<form method="get" class="row g-2 mb-3">
+  <div class="col-12 col-md-3">
+    <select name="kind" class="form-select" aria-label="Event type" onchange="this.form.submit()">
+      <option value="">All events</option>
+      {% for key, t in types.items() %}<option value="{{ key }}" {{ 'selected' if kind == key }}>{{ t[0] }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-8 col-md"><input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Search email, Student ID or IP address" maxlength="80"></div>
+  <div class="col-4 col-md-auto"><button type="submit" class="btn btn-outline-secondary w-100">Search</button></div>
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>When</th><th>Event</th><th>Login page</th><th>Tried</th><th>IP address</th></tr></thead>
+      <tbody>
+        {% for e in rows %}
+        <tr>
+          <td class="small text-nowrap">{{ e.created_at.strftime('%b %d, %Y %I:%M %p') }}</td>
+          <td><span class="badge text-bg-{{ types[e.event_type][1] }}">{{ types[e.event_type][0] }}</span></td>
+          <td class="small">{{ portals.get(e.portal, e.portal) }}</td>
+          <td>{{ e.identifier or '-' }}{% if e.first_name %}<div class="small text-muted">{{ e.first_name }} {{ e.last_name }}</div>{% else %}{% if e.event_type != 'ip_blocked' %}<div class="small text-muted">No such account</div>{% endif %}{% endif %}</td>
+          <td class="small text-nowrap">{{ e.ip_address or '-' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No security events yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+  <small class="text-muted">Showing {{ pager.start }}&ndash;{{ pager.end }} of {{ pager.total }}. Events older than {{ days }} days are removed.</small>
+  {% include 'partials/_pagination.html' %}
+</div>
+{% endblock %}

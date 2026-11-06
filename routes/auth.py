@@ -6,6 +6,7 @@ from routes.public import home_context
 from mailer import send_email
 from utils import login_url_for
 from models.term import Term
+from models.security import Security
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -107,13 +108,22 @@ def login():
     remember = bool(request.form.get('remember'))
     user = User.find_by_email(email) if email else None
 
+    if Security.ip_blocked():
+        Security.record('ip_blocked', 'applicant', email)
+        flash('Too many failed attempts from your network. Please try again in 15 minutes.', 'danger')
+        return show_home('login')
+
     if user and user.is_locked():
+        Security.record('locked_attempt', 'applicant', email, user)
         flash('Too many failed attempts. Please try again in 15 minutes.', 'danger')
         return show_home('login')
 
     if user is None or not user.check_password(password):
         if user:
             user.register_failed_login()
+        Security.record('failed_login', 'applicant', email, user)
+        if user and user.is_locked():
+            Security.record('account_locked', 'applicant', email, user)
         flash('Incorrect login details.', 'danger')
         return show_home('login')
 

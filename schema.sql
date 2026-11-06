@@ -409,3 +409,17 @@ CREATE TABLE IF NOT EXISTS email_logs (
   KEY idx_email_created (created_at),
   KEY idx_email_status (status, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS security_events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  event_type ENUM('failed_login','account_locked','locked_attempt','ip_blocked') NOT NULL,
+  portal VARCHAR(20) NOT NULL,
+  identifier VARCHAR(120) NULL,
+  user_id INT NULL,
+  ip_address VARCHAR(45) NULL,
+  cleared TINYINT(1) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_sec_ip (ip_address, event_type, created_at),
+  KEY idx_sec_type (event_type, created_at),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -27,6 +27,7 @@ MENUS = {
         ('Landing Page', 'bi-window', 'admin_landing.index'),
         ('Archive', 'bi-archive', 'admin_archive.index'),
         ('Audit Logs', 'bi-clipboard-data', 'admin_audit.index'),
+        ('Security', 'bi-shield-exclamation', 'admin_security.index'),
         ('Trash Bin', 'bi-trash', 'admin_trash.index'),
         ('Email Log', 'bi-envelope-paper', 'admin_emails.index'),],
     'registrar': [
