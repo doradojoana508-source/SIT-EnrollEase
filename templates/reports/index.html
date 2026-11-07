@@ -1,0 +1,36 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Reports | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">Reports</h1>
+<p class="text-muted mb-3">Download a report as a CSV file. It opens in Excel, and you can also use it as a backup of the records. Each download is written to the Audit Logs.</p>
+
+{% for r in reports %}
+<div class="card mb-3"><div class="card-body p-4">
+  <h2 class="h5 mb-1">{{ r.title }}</h2>
+  <p class="text-muted small mb-3">{{ r.about }}</p>
+  <form method="get" action="{{ url_for(endpoint, report_key=r.key) }}" class="row g-2 align-items-end">
+    {% for name, label, kind, choices in r.filters %}
+    <div class="col-12 col-md-4 col-lg-3">
+      <label for="{{ r.key }}-{{ name }}" class="form-label small mb-1">{{ label }}</label>
+      {% if kind == 'term' %}
+      <select class="form-select" id="{{ r.key }}-{{ name }}" name="{{ name }}">
+        <option value="">All trimesters</option>
+        {% for tid, tlabel in terms %}<option value="{{ tid }}" {{ 'selected' if tid == default_term }}>{{ tlabel }}</option>{% endfor %}
+      </select>
+      {% elif kind == 'select' %}
+      <select class="form-select" id="{{ r.key }}-{{ name }}" name="{{ name }}">
+        {% for value, text in choices %}<option value="{{ value }}">{{ text }}</option>{% endfor %}
+      </select>
+      {% else %}
+      <input type="date" class="form-control" id="{{ r.key }}-{{ name }}" name="{{ name }}">
+      {% endif %}
+    </div>
+    {% endfor %}
+    <div class="col-12 col-md-auto">
+      <button type="submit" class="btn btn-sit"><i class="bi bi-download"></i> Download CSV</button>
+    </div>
+  </form>
+</div></div>
+{% endfor %}
+{% endblock %}

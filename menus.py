@@ -26,6 +26,7 @@ MENUS = {
         ('Announcements', 'bi-megaphone', 'admin_announcements.index'),
         ('Landing Page', 'bi-window', 'admin_landing.index'),
         ('Archive', 'bi-archive', 'admin_archive.index'),
+        ('Reports', 'bi-file-earmark-spreadsheet', 'admin_reports.index'),
         ('Audit Logs', 'bi-clipboard-data', 'admin_audit.index'),
         ('Security', 'bi-shield-exclamation', 'admin_security.index'),
         ('Trash Bin', 'bi-trash', 'admin_trash.index'),
@@ -42,11 +43,13 @@ MENUS = {
         ('Curriculum', 'bi-journal-bookmark', 'registrar_curriculum.index'),
         ('Announcements', 'bi-megaphone', 'registrar_announcements.index'),
         ('Landing Page', 'bi-window', 'registrar_landing.index'),
+        ('Reports', 'bi-file-earmark-spreadsheet', 'registrar_reports.index'),
         ('Archive', 'bi-archive', 'registrar_archive.index'),],
     'finance': [
         ('Dashboard', 'bi-speedometer2', 'finance.dashboard'),
         ('Quotation Queue', 'bi-receipt', 'finance_queue.index'),
         ('Student Records', 'bi-folder2-open', 'finance_records.index'),
+        ('Reports', 'bi-file-earmark-spreadsheet', 'finance_reports.index'),
         ('Announcements', 'bi-megaphone', 'finance_announcements.index'),],
     'faculty': [
         ('Dashboard', 'bi-speedometer2', 'faculty.dashboard'),

@@ -42,6 +42,7 @@ from routes.admin_trash import admin_trash_bp
 from routes.admin_emails import admin_emails_bp
 from routes.admin_security import admin_security_bp
 from routes.admin_settings import admin_settings_bp
+from routes.reports import report_blueprints
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -143,7 +144,7 @@ app.register_blueprint(admin_trash_bp)
 app.register_blueprint(admin_emails_bp)
 app.register_blueprint(admin_security_bp)
 app.register_blueprint(admin_settings_bp)
-for blueprint in (*manage_blueprints, *view_blueprints, *landing_blueprints):
+for blueprint in (*manage_blueprints, *view_blueprints, *landing_blueprints, *report_blueprints):
     app.register_blueprint(blueprint)
 
 if __name__ == '__main__':
