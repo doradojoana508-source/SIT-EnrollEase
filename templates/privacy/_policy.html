@@ -1,0 +1,39 @@
+<p class="small text-muted">Version {{ version }} &middot; Simons Institute of Theology, Paete, Laguna</p>
+<p>Simons Institute of Theology (SIT) respects your privacy. This notice explains, under the <strong>Data Privacy Act of 2012 (Republic Act No. 10173)</strong>, what information SIT-EnrollEase collects, why, and what your rights are.</p>
+
+<h3 class="h6 mt-4">1. What we collect</h3>
+<ul>
+  <li><strong>Account details:</strong> name, email address, Student ID, a hashed password and an optional photo.</li>
+  <li><strong>Application details:</strong> what is on the SIT Admission Form, such as address, contact numbers, birth date, family, schooling, work, church and ministry.</li>
+  <li><strong>Documents</strong> you upload, such as your 2x2 photo and school records.</li>
+  <li><strong>Enrollment and payments:</strong> Certificate of Registration, tuition quotations and payment receipts.</li>
+  <li><strong>Academic records:</strong> grades and attendance encoded by your Faculty and the Registrar.</li>
+  <li><strong>System records:</strong> login times, IP address and an audit trail of important actions, used for security.</li>
+</ul>
+
+<h3 class="h6 mt-4">2. Why we collect it</h3>
+<ul>
+  <li>To process your admission, enrollment and student records.</li>
+  <li>To prepare tuition quotations and record payments.</li>
+  <li>To send you notices about your application, schedule and account by dashboard and email.</li>
+  <li>To keep the system secure and to prevent misuse.</li>
+</ul>
+
+<h3 class="h6 mt-4">3. Who can see it</h3>
+<p>Only authorized SIT staff, and only what their work needs: the Registrar (applications and academic records), Finance (quotations and payments), Faculty (the students of their own classes) and the Administrator (accounts and security). You can see your own information. We do not sell your information, and we share it with others only when the law requires it or you agree.</p>
+
+<h3 class="h6 mt-4">4. How long we keep it</h3>
+<p>Student and enrollment records are kept for as long as the school needs them as official records. Deleted announcements and class materials stay in the Trash Bin for a limited time before they are removed for good. System and security logs are kept for a limited period.</p>
+
+<h3 class="h6 mt-4">5. How we protect it</h3>
+<p>Passwords are stored as hashes. Every form is protected against forged requests. Access is limited by role. Accounts lock after repeated wrong passwords. Uploaded files are checked and are only shown to people who are allowed to see them.</p>
+
+<h3 class="h6 mt-4">6. Your rights</h3>
+<p>You may ask to see the information we hold about you, ask us to correct it, object to its use, or ask us to block or remove it, subject to the school's duty to keep official records. You may also file a complaint with the National Privacy Commission (privacy.gov.ph).</p>
+
+<h3 class="h6 mt-4">7. Contact</h3>
+<p class="mb-0">
+  {% if school.school_email %}Email: {{ school.school_email }}<br>{% endif %}
+  {% if school.school_phone %}Phone: {{ school.school_phone }}<br>{% endif %}
+  HelpDesk: {{ school.helpdesk_email or 'sit.ntbc@gmail.com' }}
+</p>

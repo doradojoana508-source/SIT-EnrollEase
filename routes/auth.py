@@ -7,6 +7,7 @@ from mailer import send_email
 from utils import login_url_for
 from models.term import Term
 from models.security import Security
+from models.privacy import Privacy
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -77,6 +78,7 @@ def register():
     user.set_password(password)               # naka-hash
     user.save()
 
+    Privacy.accept(user)
     if send_verification(user):
         flash(f'Account created! We sent a verification link to {email}. Please verify before logging in.', 'success')
     else:

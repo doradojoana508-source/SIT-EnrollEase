@@ -2,16 +2,8 @@
 {% block title %}Email Log | SIT-EnrollEase{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
-  <div>
-    <h1 class="h2 mb-1">Email Log</h1>
-    <p class="text-muted mb-0">Every email the system tried to send. Only the recipient, subject and result are kept, not the message. Entries older than {{ days }} days are removed.</p>
-  </div>
-  <form method="post" action="{{ url_for('admin_emails.test') }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button type="submit" class="btn btn-sit"><i class="bi bi-send"></i> Send test email to me</button>
-  </form>
-</div>
+<h1 class="h2 mb-1">Email Log</h1>
+<p class="text-muted mb-3">Every email the system tried to send. Only the recipient, subject and result are kept, not the message. Entries older than {{ days }} days are removed.</p>
 
 <div class="d-flex flex-wrap gap-2 mb-3">
   <a href="{{ url_for('admin_emails.index') }}" class="btn btn-sm {{ 'btn-sit' if not status else 'btn-outline-secondary' }}">All</a>

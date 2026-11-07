@@ -1,0 +1,10 @@
+{% extends 'layouts/app.html' if current_user else 'layouts/base.html' %}
+{% block title %}Data Privacy Notice | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 800px">
+  <h1 class="h2 mb-3">Data Privacy Notice</h1>
+  <div class="card"><div class="card-body p-4">{% include 'privacy/_policy.html' %}</div></div>
+  <div class="mt-3"><a href="{{ url_for('dashboard.home') if current_user else '/' }}" class="btn btn-outline-sit">{{ 'Back to Dashboard' if current_user else 'Back to Home' }}</a></div>
+</div>
+{% endblock %}

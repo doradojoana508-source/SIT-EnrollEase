@@ -31,7 +31,7 @@ MENUS = {
         ('Security', 'bi-shield-exclamation', 'admin_security.index'),
         ('Trash Bin', 'bi-trash', 'admin_trash.index'),
         ('Email Log', 'bi-envelope-paper', 'admin_emails.index'),
-        ('Settings', 'bi-gear', 'admin_settings.index'),],
+        ('System Settings', 'bi-sliders', 'admin_settings.index'),],
     'registrar': [
         ('Dashboard', 'bi-speedometer2', 'registrar.dashboard'),
         ('Applications', 'bi-inboxes', 'registrar_applications.index'),
@@ -57,7 +57,7 @@ MENUS = {
         ('Announcements', 'bi-megaphone', 'faculty_news.index'),],
 }
 
-ACCOUNT_MENU = [('Change Password', 'bi-key', 'account.change_password')]
+ACCOUNT_MENU = [('Settings', 'bi-gear', 'account.settings')]
 
 
 def menu_for(role):

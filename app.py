@@ -1,6 +1,6 @@
 import time
 from datetime import timedelta
-from flask import Flask, g, request, session, flash
+from flask import Flask, g, request, session, flash, redirect, url_for
 from flask_wtf.csrf import CSRFProtect
 from config import SECRET_KEY, MAIL_USERNAME, MAIL_PASSWORD
 from mailer import mail
@@ -44,6 +44,8 @@ from routes.admin_security import admin_security_bp
 from routes.admin_settings import admin_settings_bp
 from routes.reports import report_blueprints
 from errors import register_errors
+from routes.privacy import privacy_bp
+from models.privacy import Privacy
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -112,6 +114,21 @@ def inject_admission():
         return g.admission
     return {'admission_window': admission_window}
 
+@app.before_request
+def require_privacy_consent():
+    """Walang makakagamit ng system hangga't hindi tinatanggap ang Data Privacy Notice."""
+    user = g.get('user')
+    endpoint = request.endpoint or ''
+    if user is None or endpoint in ('static', 'auth.logout', 'account.photo') or endpoint.startswith('privacy.'):
+        return
+    if session.get('privacy') == Privacy.VERSION:
+        return
+    if Privacy.has_accepted(user.id):
+        session['privacy'] = Privacy.VERSION
+        return
+    return redirect(url_for('privacy.consent'))
+
+
 app.register_blueprint(public_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(account_bp)
@@ -146,6 +163,7 @@ app.register_blueprint(admin_trash_bp)
 app.register_blueprint(admin_emails_bp)
 app.register_blueprint(admin_security_bp)
 app.register_blueprint(admin_settings_bp)
+app.register_blueprint(privacy_bp)
 for blueprint in (*manage_blueprints, *view_blueprints, *landing_blueprints, *report_blueprints):
     app.register_blueprint(blueprint)
 
