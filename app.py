@@ -43,6 +43,7 @@ from routes.admin_emails import admin_emails_bp
 from routes.admin_security import admin_security_bp
 from routes.admin_settings import admin_settings_bp
 from routes.reports import report_blueprints
+from errors import register_errors
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -64,6 +65,7 @@ app.config.update(
 
 csrf = CSRFProtect(app)
 mail.init_app(app)
+register_errors(app)
 
 
 @app.before_request

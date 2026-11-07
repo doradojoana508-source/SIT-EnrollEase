@@ -142,8 +142,8 @@ CREATE TABLE IF NOT EXISTS applications (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_app_status (status),
   INDEX idx_app_program (program_id),
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   UNIQUE KEY uq_app_user_term (user_id, term_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 ALTER TABLE applications ADD CONSTRAINT fk_app_program FOREIGN KEY (program_id) REFERENCES programs(id);
@@ -224,7 +224,6 @@ CREATE TABLE IF NOT EXISTS quotations (
   FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-ALTER TABLE quotations ADD COLUMN paid_at DATETIME NULL AFTER total;
 ALTER TABLE quotations ADD COLUMN archived_at DATETIME NULL AFTER paid_at;
 
 CREATE TABLE IF NOT EXISTS payments (
