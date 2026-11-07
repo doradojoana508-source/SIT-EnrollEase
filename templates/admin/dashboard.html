@@ -1,0 +1,105 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Administrator | SIT-EnrollEase{% endblock %}
+
+{% block content %}
+<h1 class="h2 mb-1">Welcome, {{ current_user.first_name }}!</h1>
+<p class="text-muted mb-3">
+  Administrator
+  {% if open_term %}&middot; <span class="fw-semibold">{{ open_term.name }}</span> <span class="badge text-bg-success ms-1">Admission open</span>
+  {% elif current_term %}&middot; <span class="fw-semibold">{{ current_term.name }}</span> <span class="badge text-bg-secondary ms-1">Admission {{ current_term.admission_status|lower }}</span>{% endif %}
+</p>
+
+<!-- Mga kailangang tingnan -->
+<div class="row g-3 mb-3">
+  {% for n, label, icon, color, link in [
+      (pending, 'Pending student accounts', 'bi-person-check', 'primary', url_for('admin_pending.index')),
+      (locked, 'Locked accounts', 'bi-lock', 'danger', url_for('admin_security.index')),
+      (failed_emails, 'Failed emails (24 hours)', 'bi-envelope-exclamation', 'warning', url_for('admin_emails.index', status='Failed')),
+      (trash, 'Items in the Trash Bin', 'bi-trash', 'secondary', url_for('admin_trash.index'))] %}
+  <div class="col-6 col-lg-3">
+    <a href="{{ link }}" class="text-decoration-none">
+      <div class="card h-100"><div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="display-6 fw-bold text-{{ color if n else 'secondary' }}">{{ n }}</div>
+          <i class="bi {{ icon }} fs-3 text-{{ color if n else 'secondary' }}"></i>
+        </div>
+        <div class="text-muted small">{{ label }}</div>
+      </div></div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+{% if skipped_emails %}
+<div class="alert alert-warning small"><i class="bi bi-exclamation-triangle"></i> {{ skipped_emails }} email(s) were not sent in the last 24 hours because email is not set up.
+  <a href="{{ url_for('admin_emails.index', status='Skipped') }}" class="alert-link">See the Email Log</a>.</div>
+{% endif %}
+{% if blocked or failed_logins >= 10 %}
+<div class="alert alert-warning small"><i class="bi bi-shield-exclamation"></i> {{ failed_logins }} failed login(s) in the last 24 hours{% if blocked %}, {{ blocked }} IP address(es) blocked{% endif %}.
+  <a href="{{ url_for('admin_security.index') }}" class="alert-link">Open Security</a>.</div>
+{% endif %}
+
+<div class="row g-3 mb-3">
+  <!-- Mga user ayon sa role -->
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body p-4">
+      <h2 class="h5 mb-3">Active accounts <span class="text-muted fs-6">&middot; {{ role_total }}</span></h2>
+      {% for r in roles %}
+      <div class="mb-3">
+        <div class="d-flex justify-content-between small"><span>{{ r.label }}</span><strong>{{ r.n }}</strong></div>
+        <div class="progress" style="height: 10px" role="progressbar" aria-label="{{ r.label }}"
+             aria-valuenow="{{ r.n }}" aria-valuemin="0" aria-valuemax="{{ role_total }}">
+          <div class="progress-bar bg-{{ r.color }}" style="width: {{ (r.n * 100 / role_total)|round|int if role_total else 0 }}%"></div>
+        </div>
+      </div>
+      {% endfor %}
+      <p class="small text-muted mb-0">
+        {{ inactive }} deactivated &middot; {{ not_activated }} waiting to activate
+        &middot; <a href="{{ url_for('admin_users.index') }}">Manage users</a></p>
+    </div></div>
+  </div>
+
+  <!-- Enrolled bawat term -->
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body p-4">
+      <h2 class="h5 mb-3">Enrolled students per trimester</h2>
+      {% for t in term_rows %}
+      <div class="mb-3">
+        <div class="d-flex justify-content-between small"><span>{{ t.label }}</span><strong>{{ t.n }}</strong></div>
+        <div class="progress" style="height: 10px" role="progressbar" aria-label="{{ t.label }}"
+             aria-valuenow="{{ t.n }}" aria-valuemin="0" aria-valuemax="{{ term_max }}">
+          <div class="progress-bar bg-success" style="width: {{ (t.n * 100 / term_max)|round|int if term_max else 0 }}%"></div>
+        </div>
+      </div>
+      {% else %}
+      <p class="text-muted mb-0">No trimesters yet.</p>
+      {% endfor %}
+      {% if current_term %}
+      <p class="small text-muted mb-0">{{ enrolled_now }} enrolled now in {{ current_term.short }}{% if open_term %} &middot; {{ in_process }} application(s) in process{% endif %}</p>
+      {% endif %}
+    </div></div>
+  </div>
+</div>
+
+<!-- Pinakabagong gawain -->
+<div class="card"><div class="card-body p-4">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="h5 mb-0">Recent activity</h2>
+    <a href="{{ url_for('admin_audit.index') }}" class="small text-decoration-none">See all</a>
+  </div>
+  <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+    <tbody>
+      {% for r in recent %}
+      <tr>
+        <td class="small text-nowrap text-muted">{{ r.created_at.strftime('%b %d, %I:%M %p') }}</td>
+        <td class="small">{% if r.first_name %}{{ r.first_name }} {{ r.last_name }}{% else %}<span class="text-muted">System</span>{% endif %}</td>
+        <td class="fw-semibold small">{{ r.action }}</td>
+        <td class="small text-muted">{{ r.details or '' }}</td>
+      </tr>
+      {% else %}
+      <tr><td class="text-muted">No activity yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</div></div>
+{% endblock %}

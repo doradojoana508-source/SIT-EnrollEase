@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
 from models.audit_log import AuditLog
 from models.security import Security
+from models.setting import Setting
 from models.user import User
 from utils import roles_required, Pager
 
@@ -19,6 +20,8 @@ def index():
                            portals=Security.PORTAL_LABELS, summary=Security.summary(),
                            locked=Security.locked_accounts(), blocked=Security.blocked_ips(),
                            top_ips=Security.top_ips(), limit=Security.IP_LIMIT, minutes=Security.WINDOW_MINUTES,
+                           max_failed=Setting.number('max_failed_logins', 5, 3, 10),
+                           lock_minutes=Setting.number('lock_minutes', 15, 5, 120),
                            days=Security.RETENTION_DAYS)
 
 

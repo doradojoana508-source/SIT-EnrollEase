@@ -5,6 +5,7 @@ from flask import current_app
 from werkzeug.utils import secure_filename
 from db import query, execute
 from models.grade import Grade
+from models.setting import Number
 
 ZIP = b'PK\x03\x04'
 OLE = bytes.fromhex('D0CF11E0A1B11AE1')
@@ -14,7 +15,7 @@ OFFICE = 'application/vnd.openxmlformats-officedocument.'
 class LmsMaterial:
     """Mga e-book, handout at link ng bawat klase. Ang professor ang nagma-manage; nakikita ng student ang sa klase niya."""
 
-    MAX_BYTES = 30 * 1024 * 1024
+    MAX_BYTES = Number('material_max_mb', 30, 1, 30, scale=1024 * 1024)
     # ext: (laman sa simula ng file, mime, puwedeng buksan sa browser, icon)
     TYPES = {
         'pdf': (b'%PDF', 'application/pdf', True, 'bi-file-earmark-pdf'),

@@ -5,6 +5,8 @@ from utils import roles_required, start_session
 from models.stats import Stats
 from models.finance import Finance
 from models.security import Security
+from models.admin_stats import AdminStats
+from models.faculty_stats import FacultyStats
 
 # Isang config bawat portal. Ang key ang pangalan ng blueprint.
 PORTALS = {
@@ -59,11 +61,11 @@ def create_portal(key, cfg):
 
         if key != 'admin' and Security.ip_blocked():          # ang Admin login ay hindi hinaharang ng IP
             Security.record('ip_blocked', key, identifier)
-            flash('Too many failed attempts from your network. Please try again in 15 minutes.', 'danger')
+            flash('Too many failed attempts from your network. Please try again later.', 'danger')
             return page()
         if user and user.is_locked():
             Security.record('locked_attempt', key, identifier, user)
-            flash('Too many failed attempts. Please try again in 15 minutes.', 'danger')
+            flash('Too many failed attempts. Please try again later.', 'danger')
             return page()
         if user is None or not user.check_password(password):
             if user:
@@ -109,6 +111,10 @@ def create_portal(key, cfg):
             data['show_notice'] = bool(data['notices'] or data['balance'] > 0) and not session.get('notice_seen')
             session['notice_seen'] = True
             return render_template('portal/dashboard.html', **data)
+        if key == 'admin':
+            return render_template('admin/dashboard.html', **AdminStats.dashboard())
+        if key == 'faculty':
+            return render_template('faculty/dashboard.html', **FacultyStats.dashboard(g.user))
         return render_template('app_home.html', heading=cfg['title'])
 
     return bp

@@ -1,6 +1,7 @@
 from datetime import datetime
 from db import query, execute
 from models.lms_material import LmsMaterial
+from models.setting import Number
 
 
 class Trash:
@@ -8,7 +9,7 @@ class Trash:
     Mga anunsyo at materyales lang ang nandito. Ang mga record ng mga student (application, enrollment,
     COR, grade, bayad) ay hindi kailanman napupunta rito, kaya hindi sila mapupurga."""
 
-    DAYS = 30
+    DAYS = Number('trash_days', 30, 7, 90)
     # kind: label, table, at ang SQL na naglilista ng mga binura (id, title, deleted_at, owner, detail)
     SOURCES = {
         'announcement': {

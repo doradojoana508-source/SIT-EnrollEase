@@ -41,6 +41,7 @@ from routes.portal_library import portal_library_bp
 from routes.admin_trash import admin_trash_bp
 from routes.admin_emails import admin_emails_bp
 from routes.admin_security import admin_security_bp
+from routes.admin_settings import admin_settings_bp
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -141,6 +142,7 @@ app.register_blueprint(portal_library_bp)
 app.register_blueprint(admin_trash_bp)
 app.register_blueprint(admin_emails_bp)
 app.register_blueprint(admin_security_bp)
+app.register_blueprint(admin_settings_bp)
 for blueprint in (*manage_blueprints, *view_blueprints, *landing_blueprints):
     app.register_blueprint(blueprint)
 

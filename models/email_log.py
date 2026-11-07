@@ -1,4 +1,5 @@
 from db import query, execute
+from models.setting import Number
 
 
 class EmailLog:
@@ -6,7 +7,7 @@ class EmailLog:
     (may mga link ng activation at reset), ang tatanggap, paksa at resulta lang."""
 
     STATUSES = ('Sent', 'Failed', 'Skipped')
-    RETENTION_DAYS = 180
+    RETENTION_DAYS = Number('email_log_days', 180, 30, 365)
 
     @staticmethod
     def record(recipient, subject, template, status, error=None):

@@ -110,12 +110,12 @@ def login():
 
     if Security.ip_blocked():
         Security.record('ip_blocked', 'applicant', email)
-        flash('Too many failed attempts from your network. Please try again in 15 minutes.', 'danger')
+        flash('Too many failed attempts from your network. Please try again later.', 'danger')
         return show_home('login')
 
     if user and user.is_locked():
         Security.record('locked_attempt', 'applicant', email, user)
-        flash('Too many failed attempts. Please try again in 15 minutes.', 'danger')
+        flash('Too many failed attempts. Please try again later.', 'danger')
         return show_home('login')
 
     if user is None or not user.check_password(password):

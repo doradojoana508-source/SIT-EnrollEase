@@ -51,8 +51,11 @@ class User(BaseModel):
     def is_locked(self):
         return self.locked_until is not None and self.locked_until > datetime.now()
 
-    def register_failed_login(self, max_attempts=5, minutes=15):
-        """Bawat maling password ay binibilang. Sa ika-5, naka-lock ang account nang 15 minuto."""
+    def register_failed_login(self, max_attempts=None, minutes=None):
+        """Bawat maling password ay binibilang. Kapag umabot sa limit (nasa Settings), naka-lock ang account."""
+        from models.setting import Setting
+        max_attempts = max_attempts or Setting.number('max_failed_logins', 5, 3, 10)
+        minutes = minutes or Setting.number('lock_minutes', 15, 5, 120)
         self.failed_attempts += 1
         if self.failed_attempts >= max_attempts:
             self.locked_until = datetime.now() + timedelta(minutes=minutes)

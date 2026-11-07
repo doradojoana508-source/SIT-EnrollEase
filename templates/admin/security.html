@@ -3,7 +3,7 @@
 
 {% block content %}
 <h1 class="h2 mb-1">Security</h1>
-<p class="text-muted mb-3">Failed logins and the protections against guessing passwords. An account is locked for 15 minutes after 5 wrong passwords. An IP address is blocked for {{ minutes }} minutes after {{ limit }} failed logins. Passwords are never recorded.</p>
+<p class="text-muted mb-3">Failed logins and the protections against guessing passwords. An account is locked for {{ lock_minutes }} minutes after {{ max_failed }} wrong passwords. An IP address is blocked for {{ minutes }} minutes after {{ limit }} failed logins. Passwords are never recorded.</p>
 
 <div class="row g-3 mb-4">
   <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Failed logins (24 hours)</div><div class="h3 mb-0">{{ summary.failed_24h }}</div></div></div></div>

@@ -1,6 +1,8 @@
 from datetime import datetime
 from flask import request
 from db import query, execute
+from models.setting import Number
+from models.setting import Number
 
 LOCAL_IPS = ('127.0.0.1', '::1')                     # ang sarili mong computer ay hindi hinaharang (para sa testing)
 
@@ -10,9 +12,9 @@ class Security:
     1) ang account ay naka-lock ng 15 minuto pagkatapos ng 5 maling password (nasa User model),
     2) ang IP address ay hinaharang ng 15 minuto kapag 10 beses nang pumalya sa loob ng 15 minuto (kahit anong account)."""
 
-    IP_LIMIT = 10
-    WINDOW_MINUTES = 15
-    RETENTION_DAYS = 90
+    IP_LIMIT = Number('ip_limit', 10, 5, 50)
+    WINDOW_MINUTES = Number('ip_window', 15, 5, 120)
+    RETENTION_DAYS = Number('security_log_days', 90, 30, 365)
     TYPES = {'failed_login': ('Failed login', 'warning'), 'account_locked': ('Account locked', 'danger'),
              'locked_attempt': ('Tried a locked account', 'secondary'), 'ip_blocked': ('Blocked IP tried again', 'dark')}
     PORTAL_LABELS = {'applicant': 'Applicant', 'portal': 'Student', 'admin': 'Admin', 'registrar': 'Registrar',

@@ -29,7 +29,8 @@ MENUS = {
         ('Audit Logs', 'bi-clipboard-data', 'admin_audit.index'),
         ('Security', 'bi-shield-exclamation', 'admin_security.index'),
         ('Trash Bin', 'bi-trash', 'admin_trash.index'),
-        ('Email Log', 'bi-envelope-paper', 'admin_emails.index'),],
+        ('Email Log', 'bi-envelope-paper', 'admin_emails.index'),
+        ('Settings', 'bi-gear', 'admin_settings.index'),],
     'registrar': [
         ('Dashboard', 'bi-speedometer2', 'registrar.dashboard'),
         ('Applications', 'bi-inboxes', 'registrar_applications.index'),
