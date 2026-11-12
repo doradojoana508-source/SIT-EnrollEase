@@ -13,6 +13,8 @@
     <input type="text" class="form-control" id="title" name="title" value="{{ values.get('title', '') }}" maxlength="150" required></div>
   <div class="mb-3"><label for="description" class="form-label">Description <span class="text-muted small">(optional)</span></label>
     <input type="text" class="form-control" id="description" name="description" value="{{ values.get('description', '') }}" maxlength="500"></div>
+  <div class="mb-3"><label for="phase" class="form-label">Exam period</label>
+    <select class="form-select" id="phase" name="phase">{% for phase in ('PRELIM','MIDTERMS','FINALS') %}<option value="{{ phase }}" {{ 'selected' if values.get('phase', m.phase) == phase }}>{{ phase|title }}</option>{% endfor %}</select></div>
   {% if m.kind == 'Link' %}
   <div class="mb-3"><label for="link_url" class="form-label">Link</label>
     <input type="url" class="form-control" id="link_url" name="link_url" value="{{ values.get('link_url', '') }}" maxlength="500" required></div>

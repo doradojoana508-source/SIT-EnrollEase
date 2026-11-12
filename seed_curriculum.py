@@ -70,7 +70,10 @@ CURRICULUM = {
         ('RD 2', 'Research Writing', 2, 'Core'),
         ('RD 3', 'Research Presentation', 2, 'Core'),
         ('IP', 'Internship (Ministry Program)', 6, 'Core'),
-        ('FE', 'Field Education', 4, 'Core'),
+        ('FE 1', 'Field Education I', 1, 'Core'),
+        ('FE 2', 'Field Education II', 1, 'Core'),
+        ('FE 3', 'Field Education III', 1, 'Core'),
+        ('FE 4', 'Field Education IV', 1, 'Core'),
         ('PM 517', 'Music I (Basic of Music)', 2, 'Elective'),
         ('PM 518', 'Music II (Music Leading)', 2, 'Elective'),
         ('PM 519', 'Baptist Distinctives', 2, 'Elective'),
@@ -135,7 +138,10 @@ CURRICULUM = {
         ('RD 2', 'Research Writing', 2, 'Core'),
         ('RD 3', 'Research Presentation', 2, 'Core'),
         ('IP', 'Internship (Ministry Program)', 6, 'Core'),
-        ('FE', 'Field Education', 4, 'Core'),
+        ('FE 1', 'Field Education I', 1, 'Core'),
+        ('FE 2', 'Field Education II', 1, 'Core'),
+        ('FE 3', 'Field Education III', 1, 'Core'),
+        ('FE 4', 'Field Education IV', 1, 'Core'),
         ('NT 204', 'Romans and Galatians', 2, 'Elective'),
         ('PM 519', 'Baptist Distinctives', 2, 'Elective'),
         ('PM 520', 'Youth Camp Leading', 2, 'Elective'),
@@ -218,7 +224,10 @@ CURRICULUM = {
         ('RD 2', 'Thesis Writing', 3, 'Thesis'),
         ('ED', 'Educational Ministry Project', 4, 'Project'),
         ('IP', 'Internship', 4, 'Core'),
-        ('FE', 'Field Education', 4, 'Core'),
+        ('FE 1', 'Field Education I', 1, 'Core'),
+        ('FE 2', 'Field Education II', 1, 'Core'),
+        ('FE 3', 'Field Education III', 1, 'Core'),
+        ('FE 4', 'Field Education IV', 1, 'Core'),
         ('COMPS', 'Comprehensive Examination (English Exam)', 3, 'Core'),
     ],
     'MACM': [
@@ -242,7 +251,10 @@ CURRICULUM = {
         ('RD 2', 'Thesis Writing', 3, 'Thesis'),
         ('ED', 'Educational Ministry Project', 4, 'Project'),
         ('IP', 'Internship', 4, 'Core'),
-        ('FE', 'Field Education', 4, 'Core'),
+        ('FE 1', 'Field Education I', 1, 'Core'),
+        ('FE 2', 'Field Education II', 1, 'Core'),
+        ('FE 3', 'Field Education III', 1, 'Core'),
+        ('FE 4', 'Field Education IV', 1, 'Core'),
         ('COMPS', 'Comprehensive Examination (English Exam)', 3, 'Core'),
     ],
     'MDiv': [
@@ -270,6 +282,8 @@ EXTRA_UNITS = {'MACE': 15, 'MACM': 15}
 
 
 def seed_curriculum():
+    # CCL has 14 existing core subjects at 2 units each = 28 units.
+    run("UPDATE programs SET total_units = 28 WHERE code = 'CCL'")
     for program_code, items in CURRICULUM.items():
         program = run("SELECT id FROM programs WHERE code = %s", (program_code,), fetch='one')
         if program is None:
@@ -283,6 +297,11 @@ def seed_curriculum():
                 "ON DUPLICATE KEY UPDATE seq = VALUES(seq), grp = VALUES(grp), "
                 "title = VALUES(title), units = VALUES(units)",
                 (program['id'], subject['id'], seq, grp, title, units))
+        if any(code == 'FE 1' for code, _title, _units, _grp in items):
+            # The former single FE (4 units) entry is superseded by FE 1–4 (1 unit each).
+            # Keep the legacy subject itself so old class/history foreign keys remain valid.
+            run("DELETE c FROM curriculum c JOIN subjects s ON s.id = c.subject_id "
+                "WHERE c.program_id = %s AND s.code = 'FE'", (program['id'],))
 
 
 if __name__ == '__main__':
@@ -294,5 +313,5 @@ if __name__ == '__main__':
         row = run("SELECT COUNT(*) AS n, COALESCE(SUM(CASE WHEN grp = 'Core' THEN units END), 0) AS core "
                   "FROM curriculum WHERE program_id = %s", (p['id'],), fetch='one')
         extra = EXTRA_UNITS.get(p['code'], 0)
-        flag = '' if int(row['core']) + extra == p['total_units'] else '   <-- hindi tugma'
+        flag = '' if p['code'] == 'BThCE' or int(row['core']) + extra == p['total_units'] else '   <-- hindi tugma'
         print(f"{p['code']:8} {row['n']:>8} {int(row['core']):>10} {extra:>7} {p['total_units']:>9}{flag}")

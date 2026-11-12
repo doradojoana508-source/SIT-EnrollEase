@@ -12,10 +12,13 @@ MENUS = {
         ('Announcements', 'bi-megaphone', 'applicant_news.index'),],
     'student': [
         ('Dashboard', 'bi-speedometer2', 'portal.dashboard'),
+        ('My Registration Form', 'bi-printer', 'portal_student.cor_print'),
         ('COR & Schedule', 'bi-card-checklist', 'portal_student.cor'),
         ('Pre-Enrollment', 'bi-pencil-square', 'portal_enroll.index'),
+        ('Classes', 'bi-easel', 'portal_library.classes'),
         ('Grades', 'bi-award', 'portal_grades.index'),
         ('Library', 'bi-book', 'portal_library.index'),
+        ('Resources', 'bi-folder2-open', 'university_resources.index'),
         ('Tuition & Balance', 'bi-cash-coin', 'portal_student.tuition'),
         ('Announcements', 'bi-megaphone', 'portal_news.index'),],
     'admin': [
@@ -31,6 +34,7 @@ MENUS = {
         ('Security', 'bi-shield-exclamation', 'admin_security.index'),
         ('Trash Bin', 'bi-trash', 'admin_trash.index'),
         ('Email Log', 'bi-envelope-paper', 'admin_emails.index'),
+        ('University Resources', 'bi-folder2-open', 'university_resources.manage'),
         ('System Settings', 'bi-sliders', 'admin_settings.index'),],
     'registrar': [
         ('Dashboard', 'bi-speedometer2', 'registrar.dashboard'),
@@ -44,7 +48,8 @@ MENUS = {
         ('Announcements', 'bi-megaphone', 'registrar_announcements.index'),
         ('Landing Page', 'bi-window', 'registrar_landing.index'),
         ('Reports', 'bi-file-earmark-spreadsheet', 'registrar_reports.index'),
-        ('Archive', 'bi-archive', 'registrar_archive.index'),],
+        ('Archive', 'bi-archive', 'registrar_archive.index'),
+        ('University Resources', 'bi-folder2-open', 'university_resources.manage'),],
     'finance': [
         ('Dashboard', 'bi-speedometer2', 'finance.dashboard'),
         ('Quotation Queue', 'bi-receipt', 'finance_queue.index'),
@@ -53,7 +58,8 @@ MENUS = {
         ('Announcements', 'bi-megaphone', 'finance_announcements.index'),],
     'faculty': [
         ('Dashboard', 'bi-speedometer2', 'faculty.dashboard'),
-        ('My Classes', 'bi-easel', 'faculty_classes.index'),
+        ('Classes', 'bi-easel', 'faculty_classes.index'),
+        ('Upload', 'bi-cloud-arrow-up', 'faculty_classes.uploads'),
         ('Announcements', 'bi-megaphone', 'faculty_news.index'),],
 }
 

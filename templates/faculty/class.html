@@ -2,9 +2,28 @@
 {% block title %}{{ c.code }} | SIT-EnrollEase{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('faculty_classes.index', term=c.term_id) }}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Back to My Classes</a>
+<a href="{{ url_for('faculty_classes.index', term=c.term_id) }}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Back to Classes</a>
 <h1 class="h2 mb-1 mt-2">{{ c.code }} &middot; {{ c.title }}</h1>
 <p class="text-muted mb-3">{{ c.schedule }} &middot; {{ c.units }} units &middot; {{ term.label }} &middot; {{ roster|length }} student{{ 's' if roster|length != 1 }}</p>
+<form method="get" class="row g-2 align-items-end mb-3">
+  <div class="col-12 col-sm-4"><label class="form-label small mb-1" for="class_year_filter">Filter roster by year level</label>
+    <select class="form-select form-select-sm" id="class_year_filter" name="year" onchange="this.form.submit()">
+      <option value="">All year levels</option>{% for y in year_levels %}<option value="{{ y }}" {{ 'selected' if year_level == y }}>{{ y }} Year</option>{% endfor %}
+    </select></div>
+  {% if request.args.get('date') %}<input type="hidden" name="date" value="{{ request.args.get('date') }}">{% endif %}
+</form>
+
+<div class="card mb-3" id="class-announcements"><div class="card-body">
+  <h2 class="h5 mb-1">Class Announcements</h2>
+  <p class="text-muted small">Only students enrolled in {{ c.code }} can see these announcements.</p>
+  <form method="post" action="{{ url_for('faculty_classes.add_announcement', class_id=c.id) }}" class="border rounded p-3 mb-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="mb-2"><label class="form-label" for="announcement_title">Title</label><input class="form-control" id="announcement_title" name="title" maxlength="120" required></div>
+    <div class="mb-2"><label class="form-label" for="announcement_body">Announcement</label><textarea class="form-control" id="announcement_body" name="body" rows="3" maxlength="3000" required></textarea></div>
+    <button class="btn btn-sit btn-sm" type="submit">Post announcement</button>
+  </form>
+  {% for a in class_announcements %}<div class="border-top py-3"><div class="d-flex justify-content-between gap-2"><strong>{{ a.title }}</strong><span class="small text-muted">{{ a.created_at.strftime('%b %d, %Y %I:%M %p') }}</span></div><p class="mb-2 mt-2" style="white-space:pre-line">{{ a.body }}</p><form method="post" action="{{ url_for('faculty_classes.delete_announcement', class_id=c.id, announcement_id=a.id) }}" onsubmit="return confirm('Remove this class announcement?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-danger btn-sm">Delete</button></form></div>{% else %}<p class="text-muted mb-0">No announcements for this class yet.</p>{% endfor %}
+</div></div>
 
 {% include 'faculty/_materials.html' %}
 <div class="card mb-3" id="grades"><div class="card-body">
@@ -14,7 +33,7 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="table-responsive">
       <table class="table align-middle">
-        <thead><tr><th>Student No.</th><th>Name</th><th style="width:150px">Final grade</th><th style="width:150px">Removal rating</th><th>Remark</th></tr></thead>
+        <thead><tr><th>Student No.</th><th>Name</th><th style="width:150px">Final grade</th><th>Remark</th></tr></thead>
         <tbody>
           {% for s in roster %}
           <tr>
@@ -23,14 +42,10 @@
               <option value="">-</option>
               {% for gr in grades %}<option value="{{ gr }}" {{ 'selected' if s.grade == gr }}>{{ gr }}</option>{% endfor %}
             </select></td>
-            <td><select class="form-select form-select-sm" name="removal_{{ s.user_id }}" aria-label="Removal rating of {{ s.name }}">
-              <option value="">-</option>
-              {% for gr in grades %}<option value="{{ gr }}" {{ 'selected' if s.removal_rating == gr }}>{{ gr }}</option>{% endfor %}
-            </select></td>
             <td>{% if s.remark %}<span class="badge text-bg-{{ 'success' if s.remark == 'PASSED' else 'secondary' }}">{{ s.remark }}</span>{% endif %}</td>
           </tr>
           {% else %}
-          <tr><td colspan="5" class="text-center text-muted py-4">No students enrolled in this class yet.</td></tr>
+          <tr><td colspan="3" class="text-center text-muted py-4">No students enrolled in this class yet.</td></tr>
           {% endfor %}
         </tbody>
       </table>

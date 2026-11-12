@@ -1,0 +1,30 @@
+{% extends 'layouts/app.html' %}
+{% block title %}University Resources | SIT-EnrollEase{% endblock %}
+{% block content %}
+<h1 class="h2 mb-1">University Resources</h1>
+<p class="text-muted mb-3">Upload and publish official documents, guides, forms, and reference materials for students.</p>
+<div class="card mb-4"><div class="card-body">
+  <h2 class="h5 mb-3">Add a resource</h2>
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('university_resources.upload') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3">
+      <div class="col-md-6"><label class="form-label" for="resource_title">Title</label><input class="form-control" id="resource_title" name="title" maxlength="150" required></div>
+      <div class="col-md-6"><label class="form-label" for="resource_category">Category</label><input class="form-control" id="resource_category" name="category" maxlength="60" value="General" required></div>
+      <div class="col-12"><label class="form-label" for="resource_description">Description</label><input class="form-control" id="resource_description" name="description" maxlength="500"></div>
+      <div class="col-md-6"><label class="form-label" for="resource_file">Upload document</label><input class="form-control" type="file" id="resource_file" name="file" accept=".pdf,.epub,.docx,.pptx,.xlsx,.doc,.ppt,.xls,.txt,.jpg,.jpeg,.png"><div class="form-text">{{ allowed }} · Maximum {{ max_mb }} MB</div></div>
+      <div class="col-md-6"><label class="form-label" for="resource_link">Or resource link</label><input class="form-control" type="url" id="resource_link" name="link_url" placeholder="https://..."></div>
+    </div>
+    <button class="btn btn-sit mt-3" type="submit"><i class="bi bi-cloud-arrow-up me-1"></i> Publish resource</button>
+  </form>
+</div></div>
+<div class="card"><div class="table-responsive"><table class="table align-middle mb-0">
+  <thead><tr><th>Resource</th><th>Category</th><th>Type</th><th>Visibility</th><th class="text-end">Actions</th></tr></thead><tbody>
+  {% for r in rows %}<tr><td><div class="fw-semibold">{{ r.title }}</div><div class="small text-muted">{{ r.description or '' }}</div></td><td>{{ r.category }}</td><td>{{ r.kind }}</td>
+  <td><span class="badge text-bg-{{ 'success' if r.is_active else 'secondary' }}">{{ 'Published' if r.is_active else 'Hidden' }}</span></td>
+  <td class="text-end"><div class="d-inline-flex gap-1">
+    {% if r.kind == 'File' %}<a class="btn btn-outline-secondary btn-sm" href="{{ url_for('university_resources.file', resource_id=r.id) }}">View</a>{% elif r.link_url %}<a class="btn btn-outline-secondary btn-sm" href="{{ r.link_url }}" target="_blank" rel="noopener">Open</a>{% endif %}
+    <form method="post" action="{{ url_for('university_resources.toggle', resource_id=r.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-secondary btn-sm">{{ 'Hide' if r.is_active else 'Publish' }}</button></form>
+    <form method="post" action="{{ url_for('university_resources.delete', resource_id=r.id) }}" onsubmit="return confirm('Remove this resource?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-danger btn-sm">Delete</button></form>
+  </div></td></tr>{% else %}<tr><td colspan="5" class="text-center text-muted py-4">No university resources uploaded yet.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+{% endblock %}

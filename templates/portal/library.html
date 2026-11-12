@@ -1,16 +1,21 @@
 {% extends 'layouts/app.html' %}
-{% block title %}Library | SIT-EnrollEase{% endblock %}
+{% block title %}{{ page_title }} | SIT-EnrollEase{% endblock %}
 
 {% block content %}
-<h1 class="h2 mb-1">Library</h1>
-<p class="text-muted mb-3">E-books, handouts and links shared by your professors for the subjects on your COR.</p>
+<h1 class="h2 mb-1">{{ page_title }}</h1>
+<p class="text-muted mb-3">Your current-trimester classes, class announcements, and learning materials.</p>
 
 {% for t in terms %}
 <h2 class="h5 mt-4 mb-2">{{ t.label }}</h2>
 {% for c in t.classes %}
 <div class="card mb-3"><div class="card-body">
   <h3 class="h6 mb-2">{{ c.code }} <span class="fw-normal text-muted">&middot; {{ c.title }}</span></h3>
-  {% for m in c.materials %}
+  <div class="rounded-3 border p-3 mt-3"><h4 class="small text-uppercase text-muted mb-2"><i class="bi bi-megaphone me-1"></i>Announcements</h4>
+  {% for a in announcements.get(c.class_id, []) %}<div class="border-top py-2"><div class="d-flex justify-content-between gap-2"><strong>{{ a.title }}</strong><span class="small text-muted">{{ a.created_at.strftime('%b %d, %Y') }}</span></div><div class="small mt-1" style="white-space:pre-line">{{ a.body }}</div></div>{% else %}<p class="small text-muted mb-0">No announcements for this class yet.</p>{% endfor %}</div>
+  {% for phase in ('PRELIM', 'MIDTERMS', 'FINALS') %}
+  {% set phase_rows = c.materials|selectattr('phase', 'equalto', phase)|list %}
+  {% if phase_rows %}<h4 class="small text-uppercase text-muted mt-3">{{ phase|title }}</h4>{% endif %}
+  {% for m in phase_rows %}
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-top py-2">
     <div>
       <div class="fw-semibold"><i class="bi {{ m.icon }}"></i> {{ m.title }}</div>
@@ -22,6 +27,7 @@
     <a href="{{ m.link_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-sit btn-sm">Open link</a>
     {% endif %}
   </div>
+  {% endfor %}
   {% endfor %}
 </div></div>
 {% endfor %}

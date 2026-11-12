@@ -1,0 +1,8 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Upload | SIT-EnrollEase{% endblock %}
+{% block content %}
+<h1 class="h2 mb-1">Upload</h1>
+<p class="text-muted mb-3">Choose one of your assigned classes to manage its learning materials. Existing Classes workflows remain unchanged.</p>
+{% if terms %}<form method="get" class="mb-3"><select class="form-select" name="term" onchange="this.form.submit()">{% for t in terms %}<option value="{{ t.id }}" {{ 'selected' if term and t.id == term.id }}>{{ t.label }}</option>{% endfor %}</select></form>{% endif %}
+<div class="row g-3">{% for c in rows %}<div class="col-md-6 col-xl-4"><div class="card h-100"><div class="card-body"><div class="fw-semibold">{{ c.code }} · {{ c.title }}</div><div class="small text-muted mb-3">{{ c.schedule }} · {{ c.units }} units</div><a class="btn btn-sit btn-sm" href="{{ url_for('faculty_classes.view', class_id=c.id) }}#materials">Manage uploads</a></div></div></div>{% else %}<div class="col-12"><div class="card"><div class="card-body text-center text-muted p-5">No assigned classes for this trimester.</div></div></div>{% endfor %}</div>
+{% endblock %}

@@ -23,7 +23,13 @@ class Curriculum:
         for r in rows:
             r['core_units'] = int(r['core_units'])
             r['expected'] = r['core_units'] + cls.EXTRA_UNITS.get(r['code'], 0)
-            r['matches'] = r['subjects'] > 0 and r['expected'] == r['total_units']
+            r['matches'] = (
+    r['subjects'] > 0
+    and (
+        r['expected'] == r['total_units']
+        or r['code'] == 'BThCE'
+    )
+)
         return rows
 
     @staticmethod

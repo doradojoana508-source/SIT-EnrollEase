@@ -5,6 +5,7 @@ from models.audit_log import AuditLog
 from models.class_offering import ClassOffering
 from models.grade import Grade
 from models.lms_material import LmsMaterial
+from models.class_announcement import ClassAnnouncement
 from models.teaching import Teaching
 from utils import roles_required
 
@@ -23,20 +24,39 @@ def _mine(class_id):
 def index():
     terms = ClassOffering.terms()
     term = ClassOffering.pick_term(terms, request.args.get('term', type=int))
-    rows = Teaching.classes(g.user.id, term['id']) if term else []
-    return render_template('faculty/classes.html', terms=terms, term=term, rows=rows)
+    year_level = request.args.get('year', '')
+    if year_level not in Teaching.YEAR_LEVELS:
+        year_level = ''
+    rows = Teaching.classes(g.user.id, term['id'], year_level or None) if term else []
+    return render_template('faculty/classes.html', terms=terms, term=term, rows=rows, year_level=year_level,
+                           year_levels=Teaching.YEAR_LEVELS)
 
 
 def _page(class_id, meeting_date=None):
     c = _mine(class_id)
     term = Teaching.term(c['term_id'])
-    roster = Teaching.roster(c, term)
+    full_roster = Teaching.roster(c, term)
+    year_level = request.args.get('year', '')
+    if year_level not in Teaching.YEAR_LEVELS:
+        year_level = ''
+    roster = [r for r in full_roster if not year_level or r['year_level'] == year_level]
     meeting_date = meeting_date or Teaching.parse_date(request.args.get('date')) or date.today()
     return render_template('faculty/class.html', c=c, term=term, roster=roster, grades=Grade.GRADES,
                            statuses=Teaching.STATUSES, meeting_date=meeting_date, today=date.today(),
                            marked=Teaching.day(class_id, meeting_date), summary=Teaching.summary(class_id),
                            dates=Teaching.dates(class_id), materials=LmsMaterial.for_class(class_id),
-                           allowed=LmsMaterial.ALLOWED_TEXT, max_mb=LmsMaterial.MAX_BYTES // (1024 * 1024))
+                           class_announcements=ClassAnnouncement.for_class(class_id),
+                           allowed=LmsMaterial.ALLOWED_TEXT, max_mb=LmsMaterial.MAX_BYTES // (1024 * 1024),
+                           year_level=year_level, year_levels=Teaching.YEAR_LEVELS)
+
+
+@faculty_classes_bp.route('/uploads')
+@roles_required('faculty')
+def uploads():
+    terms = ClassOffering.terms()
+    term = ClassOffering.pick_term(terms, request.args.get('term', type=int))
+    rows = Teaching.classes(g.user.id, term['id']) if term else []
+    return render_template('faculty/uploads.html', terms=terms, term=term, rows=rows)
 
 
 @faculty_classes_bp.route('/<int:class_id>')
@@ -74,6 +94,31 @@ def save_attendance(class_id):
     AuditLog.record('Attendance recorded', f"{c['code']} {meeting_date.isoformat()}: {saved} student(s)")
     flash(f'Attendance saved for {meeting_date:%B} {meeting_date.day}, {meeting_date:%Y}.', 'success')
     return redirect(url_for('faculty_classes.view', class_id=class_id, date=meeting_date.isoformat()) + '#attendance')
+
+
+@faculty_classes_bp.route('/<int:class_id>/announcements', methods=['POST'])
+@roles_required('faculty')
+def add_announcement(class_id):
+    c = _mine(class_id)
+    _ident, errors = ClassAnnouncement.create(class_id, request.form.get('title'), request.form.get('body'), g.user.id)
+    if errors:
+        for error in errors:
+            flash(error, 'danger')
+    else:
+        title = ' '.join(request.form.get('title', '').split())
+        AuditLog.record('Class announcement posted', f"{c['code']}: {title}"[:200])
+        flash('Announcement posted to this class.', 'success')
+    return redirect(url_for('faculty_classes.view', class_id=class_id) + '#class-announcements')
+
+
+@faculty_classes_bp.route('/<int:class_id>/announcements/<int:announcement_id>/delete', methods=['POST'])
+@roles_required('faculty')
+def delete_announcement(class_id, announcement_id):
+    c = _mine(class_id)
+    ClassAnnouncement.delete(class_id, announcement_id)
+    AuditLog.record('Class announcement deleted', f"{c['code']} announcement #{announcement_id}")
+    flash('Announcement removed from this class.', 'success')
+    return redirect(url_for('faculty_classes.view', class_id=class_id) + '#class-announcements')
 
 
 # ---------------- Materials (e-books, handouts, links) ----------------
@@ -120,7 +165,7 @@ def edit_material(class_id, material_id):
         return render_template('faculty/material_edit.html', c=c, m=row, values=request.form, errors=errors,
                                allowed=LmsMaterial.ALLOWED_TEXT, max_mb=LmsMaterial.MAX_BYTES // (1024 * 1024))
     values = {'title': row['title'], 'description': row['description'] or '', 'link_url': row['link_url'] or '',
-              'is_visible': '1' if row['is_visible'] else ''}
+              'phase': row.get('phase', 'PRELIM'), 'is_visible': '1' if row['is_visible'] else ''}
     return render_template('faculty/material_edit.html', c=c, m=row, values=values, errors=[],
                            allowed=LmsMaterial.ALLOWED_TEXT, max_mb=LmsMaterial.MAX_BYTES // (1024 * 1024))
 

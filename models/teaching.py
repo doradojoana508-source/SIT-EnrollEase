@@ -10,12 +10,18 @@ class Teaching:
     """Para sa professor: mga klase niya, listahan ng student, pag-encode ng grade at attendance."""
 
     STATUSES = (('P', 'Present'), ('A', 'Absent'), ('L', 'Late'), ('E', 'Excused'))
+    YEAR_LEVELS = ('1st', '2nd', '3rd', '4th')
 
     # ---------- klase at student ----------
     @staticmethod
-    def classes(faculty_id, term_id):
-        rows = query(f"{ClassOffering._SELECT} WHERE c.term_id = %s AND c.faculty_id = %s "
-                     "ORDER BY c.day_code, c.start_time, s.code", (term_id, faculty_id))
+    def classes(faculty_id, term_id, year_level=None):
+        sql = f"{ClassOffering._SELECT} WHERE c.term_id = %s AND c.faculty_id = %s "
+        params = [term_id, faculty_id]
+        if year_level in Teaching.YEAR_LEVELS:
+            sql += ("AND EXISTS (SELECT 1 FROM cor_subjects ycs JOIN cors yc ON yc.id = ycs.cor_id "
+                    "WHERE ycs.class_id = c.id AND yc.year_level = %s) ")
+            params.append(year_level)
+        rows = query(sql + "ORDER BY c.day_code, c.start_time, s.code", params)
         return [ClassOffering._decorate(r) for r in rows]
 
     @staticmethod
@@ -33,8 +39,8 @@ class Teaching:
     @staticmethod
     def roster(class_row, term):
         rows = query(
-            "SELECT u.id AS user_id, u.first_name, u.middle_name, u.last_name, "
-            "COALESCE(u.username, q.student_id) AS student_id, g.grade, g.removal_rating "
+            "SELECT u.id AS user_id, u.first_name, u.middle_name, u.last_name, c.year_level, "
+            "COALESCE(u.username, q.student_id) AS student_id, g.grade "
             "FROM cor_subjects cs JOIN cors c ON c.id = cs.cor_id JOIN users u ON u.id = c.user_id "
             "LEFT JOIN applications a ON a.user_id = u.id AND a.term_id = %s "
             "LEFT JOIN quotations q ON q.application_id = a.id "
@@ -55,23 +61,20 @@ class Teaching:
         for s in roster:
             uid = s['user_id']
             grade = form.get(f'grade_{uid}', '').strip()
-            removal = form.get(f'removal_{uid}', '').strip()
             if not grade:
-                if removal:
-                    errors.append(f"{s['name']}: choose the final grade before the removal rating.")
                 continue
-            if grade not in Grade.GRADES or (removal and removal not in Grade.GRADES):
+            if grade not in Grade.GRADES:
                 errors.append(f"{s['name']}: invalid grade.")
                 continue
-            if grade == (s['grade'] or '') and (removal or None) == s['removal_rating']:
+            if grade == (s['grade'] or ''):
                 continue
             execute(
-                "INSERT INTO grades (user_id, class_id, term_no, academic_year, code, title, units, grade, "
-                "removal_rating, updated_by) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                "INSERT INTO grades (user_id, class_id, term_no, academic_year, code, title, units, grade, updated_by) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) "
                 "ON DUPLICATE KEY UPDATE class_id = VALUES(class_id), title = VALUES(title), units = VALUES(units), "
-                "grade = VALUES(grade), removal_rating = VALUES(removal_rating), updated_by = VALUES(updated_by)",
+                "grade = VALUES(grade), updated_by = VALUES(updated_by)",
                 (uid, class_row['id'], term['term_no'], term['academic_year'], class_row['code'],
-                 class_row['title'], class_row['units'], grade, removal or None, by_user.id))
+                 class_row['title'], class_row['units'], grade, by_user.id))
             changed.append((uid, grade))
         for uid, grade in changed:
             student = User.find(uid)

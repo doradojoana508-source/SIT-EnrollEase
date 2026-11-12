@@ -1,0 +1,27 @@
+{% extends 'layouts/app.html' %}
+{% block title %}Resources | SIT-EnrollEase{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+  <div><p class="text-uppercase small fw-semibold text-sit mb-1">Simons Institute of Theology</p><h1 class="h2 mb-1">University Resources</h1>
+    <p class="text-muted mb-0">Official university documents, guides, forms, and reference materials.</p></div>
+</div>
+{% for category, items in groups.items() %}
+<section class="card mb-3"><div class="card-body">
+  <h2 class="h5 mb-3"><i class="bi bi-folder2-open text-sit me-2"></i>{{ category }}</h2>
+  <div class="row g-2">
+    {% for r in items %}
+    <div class="col-12 col-md-6"><div class="border rounded-3 p-3 h-100 d-flex align-items-center gap-3">
+      <div class="rounded-3 p-3 bg-light text-sit"><i class="bi {{ r.icon }} fs-4"></i></div>
+      <div class="flex-grow-1 min-w-0"><div class="fw-semibold">{{ r.title }}</div>
+        {% if r.description %}<div class="small text-muted">{{ r.description }}</div>{% endif %}
+        <div class="small text-muted">{% if r.kind == 'File' %}{{ r.size_text }}{% else %}External link{% endif %}</div></div>
+      {% if r.kind == 'File' %}<a class="btn btn-outline-sit btn-sm" href="{{ url_for('university_resources.file', resource_id=r.id) }}">Download</a>
+      {% else %}<a class="btn btn-outline-sit btn-sm" href="{{ r.link_url }}" target="_blank" rel="noopener noreferrer">Open</a>{% endif %}
+    </div></div>
+    {% endfor %}
+  </div>
+</div></section>
+{% else %}
+<div class="card"><div class="card-body text-center py-5"><i class="bi bi-folder2-open display-5 text-sit"></i><h2 class="h5 mt-3">No resources available yet</h2><p class="text-muted mb-0">University documents and reference materials will appear here when published.</p></div></div>
+{% endfor %}
+{% endblock %}

@@ -8,6 +8,9 @@
   <style>
     body { background: #e9eeed; }
     .toolbar { max-width: 210mm; margin: 1rem auto 0; padding: 0 .5rem; }
+    .sheet { position: relative; overflow: hidden; }
+    .sheet:before { content: 'SIMONS INSTITUTE OF THEOLOGY'; position: absolute; top: 43%; left: 5%; transform: rotate(-28deg); font-size: 25pt; letter-spacing: 2pt; color: rgba(15,90,78,.055); white-space: nowrap; pointer-events: none; }
+    .sheet > * { position: relative; z-index: 1; }
     .sheet { background: #fff; color: #000; max-width: 210mm; margin: 1rem auto; padding: 14mm;
              box-shadow: 0 6px 24px rgba(0, 0, 0, .15); font-family: "Times New Roman", Times, serif;
              font-size: 11pt; line-height: 1.4; }
