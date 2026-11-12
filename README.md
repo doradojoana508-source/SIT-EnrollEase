@@ -1,45 +1,158 @@
-# SIT-EnrollEase — Client Requested Updates
+# SIT-EnrollEase
 
-This package contains targeted updates to the existing Flask/MySQL SIT-EnrollEase project. It is not a rebuild.
+**SIT Integrated Enrollment and Student Records System**
 
-## Important configuration note
+SIT-EnrollEase is a web-based enrollment and student records management system developed for the Simons Institute of Theology (SIT). It aims to improve the management of student information, enrollment processes, academic records, and related administrative tasks.
 
-`config.py` is intentionally not included in this export so that secrets, passwords, and database credentials are not redistributed. Keep your existing local `config.py` in place when replacing the project files. `config.example.py` is only a reference template and does not contain live credentials.
+## Project Overview
 
-## Applying updates to an existing database
+The system was developed to help reduce manual recordkeeping and make student information more organized and accessible to authorized users.
 
-1. Back up your database first.
-2. From the MySQL client, run `migrations/20261111_client_requested_updates.sql` exactly once.
-3. From the project root, run `python seed_curriculum.py` to refresh curriculum rows, split the existing combined Field Education entries into Field Education I–IV (1 unit each), and update the CCL official unit total to 28.
-4. Install project dependencies from `requirements.txt` in your existing virtual environment.
-5. Start the app using your normal local workflow.
+### Technologies Used
 
-The migration adds LMS exam-period classification, class-scoped announcements, quotation discount support, and updates CCL's official unit requirement. Existing LMS materials default to PRELIM. Existing quotations default to zero discount. Existing payment history is preserved.
+- **Backend:** Python, Flask
+- **Frontend:** HTML, CSS, JavaScript, Bootstrap, Jinja2
+- **Database:** MySQL
+- **Database Environment:** XAMPP
+- **Security:** Flask-WTF CSRF protection
+- **Email:** Flask-Mail
 
-## Changes in this package
+## Features
 
-- Public Offered Programs no longer show units.
-- Registrar curriculum detail has per-program unit editing with validation and audit logging.
-- CCL is set to 28 units, matching its 14 existing 2-unit core subjects.
-- Existing combined Field Education rows in curricula that already had Field Education are migrated to Field Education I–IV, each 1 unit. The legacy subject row is retained for historical class references.
-- Account numbers are manually entered by Finance; existing account numbers remain unchanged and uniqueness validation remains in place.
-- Finance quotations now support a discount field and calculate totals server-side.
-- The printable accounting form uses existing student, program, term, unit, fee, discount, and payment data.
-- A printable Pre-Enrollment Form is available from the student's own pre-enrollment record; course rows appear when the student's COR exists.
-- Removal-rating controls and report columns are removed from the interface. The legacy database column is retained so historical records are not destroyed.
-- Faculty has a separate Upload navigation page. Uploads can be grouped by PRELIM, MIDTERMS, and FINALS while the existing Classes workflow remains available.
-- Class announcements are scoped to the faculty member's assigned class and are visible to students only when that class is on their current COR.
-- Student Classes shows the student's current-trimester enrolled classes, class announcements, and available materials. Material file access is checked on the server against the student's COR.
-- My Registration Form opens the student's own printable COR.
-- Printable forms include a faint institutional watermark.
+- Student information management
+- Enrollment management
+- Academic records management
+- Curriculum and subject management
+- Student schedules
+- Administrative reports
+- User authentication and access control
 
-## Verification limitations
+*Note: Available features depend on the implemented modules and user permissions.*
 
-Python source compilation and Jinja template parsing were checked in the build environment. Full Flask route execution and database integration tests were not run because Flask dependencies and the target MySQL database are not available in this environment. Apply the migration and run the project in your existing environment before using it for a client demonstration.
+## Requirements
 
-### Student Portal Resources and Faculty year filters
+Before running the project, install the following:
 
-- The student sidebar includes **Resources** for university-wide documents and official links. Admin and Registrar can manage these items under **University Resources**.
-- University-wide resources are stored separately from class handouts. Run `migrations/20261112_university_resources.sql` once on an existing database before using the Resources pages.
-- Faculty can filter assigned classes and class rosters by the year level stored on each student's COR. This is a display filter and does not change class assignments or student records.
-- Student **Classes** keeps class-specific announcements and the existing class handout/materials feature. The student calendar is not part of this portal navigation.
+- Python 3.10 or later
+- XAMPP
+- MySQL
+- Git
+
+## Installation and Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone YOUR_GITHUB_REPOSITORY_URL
+cd SIT-EnrollEase
+```
+
+### 2. Create a Virtual Environment
+
+```bash
+python -m venv venv
+```
+
+Activate it:
+
+**Windows:**
+```bash
+venv\Scripts\activate
+```
+
+### 3. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure the Database
+
+1. Open XAMPP Control Panel.
+2. Start Apache and MySQL.
+3. Open phpMyAdmin at `http://localhost/phpmyadmin`.
+4. Create the database using the database name configured in the project.
+5. Import the provided `schema.sql` file.
+
+### 5. Configure the Application
+
+Use `config.example.py` as a reference for your local configuration.
+
+Create or update your local `config.py` with the appropriate database connection settings and other required configuration values.
+
+Do not upload passwords, email credentials, secret keys, or other sensitive configuration values to GitHub.
+
+### 6. Initialize the Database
+
+After importing `schema.sql`, run:
+
+```bash
+python seed.py
+```
+
+This initializes the database with the project's initial data.
+
+### 7. Run the Application
+
+```bash
+python app.py
+```
+
+Open your browser and visit:
+
+```text
+http://127.0.0.1:5000
+```
+
+## Database Initialization Order
+
+Follow this order when setting up the database:
+
+1. Import `schema.sql` into MySQL.
+2. Run `python seed.py`.
+
+## Project Structure
+
+```text
+SIT-EnrollEase/
+│
+├── app.py
+├── config.example.py
+├── db.py
+├── errors.py
+├── mailer.py
+├── menus.py
+├── requirements.txt
+├── schema.sql
+├── seed.py
+├── seed_curriculum.py
+│
+├── migrations/
+├── models/
+├── routes/
+├── static/
+└── templates/
+```
+
+## Client Information
+
+**Client:** Simons Institute of Theology (SIT)
+
+The project was developed based on the client's requirements and feedback regarding enrollment processes, student information management, academic records, and administrative reporting.
+
+## Developer
+
+**Developer:** Joana Dorado  
+**Program:** Bachelor of Science in Information Technology  
+**University:** Laguna University
+
+## Important Notes
+
+- Use your own local database credentials and configuration.
+- Keep sensitive information out of the public repository.
+- Ensure that all required project files are included before deployment or submission.
+- This project is intended for academic and institutional use.
+
+## License
+
+This project was developed as an academic project for the Simons Institute of Theology.
